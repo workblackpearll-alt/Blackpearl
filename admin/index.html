@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Pearl | Admin Panel & Command Deck</title>
+  <meta name="description" content="Black Pearl luxury yacht charter admin dashboard, booking management, and website analytics.">
+  <link rel="icon" type="image/svg+xml" href="/assets/black-pearl-mark.svg">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Inter for clean, ultra-readable SaaS dashboard typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- ======================================================== -->
+  <!-- 1. AUTHENTICATION VIEW (SUPABASE AUTH SIGN IN / SIGN UP) -->
+  <!-- ======================================================== -->
+  <div id="authView" class="auth-view-wrap">
+    <div class="auth-card">
+      <div class="auth-header text-center">
+        <a href="/" class="auth-brand-logo">
+          <img src="/assets/black-pearl-mark.svg" alt="Black Pearl" width="46" height="46">
+        </a>
+        <h1 class="auth-title">BLACK PEARL</h1>
+        <span class="auth-badge">ADMIN COMMAND DECK</span>
+        <p class="auth-sub" id="authSubtitle">Sign in with your verified admin credentials to access the Lady Alice command deck.</p>
+      </div>
+
+      <form id="adminAuthForm" class="auth-form">
+        <div class="form-group">
+          <label for="adminEmailInput" class="form-label">Admin Email</label>
+          <input type="email" id="adminEmailInput" class="auth-input" placeholder="admin@blackpearl.in" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="adminPasswordInput" class="form-label">Password</label>
+          <input type="password" id="adminPasswordInput" class="auth-input" placeholder="••••••••••••" required autocomplete="current-password">
+        </div>
+
+        <div class="auth-actions">
+          <button type="submit" class="btn-auth-primary" id="btnSubmitAuth">
+            <span id="btnAuthText">Sign In to Dashboard</span>
+          </button>
+        </div>
+
+        <div class="auth-switch-box">
+          <span id="authSwitchText">Don't have an admin account yet?</span>
+          <button type="button" class="btn-text-link" id="btnToggleAuthMode">Create Admin Account</button>
+        </div>
+
+        <div id="authFeedbackMsg" class="auth-feedback" style="display:none;"></div>
+      </form>
+
+      <div class="auth-footer text-center">
+        <a href="/" class="auth-back-link">← Return to Public Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 2. AUTHENTICATED ADMIN PORTAL & DASHBOARD (SHELL)        -->
+  <!-- ======================================================== -->
+  <div id="portalView" class="portal-layout" style="display:none;">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-top">
+        <a href="/" class="sidebar-brand">
+          <img src="/assets/black-pearl-mark.svg" alt="Black Pearl" class="sidebar-logo-mark" width="34" height="34">
+          <div class="sidebar-brand-text">
+            <span class="sidebar-brand-name">BLACK PEARL</span>
+            <span class="sidebar-badge-tag">ADMIN PANEL</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Main Navigation Menu: 3 Core Requested Sections -->
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="dashboard" id="navDashboard">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          </span>
+          <span class="nav-label">Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-page="bookings" id="navBookings">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </span>
+          <span class="nav-label">Bookings</span>
+          <span class="nav-counter" id="sidebarBookingsCount">0</span>
+        </button>
+
+        <button class="nav-item" data-page="inquiries" id="navInquiries">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <span class="nav-label">Inquiries & Briefs</span>
+          <span class="nav-counter" id="sidebarBriefsCount">0</span>
+        </button>
+
+        <button class="nav-item" data-page="media" id="navMedia">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </span>
+          <span class="nav-label">Photo Gallery</span>
+          <span class="nav-counter" id="sidebarMediaCount">0</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="sidebar-section-label">SETTINGS</div>
+        
+        <div class="user-profile-badge">
+          <div class="user-avatar" id="sidebarUserAvatar">A</div>
+          <div class="user-info">
+            <span class="user-role">Super Admin</span>
+            <span class="user-email" id="sidebarUserEmail">admin@blackpearl.in</span>
+          </div>
+        </div>
+
+        <a href="/" target="_blank" class="sidebar-action-btn btn-view-site">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+          <span>VIEW SITE</span>
+        </a>
+
+        <button class="sidebar-action-btn btn-sign-out" id="btnSignOut">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <span>SIGN OUT</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT AREA -->
+    <main class="admin-main-viewport">
+      
+      <!-- =================================================== -->
+      <!-- TAB 1: DASHBOARD ANALYTICS (EXACT SCREENSHOT 1)     -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel active" id="pageDashboard">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Dashboard</h1>
+            <p class="panel-subtitle">Real-time overview of website visits, bookings, and customer traffic attribution.</p>
+          </div>
+          <div class="panel-header-actions">
+            <button class="btn-panel-action btn-refresh" id="btnRefreshAnalytics">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+              <span>Refresh Data</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6 METRIC KPI CARDS GRID -->
+        <div class="kpi-metrics-grid">
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">WEBSITE VIEWS</span>
+            </div>
+            <div class="kpi-number" id="metricViews">0</div>
+            <div class="kpi-subtext">Total page visits logged</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">UNIQUE VISITORS</span>
+            </div>
+            <div class="kpi-number" id="metricVisitors">0</div>
+            <div class="kpi-subtext">Distinct visitor sessions</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">BOOKING VIEWS</span>
+            </div>
+            <div class="kpi-number" id="metricBookingViews">0</div>
+            <div class="kpi-subtext">Booking engine sessions</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">TOTAL HOLDS</span>
+            </div>
+            <div class="kpi-number" id="metricClicks">0</div>
+            <div class="kpi-subtext">Customer reservations placed</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">ACTIVE HOLDS</span>
+            </div>
+            <div class="kpi-number" id="metricCharters">0</div>
+            <div class="kpi-subtext">Currently held & confirmed</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">TOP OCCASION</span>
+            </div>
+            <div class="kpi-number highlight-text" id="metricTopOccasion">—</div>
+            <div class="kpi-subtext">Highest interest category</div>
+          </div>
+        </div>
+
+        <!-- 2-COLUMN ANALYTICS REPORTS (TRAFFIC + ENGAGEMENT) -->
+        <div class="analytics-split-grid">
+          
+          <!-- LEFT CARD: Traffic Acquisition -->
+          <div class="report-card">
+            <div class="report-card-header">
+              <div class="report-card-title-group">
+                <h3 class="report-title">Traffic Acquisition</h3>
+              </div>
+              <span class="report-meta">Live Attribution</span>
+            </div>
+            
+            <div class="traffic-acquisition-list" id="trafficAcquisitionList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- RIGHT CARD: Engagement Report -->
+          <div class="report-card">
+            <div class="report-card-header">
+              <h3 class="report-title">Engagement Report</h3>
+              <span class="report-meta">↗</span>
+            </div>
+
+            <div class="report-table-wrapper">
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>EXPERIENCE</th>
+                    <th class="text-right">VIEWS</th>
+                    <th class="text-right">HOLDS</th>
+                    <th class="text-right">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody id="engagementReportBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TAB 2: BOOKINGS DATA TABLE (EXACT SCREENSHOT 2)     -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageBookings">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Bookings</h1>
+            <p class="panel-subtitle">Manage and track customer reservations and date holds.</p>
+          </div>
+          <div class="panel-header-actions">
+            <div class="table-search-bar">
+              <input type="text" id="bookingsSearchInput" class="table-search-input" placeholder="Search bookings...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="table-filters-bar">
+          <button class="filter-btn active" data-filter="all">All Bookings</button>
+          <button class="filter-btn" data-filter="held">Held (Deposit Paid)</button>
+          <button class="filter-btn" data-filter="confirmed">Confirmed</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+
+        <!-- Bookings Data Table -->
+        <div class="data-table-card">
+          <div class="table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>ORDER ID</th>
+                  <th>DATE</th>
+                  <th>CUSTOMER</th>
+                  <th>OCCASION & SLOT</th>
+                  <th>AMOUNT</th>
+                  <th>STATUS</th>
+                  <th>CONTACT</th>
+                  <th class="text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTableBody">
+                <!-- Dynamically populated from Supabase holds -->
+              </tbody>
+            </table>
+          </div>
+          <div id="bookingsEmptyState" class="table-empty-state" style="display:none;">
+            <p>No bookings matching your criteria.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TAB 3: INQUIRIES & VOYAGE BRIEFS                    -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageInquiries">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Inquiries & Briefs</h1>
+            <p class="panel-subtitle">Manage bespoke client requests from the Sail vs At Rest form.</p>
+          </div>
+          <div class="panel-header-actions">
+            <div class="table-search-bar">
+              <input type="text" id="briefsSearchInput" class="table-search-input" placeholder="Search inquiries...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Inquiries Data Table -->
+        <div class="data-table-card">
+          <div class="table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>CLIENT NAME</th>
+                  <th>WHATSAPP PHONE</th>
+                  <th>OCCASION</th>
+                  <th>CHARTER STYLE</th>
+                  <th>HOURS</th>
+                  <th>NOTES</th>
+                  <th>STATUS</th>
+                  <th class="text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="inquiriesTableBody">
+                <!-- Dynamically populated from Supabase voyage_briefs -->
+              </tbody>
+            </table>
+          </div>
+          <div id="briefsEmptyState" class="table-empty-state" style="display:none;">
+            <p>No inquiries found. Client submissions from the website will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TAB 4: DIRECT DEVICE PHOTO GALLERY                  -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageMedia">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Photo Gallery</h1>
+            <p class="panel-subtitle">Upload photos directly from your phone or laptop to display on the website gallery.</p>
+          </div>
+        </div>
+
+        <!-- Direct Device Upload Widget -->
+        <div class="upload-widget-card">
+          <h3 class="widget-heading">Add Photo from Device</h3>
+          <form id="adminMediaUploadForm" class="media-upload-form">
+            <div class="device-dropzone-box" id="deviceDropzone">
+              <input type="file" id="adminMediaFile" class="device-file-input" accept="image/*" required>
+              <div class="dropzone-content" id="dropzoneContent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="38" height="38"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                <span class="dropzone-text">Click or tap to choose a photo from your device</span>
+                <span class="dropzone-sub">Supports photos from camera, phone, or computer</span>
+              </div>
+              <div class="dropzone-preview" id="dropzonePreview" style="display:none;">
+                <img id="devicePreviewImg" src="" alt="Preview photo">
+                <button type="button" class="btn-clear-preview" id="btnClearPreview">Choose Different Photo</button>
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-top: 20px;">
+              <div class="form-group">
+                <label class="form-label" for="adminMediaTitle">Photo Title *</label>
+                <input type="text" id="adminMediaTitle" class="admin-form-input" placeholder="e.g. Sunset Proposal on Bow Deck" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="adminMediaCategory">Occasion Category</label>
+                <select id="adminMediaCategory" class="admin-form-input">
+                  <option value="sailing">Sailing & Coastal Cruises</option>
+                  <option value="romance">Romantic & Intimate</option>
+                  <option value="parties">Parties & Nightlife</option>
+                  <option value="corporate">Corporate & Brands</option>
+                  <option value="wellness">Wellness & Mornings</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="adminMediaSubtitle">Caption (Optional)</label>
+              <input type="text" id="adminMediaSubtitle" class="admin-form-input" placeholder="e.g. Private toast facing Gateway of India">
+            </div>
+
+            <div style="margin-top: 8px;">
+              <button type="submit" class="btn-panel-action btn-primary" id="btnSubmitMediaUpload">
+                <span>Add Photo to Website Gallery</span>
+              </button>
+            </div>
+            
+            <div id="mediaUploadFeedback" class="upload-feedback" style="display:none;"></div>
+          </form>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="media-library-grid-header">
+          <h3>Website Gallery Photos (<span id="mediaCountSpan">0</span>)</h3>
+        </div>
+        <div class="admin-media-library-grid" id="adminMediaGrid">
+          <!-- Populated from Supabase gallery_images -->
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TAB 5: CALENDAR LOCKS & MAINTENANCE                 -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageCalendar">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Calendar Locks</h1>
+            <p class="panel-subtitle">Lock dates on the public 5-step booking calendar for private charters or maintenance.</p>
+          </div>
+        </div>
+
+        <div class="calendar-lock-card">
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label" for="adminLockDate">Date to Lock</label>
+              <input type="date" id="adminLockDate" class="admin-form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="adminLockReason">Reason</label>
+              <select id="adminLockReason" class="admin-form-input">
+                <option value="Maintenance">Scheduled Marine Maintenance</option>
+                <option value="Phone Booking">Booked via Phone Concierge</option>
+                <option value="Weather">Adverse Weather Warning</option>
+                <option value="Private Charter">VIP Private Charter</option>
+              </select>
+            </div>
+            <div class="form-group flex-end">
+              <button class="btn-panel-action btn-primary" id="btnSubmitLockDate">Lock Date</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="locked-dates-table-card">
+          <h3 class="widget-heading">Currently Locked Dates</h3>
+          <div class="locked-dates-list" id="lockedDatesList">
+            <!-- Populated from Supabase blocked_dates -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- BOOKING DETAIL MODAL -->
+  <div class="admin-modal-overlay" id="bookingDetailModal" style="display:none;">
+    <div class="admin-modal-card">
+      <div class="modal-card-header">
+        <h3 id="modalBookingId">Booking Details</h3>
+        <button class="modal-close-icon" id="btnCloseDetailModal" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-card-body" id="modalBookingBody">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/admin/admin.js"></script>
+</body>
+</html>

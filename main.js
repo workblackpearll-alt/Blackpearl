@@ -1,4 +1,21 @@
 import confetti from 'canvas-confetti';
+import {
+  isSupabaseConfigured,
+  saveBookingHold,
+  fetchBookingHolds,
+  saveVoyageBrief,
+  fetchVoyageBriefs,
+  saveBlockedDate,
+  fetchBlockedDates,
+  saveGalleryImage,
+  fetchGalleryImages,
+  trackPageView
+} from './supabaseClient.js';
+import {
+  isImageKitConfigured,
+  getImageKitUrl,
+  uploadImageToImageKit
+} from './imageKitService.js';
 
 /* ========================================================
    BLACK PEARL · LADY ALICE
@@ -25,7 +42,10 @@ const state = {
   currentMonth: 10, // 0-indexed: 10 is November
   currentYear: 2026,
   blockedDates: ['2026-11-01', '2026-11-08', '2026-11-20', '2026-11-27', '2026-11-28'],
+  blockedDatesDetails: [],
   fillingDates: ['2026-11-14', '2026-11-15', '2026-11-21', '2026-11-22'],
+  voyageBriefs: [],
+  galleryImages: [],
   holds: [
     {
       id: 'BP-1411-027',
@@ -127,6 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initWaterlineAnimations();
   initSmoothParallax();
   updateAdminView();
+  initSupabaseSync();
+  initImageKitOptimization();
+
+  // Track page visit in Supabase analytics
+  try {
+    trackPageView(window.location.pathname || '/');
+  } catch (e) {
+    // Analytics fail-safe
+  }
 
   const heroVideo = document.getElementById('heroBgVideo');
   if (heroVideo) {
@@ -567,6 +596,11 @@ function openBookingModal(occasionName = 'Proposals') {
   modal.classList.add('active');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Track booking modal open
+  try {
+    trackPageView(`/book/${(occasionName || 'general').toLowerCase().replace(/\s+/g, '-')}`);
+  } catch (e) {}
 }
 
 function closeBookingModal() {
@@ -870,6 +904,7 @@ function completeBookingAndCelebrate() {
   const isSailing = state.voyageMode === 'sailing';
   const sailingAddon = isSailing ? (sailingSurcharges[state.selectedDuration] || 45000) : 0;
   const calculatedTotal = Math.round(state.occasionBasePrice * priceMultipliers[state.selectedDuration] + sailingAddon);
+  const selectedPaymentMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'upi';
 
   const newHold = {
     id: bookingCode,
@@ -882,9 +917,11 @@ function completeBookingAndCelebrate() {
     guests: state.guestDetails.guestCount,
     price: formatCurrency(calculatedTotal),
     paidToken: '₹5,000',
+    paymentMethod: selectedPaymentMethod,
     name: state.guestDetails.fullName,
     phone: state.guestDetails.phone,
     email: state.guestDetails.email,
+    address: state.guestDetails.address || '',
     notes: state.guestDetails.notes || 'None',
     status: 'Held (Deposit Paid)'
   };
@@ -895,6 +932,17 @@ function completeBookingAndCelebrate() {
     state.fillingDates.push(state.selectedDate);
   }
   saveHoldsToStorage();
+
+  // Asynchronously persist to Supabase
+  saveBookingHold(newHold)
+    .then(res => {
+      if (res.success && res.source === 'supabase') {
+        console.log('[Black Pearl] Booking stored in Supabase with ID:', res.data.id);
+      } else {
+        console.info('[Black Pearl] Booking stored in local storage:', res);
+      }
+    })
+    .catch(err => console.error('Error storing booking in Supabase:', err));
 
   // Populate Confirmation Screen
   document.getElementById('confirmedBookingRef').textContent = `Booking ${bookingCode}`;
@@ -980,16 +1028,49 @@ function generateICalendarFile() {
 /* ========================================================
    CREW & ADMIN MANAGEMENT PORTAL
    ======================================================== */
+/* ========================================================
+   CREW & ADMIN MANAGEMENT PORTAL (SUPABASE + IMAGEKIT)
+   ======================================================== */
 function initAdminPortal() {
   const modal = document.getElementById('adminModal');
   const trigger = document.getElementById('crewPortalTrigger');
   const closeBtn = document.getElementById('adminCloseBtn');
   const blockBtn = document.getElementById('btnAdminBlockDate');
   const resetBtn = document.getElementById('adminResetDemoData');
+  const refreshHoldsBtn = document.getElementById('btnAdminRefreshHolds');
+  const refreshBriefsBtn = document.getElementById('btnAdminRefreshBriefs');
+  const mediaForm = document.getElementById('adminMediaUploadForm');
+
+  // Navigation Tabs (Holds, Briefs, Media, Calendar)
+  const tabs = document.querySelectorAll('.admin-nav-tab');
+  const panels = {
+    holds: document.getElementById('adminPanelHolds'),
+    briefs: document.getElementById('adminPanelBriefs'),
+    media: document.getElementById('adminPanelMedia'),
+    calendar: document.getElementById('adminPanelCalendar')
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-admin-tab');
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      Object.keys(panels).forEach(key => {
+        if (panels[key]) {
+          panels[key].classList.toggle('active', key === target);
+        }
+      });
+    });
+  });
 
   if (trigger) {
     trigger.addEventListener('click', () => {
       updateAdminView();
+      updateAdminBriefsView();
+      updateAdminMediaView();
+      updateAdminBlockedDatesView();
+      updateConnectionBadges();
       modal.classList.add('active');
     });
   }
@@ -1008,12 +1089,47 @@ function initAdminPortal() {
   document.addEventListener('keydown', (e) => {
     if (e.shiftKey && (e.key === 'A' || e.key === 'a')) {
       updateAdminView();
+      updateAdminBriefsView();
+      updateAdminMediaView();
+      updateAdminBlockedDatesView();
+      updateConnectionBadges();
       modal.classList.toggle('active');
     }
   });
 
+  // Supabase Manual Refresh Buttons
+  if (refreshHoldsBtn) {
+    refreshHoldsBtn.addEventListener('click', async () => {
+      refreshHoldsBtn.disabled = true;
+      refreshHoldsBtn.textContent = 'Refreshing...';
+      const res = await fetchBookingHolds();
+      if (res.success && res.data.length > 0) {
+        state.holds = res.data;
+        saveHoldsToStorage();
+        updateAdminView();
+      }
+      refreshHoldsBtn.disabled = false;
+      refreshHoldsBtn.textContent = 'Refresh from Supabase';
+    });
+  }
+
+  if (refreshBriefsBtn) {
+    refreshBriefsBtn.addEventListener('click', async () => {
+      refreshBriefsBtn.disabled = true;
+      refreshBriefsBtn.textContent = 'Refreshing...';
+      const res = await fetchVoyageBriefs();
+      if (res.success) {
+        state.voyageBriefs = res.data;
+        updateAdminBriefsView();
+      }
+      refreshBriefsBtn.disabled = false;
+      refreshBriefsBtn.textContent = 'Refresh from Supabase';
+    });
+  }
+
+  // Block Date Form (persisted to Supabase)
   if (blockBtn) {
-    blockBtn.addEventListener('click', () => {
+    blockBtn.addEventListener('click', async () => {
       const dateVal = document.getElementById('adminBlockDateInput').value;
       const reason = document.getElementById('adminBlockReason').value;
       if (!dateVal) {
@@ -1024,9 +1140,89 @@ function initAdminPortal() {
       if (!state.blockedDates.includes(dateVal)) {
         state.blockedDates.push(dateVal);
       }
+      state.blockedDatesDetails.push({ date: dateVal, reason });
+
+      blockBtn.disabled = true;
+      blockBtn.textContent = 'Saving...';
+
+      try {
+        await saveBlockedDate(dateVal, reason);
+      } catch (err) {
+        console.warn('Blocked date saved locally:', err);
+      }
+
+      blockBtn.disabled = false;
+      blockBtn.textContent = 'Block Date';
       renderCalendar();
-      updateAdminView();
-      alert(`Date ${dateVal} is now blocked for: ${reason}`);
+      updateAdminBlockedDatesView();
+      alert(`Date ${dateVal} is now locked in calendar for: ${reason}`);
+    });
+  }
+
+  // ImageKit Media Uploader Form
+  if (mediaForm) {
+    mediaForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('mediaTitleInput').value.trim();
+      const category = document.getElementById('mediaCategorySelect').value;
+      const subtitle = document.getElementById('mediaSubtitleInput').value.trim();
+      const fileInput = document.getElementById('mediaFileInput');
+      const urlInput = document.getElementById('mediaUrlInput').value.trim();
+      const submitBtn = document.getElementById('btnAdminUploadMedia');
+      const feedback = document.getElementById('mediaUploadFeedback');
+
+      const file = fileInput.files && fileInput.files[0];
+      const source = file || urlInput;
+
+      if (!title) {
+        alert('Please provide an image title.');
+        return;
+      }
+
+      if (!source) {
+        alert('Please select an image file or provide an ImageKit / web image URL.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Uploading to ImageKit & Saving to Supabase...</span>';
+      feedback.style.display = 'none';
+
+      try {
+        const fileName = file ? file.name : `lady_alice_${category}_${Date.now()}.jpg`;
+        const ikRes = await uploadImageToImageKit(source, fileName, { tags: ['lady-alice', category] });
+
+        const imageRecord = {
+          title,
+          subtitle: subtitle || 'Private celebration on Lady Alice',
+          category,
+          imagekitUrl: ikRes.url,
+          fileId: ikRes.fileId || '',
+          thumbnailUrl: ikRes.thumbnailUrl || ikRes.url
+        };
+
+        const spRes = await saveGalleryImage(imageRecord);
+        state.galleryImages.unshift(imageRecord);
+
+        // Append dynamically to live gallery on the website
+        renderDynamicGalleryImages([imageRecord]);
+        updateAdminMediaView();
+
+        feedback.className = 'upload-feedback-msg success';
+        feedback.textContent = `Image "${title}" successfully processed with ImageKit & saved to Supabase!`;
+        feedback.style.display = 'block';
+
+        mediaForm.reset();
+      } catch (err) {
+        console.error('Image upload failed:', err);
+        feedback.className = 'upload-feedback-msg error';
+        feedback.textContent = `Upload issue: ${err.message || 'Please check ImageKit and Supabase config'}`;
+        feedback.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Upload to ImageKit & Save to Supabase</span>';
+      }
     });
   }
 
@@ -1035,6 +1231,41 @@ function initAdminPortal() {
       localStorage.removeItem('black_pearl_holds');
       window.location.reload();
     });
+  }
+}
+
+function updateConnectionBadges() {
+  const sbStatus = document.getElementById('adminSupabaseStatus');
+  const ikStatus = document.getElementById('adminImageKitStatus');
+  const footerSync = document.getElementById('adminFooterSyncText');
+
+  const sbConnected = isSupabaseConfigured();
+  const ikConnected = isImageKitConfigured();
+
+  if (sbStatus) {
+    if (sbConnected) {
+      sbStatus.className = 'admin-conn-pill connected';
+      sbStatus.textContent = 'Supabase: Live Database';
+    } else {
+      sbStatus.className = 'admin-conn-pill standby';
+      sbStatus.textContent = 'Supabase: Waiting for .env';
+    }
+  }
+
+  if (ikStatus) {
+    if (ikConnected) {
+      ikStatus.className = 'admin-conn-pill connected';
+      ikStatus.textContent = 'ImageKit: Active CDN';
+    } else {
+      ikStatus.className = 'admin-conn-pill standby';
+      ikStatus.textContent = 'ImageKit: Local Fallback';
+    }
+  }
+
+  if (footerSync) {
+    footerSync.textContent = sbConnected && ikConnected
+      ? 'Fully Live: Supabase Datastore & ImageKit Media CDN Connected'
+      : 'Configuration Ready: Set VITE_SUPABASE_* & VITE_IMAGEKIT_* in .env to go live';
   }
 }
 
@@ -1051,20 +1282,108 @@ function updateAdminView() {
   if (!list) return;
   list.innerHTML = '';
 
+  if (state.holds.length === 0) {
+    list.innerHTML = '<p style="color: var(--smoke); font-size: 13px; padding: 12px 0;">No active holds yet. Holds submitted on the site will appear here.</p>';
+    return;
+  }
+
   state.holds.forEach(hold => {
     const row = document.createElement('div');
     row.className = 'admin-booking-row';
     row.innerHTML = `
       <div class="admin-booking-info">
         <h5>${hold.occasion} · <strong>${hold.name}</strong></h5>
-        <p>📅 ${hold.date} (${hold.slot}, ${hold.duration}${hold.voyageMode ? ' · ' + hold.voyageMode : ''}) · 👥 ${hold.guests} guests</p>
-        <p>📞 ${hold.phone} · ✉️ ${hold.email} ${hold.notes ? '· 💬 ' + hold.notes : ''}</p>
+        <p>${hold.date} (${hold.slot}, ${hold.duration}${hold.voyageMode ? ' · ' + hold.voyageMode : ''}) · ${hold.guests} guests</p>
+        <p>${hold.phone} · ${hold.email} ${hold.address ? '· ' + hold.address : ''}</p>
+        ${hold.notes ? '<p style="margin-top:4px; font-style:italic; color: var(--gold);">Notes: ' + hold.notes + '</p>' : ''}
       </div>
       <div class="admin-booking-meta">
-        <span class="admin-booking-status">${hold.status}</span>
+        <span class="admin-booking-status">${hold.status || 'Held'}</span>
         <div style="font-family: var(--font-heading); color: var(--gold); font-size: 16px;">${hold.id}</div>
-        <div style="font-size: 12px; color: var(--mist);">Deposit: ${hold.paidToken}</div>
+        <div style="font-size: 12px; color: var(--mist);">Deposit: ${hold.paidToken || '₹5,000'} (${hold.paymentMethod || 'upi'})</div>
       </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateAdminBriefsView() {
+  const list = document.getElementById('adminBriefsList');
+  const countPill = document.getElementById('adminBriefsCount');
+
+  if (countPill) countPill.textContent = state.voyageBriefs.length;
+  if (!list) return;
+
+  list.innerHTML = '';
+  if (state.voyageBriefs.length === 0) {
+    list.innerHTML = '<p style="color: var(--smoke); font-size: 13px; padding: 12px 0;">No bespoke voyage briefs received yet. Submissions from the "Sail or Rest in Ocean" form will appear here.</p>';
+    return;
+  }
+
+  state.voyageBriefs.forEach(brief => {
+    const card = document.createElement('div');
+    card.className = 'admin-brief-card';
+    card.innerHTML = `
+      <div>
+        <h5>${brief.name} · <span style="color: var(--gold);">${brief.occasion}</span></h5>
+        <p><strong>${brief.phone}</strong> · ${brief.duration === 'custom' ? 'Custom Hours' : brief.duration + ' Hours'}</p>
+        <p>Notes: ${brief.notes || 'None'}</p>
+        <span class="admin-brief-mode-tag">Style: ${brief.charterMode || brief.charter_mode || 'At Rest'}</span>
+      </div>
+      <div style="text-align: right;">
+        <span class="admin-booking-status">${brief.status || 'New Brief'}</span>
+        <div style="font-size: 11px; color: var(--smoke); margin-top: 6px;">
+          ${brief.created_at ? new Date(brief.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Today'}
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function updateAdminMediaView() {
+  const grid = document.getElementById('adminMediaGrid');
+  const countPill = document.getElementById('adminMediaCount');
+
+  if (countPill) countPill.textContent = state.galleryImages.length;
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  if (state.galleryImages.length === 0) {
+    grid.innerHTML = '<p style="color: var(--smoke); font-size: 13px; grid-column: 1 / -1;">No user-uploaded images in Supabase yet. Use the form above to upload images via ImageKit.</p>';
+    return;
+  }
+
+  state.galleryImages.forEach(img => {
+    const card = document.createElement('div');
+    card.className = 'admin-media-card';
+    const ikUrl = getImageKitUrl(img.imagekit_url || img.imagekitUrl || img.url, { width: 300, height: 200, quality: 75 });
+    card.innerHTML = `
+      <img src="${ikUrl}" alt="${img.title}" loading="lazy">
+      <div class="admin-media-card-body">
+        <div class="admin-media-card-cat">${img.category}</div>
+        <div class="admin-media-card-title">${img.title}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function updateAdminBlockedDatesView() {
+  const list = document.getElementById('adminBlockedDatesList');
+  if (!list) return;
+
+  list.innerHTML = '';
+  const dates = state.blockedDatesDetails.length > 0
+    ? state.blockedDatesDetails
+    : state.blockedDates.map(d => ({ date: d, reason: 'Maintenance / Reserved' }));
+
+  dates.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'admin-blocked-date-item';
+    row.innerHTML = `
+      <span><strong>${item.date}</strong> — ${item.reason}</span>
+      <span style="font-size: 11px; color: var(--gold); border: 1px solid var(--gold-deep); padding: 2px 6px; border-radius: 4px;">Locked</span>
     `;
     list.appendChild(row);
   });
@@ -1100,6 +1419,26 @@ function initVoyageBriefSection() {
 
     const submitBtn = document.getElementById('btnSubmitBrief');
     const originalText = submitBtn.innerHTML;
+
+    // Persist Voyage Brief to Supabase
+    const briefRecord = {
+      name,
+      phone,
+      occasion,
+      duration,
+      charterMode: mode,
+      notes: notes || 'Open harbour cruise & anchor'
+    };
+    state.voyageBriefs.unshift(briefRecord);
+    updateAdminBriefsView();
+
+    saveVoyageBrief(briefRecord)
+      .then(res => {
+        if (res.success) {
+          console.log('[Supabase] Voyage brief saved to Supabase:', res.data);
+        }
+      })
+      .catch(err => console.error('Error saving brief to Supabase:', err));
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span>PROCESSING BRIEF...</span>';
@@ -1246,4 +1585,171 @@ function initSmoothParallax() {
   // Initial calculation after layout settles
   requestTick();
 }
+
+/* ========================================================
+   SUPABASE LIVE DATA SYNCHRONIZATION
+   ======================================================== */
+async function initSupabaseSync() {
+  updateConnectionBadges();
+
+  if (!isSupabaseConfigured()) {
+    console.info('Supabase credentials not set in .env yet. Running in offline/fallback mode.');
+    return;
+  }
+
+  try {
+    // 1. Fetch Blocked Dates from Supabase
+    const blockedRes = await fetchBlockedDates();
+    if (blockedRes.success && Array.isArray(blockedRes.data) && blockedRes.data.length > 0) {
+      state.blockedDatesDetails = blockedRes.data;
+      const remoteDates = blockedRes.data.map(item => item.date);
+      state.blockedDates = Array.from(new Set([...state.blockedDates, ...remoteDates]));
+      renderCalendar();
+      updateAdminBlockedDatesView();
+    }
+
+    // 2. Fetch Active Holds from Supabase
+    const holdsRes = await fetchBookingHolds();
+    if (holdsRes.success && Array.isArray(holdsRes.data) && holdsRes.data.length > 0) {
+      state.holds = holdsRes.data;
+      saveHoldsToStorage();
+      holdsRes.data.forEach(h => {
+        if (h.dateIso && !state.fillingDates.includes(h.dateIso)) {
+          state.fillingDates.push(h.dateIso);
+        }
+      });
+      renderCalendar();
+      updateAdminView();
+    }
+
+    // 3. Fetch Voyage Charter Briefs from Supabase
+    const briefsRes = await fetchVoyageBriefs();
+    if (briefsRes.success && Array.isArray(briefsRes.data)) {
+      state.voyageBriefs = briefsRes.data;
+      updateAdminBriefsView();
+    }
+
+    // 4. Fetch Dynamic Gallery Images from Supabase & Local Cache
+    let allGallery = [];
+    try {
+      const cached = JSON.parse(localStorage.getItem('black_pearl_gallery') || '[]');
+      if (Array.isArray(cached)) allGallery.push(...cached);
+    } catch (_) {}
+
+    const galleryRes = await fetchGalleryImages();
+    if (galleryRes.success && Array.isArray(galleryRes.data) && galleryRes.data.length > 0) {
+      allGallery.push(...galleryRes.data);
+    }
+
+    if (allGallery.length > 0) {
+      state.galleryImages = allGallery;
+      renderDynamicGalleryImages(allGallery);
+      updateAdminMediaView();
+    }
+  } catch (err) {
+    console.error('Error during Supabase synchronization:', err);
+  }
+}
+
+/* ========================================================
+   IMAGEKIT REAL-TIME CDN OPTIMIZATION & TRANSFORMATION
+   ======================================================== */
+function initImageKitOptimization() {
+  if (!isImageKitConfigured()) {
+    return;
+  }
+
+  console.log('[ImageKit] Active CDN detected. Optimizing site media...');
+
+  // Optimize static images with ImageKit CDN with fail-safe local fallback
+  const imgElements = document.querySelectorAll('img[src^="/assets/images/"], img[src^="assets/images/"]');
+  imgElements.forEach(img => {
+    const rawSrc = img.getAttribute('src');
+    if (!rawSrc) return;
+
+    // Attach immediate onerror handler so if ImageKit returns 404, the local image is displayed seamlessly
+    img.onerror = function() {
+      this.onerror = null; // Prevent loop
+      console.warn(`[ImageKit] Asset not found in ImageKit media library yet. Loading local: ${rawSrc}`);
+      this.src = rawSrc;
+    };
+
+    const optimized = getImageKitUrl(rawSrc, { quality: 80, format: 'auto' });
+    if (optimized && optimized !== rawSrc) {
+      img.src = optimized;
+    }
+  });
+
+  // Optimize hero video poster
+  const heroVideo = document.getElementById('heroBgVideo');
+  if (heroVideo) {
+    const poster = heroVideo.getAttribute('poster');
+    if (poster && poster.includes('assets/images/')) {
+      const origPoster = poster;
+      const imgTest = new Image();
+      imgTest.onerror = () => {
+        heroVideo.poster = origPoster;
+      };
+      const optPoster = getImageKitUrl(poster, { width: 1400, quality: 75, format: 'auto' });
+      imgTest.onload = () => {
+        heroVideo.poster = optPoster;
+      };
+      imgTest.src = optPoster;
+    }
+  }
+}
+
+/* ========================================================
+   DYNAMIC GALLERY RENDERER (SUPABASE + IMAGEKIT)
+   ======================================================== */
+function renderDynamicGalleryImages(images) {
+  const galleryGrid = document.querySelector('.gallery-grid');
+  if (!Array.isArray(images) || images.length === 0) return;
+
+  images.forEach(img => {
+    const rawUrl = img.imagekit_url || img.imagekitUrl || img.url || img.thumbnailUrl;
+    if (!rawUrl) return;
+
+    const displayUrl = rawUrl.startsWith('data:') ? rawUrl : getImageKitUrl(rawUrl, { width: 800, quality: 80, format: 'auto' });
+    const thumbUrl = rawUrl.startsWith('data:') ? rawUrl : getImageKitUrl(rawUrl, { width: 400, quality: 75, format: 'auto' });
+
+    if (galleryGrid) {
+      const existing = galleryGrid.querySelector(`[data-img-id="${img.id || img.file_id || img.fileId}"]`);
+      if (!existing) {
+        const item = document.createElement('div');
+        item.className = 'gallery-item span-sq';
+        if (img.id || img.file_id || img.fileId) item.setAttribute('data-img-id', img.id || img.file_id || img.fileId);
+        item.setAttribute('data-src', displayUrl);
+        item.setAttribute('data-title', img.title);
+        item.setAttribute('data-subtitle', img.subtitle || 'Private celebration on Lady Alice');
+        item.innerHTML = `
+          <img src="${thumbUrl}" alt="${img.title}" loading="lazy">
+          <div class="gallery-overlay">
+            <span class="overlay-tag">Celebration · ${img.category || 'Special'}</span>
+            <h4 class="overlay-title">${img.title}</h4>
+            <p class="overlay-desc">${img.subtitle || 'Private charter on Lady Alice'}</p>
+            <span class="expand-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
+            </span>
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          const overlay = document.getElementById('lightboxOverlay');
+          const lightboxImg = document.getElementById('lightboxImg');
+          const title = document.getElementById('lightboxTitle');
+          const subtitle = document.getElementById('lightboxSubtitle');
+          if (overlay && lightboxImg) {
+            lightboxImg.src = displayUrl;
+            if (title) title.textContent = img.title;
+            if (subtitle) subtitle.textContent = img.subtitle || '';
+            overlay.classList.add('active');
+          }
+        });
+        galleryGrid.prepend(item);
+      }
+    }
+  });
+}
+
 
