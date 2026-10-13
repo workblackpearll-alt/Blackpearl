@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reserve Date | Black Pearl · Lady Alice Luxury Yacht Mumbai</title>
+  <meta name="description" content="Reserve your private luxury charter on Lady Alice at Gateway of India, Mumbai. One private booking at a time. Lock your date with a ₹5,000 deposit via Razorpay.">
+  <meta name="theme-color" content="#050506">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/black-pearl-mark.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Italiana&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/index.css">
+  <style>
+    /* Dedicated Booking Page Layout Styles */
+    body.booking-page-body {
+      background-color: var(--black);
+      color: var(--pearl);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .booking-site-header {
+      background: rgba(9, 10, 13, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--rail);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .booking-nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+    }
+
+    .brand-sub-badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      border-left: 1px solid var(--rail);
+      padding-left: 14px;
+      display: inline-block;
+    }
+
+    .booking-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-back-home {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--mist);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+      padding: 8px 14px;
+      border: 1px solid var(--rail);
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-back-home:hover {
+      color: var(--pearl);
+      border-color: rgba(201, 169, 104, 0.4);
+      background: rgba(201, 169, 104, 0.06);
+    }
+
+    .booking-main-content {
+      flex: 1;
+      padding: 40px 0 80px;
+    }
+
+    .booking-page-hero {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .booking-eyebrow {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .booking-page-title {
+      font-family: var(--font-name);
+      font-size: 38px;
+      color: var(--pearl);
+      margin-bottom: 10px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    .booking-page-sub {
+      font-size: 15px;
+      color: var(--mist);
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* 2-Column Split: Form on Left, Sticky Summary on Right */
+    .booking-layout-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .booking-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+    }
+
+    /* Section Cards */
+    .booking-card {
+      background: var(--deck);
+      border: 1px solid var(--rail);
+      border-radius: 14px;
+      padding: 26px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .booking-card-title {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      color: var(--pearl);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(201, 169, 104, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 13px;
+      font-family: var(--font-body);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .booking-card-desc {
+      font-size: 13px;
+      color: var(--mist);
+      margin-bottom: 20px;
+    }
+
+    /* Private Event Featured Banner Option */
+    .private-event-featured {
+      background: linear-gradient(135deg, rgba(201, 169, 104, 0.14) 0%, rgba(14, 15, 18, 0.9) 100%);
+      border: 1.5px solid var(--gold);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .private-event-featured:hover {
+      box-shadow: 0 0 20px rgba(201, 169, 104, 0.25);
+    }
+
+    .private-event-featured input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .private-event-featured.active,
+    .private-event-featured:has(input:checked) {
+      background: linear-gradient(135deg, rgba(201, 169, 104, 0.22) 0%, rgba(14, 15, 18, 0.95) 100%);
+      box-shadow: 0 0 24px rgba(201, 169, 104, 0.3);
+    }
+
+    .private-featured-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .private-star-icon {
+      font-size: 22px;
+      color: var(--gold);
+    }
+
+    .private-featured-title {
+      font-family: var(--font-heading);
+      font-size: 19px;
+      color: var(--pearl);
+      font-weight: 600;
+    }
+
+    .private-featured-sub {
+      font-size: 12px;
+      color: var(--mist);
+    }
+
+    .private-featured-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--gold);
+      color: var(--black);
+      border-radius: 9999px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .custom-private-input-wrap {
+      margin-top: 14px;
+      display: none;
+      animation: stepFadeIn 0.3s ease;
+    }
+
+    .custom-private-input-wrap.active {
+      display: block;
+    }
+
+    /* Event Choices Grid */
+    .events-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .events-picker-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .event-choice-label {
+      position: relative;
+      cursor: pointer;
+      display: block;
+    }
+
+    .event-choice-label input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .event-choice-pill {
+      background: rgba(5, 5, 6, 0.7);
+      border: 1px solid var(--rail);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all var(--transition-fast);
+    }
+
+    .event-choice-label:hover .event-choice-pill {
+      border-color: rgba(201, 169, 104, 0.4);
+    }
+
+    .event-choice-label input:checked + .event-choice-pill {
+      border-color: var(--gold);
+      background: rgba(201, 169, 104, 0.12);
+      box-shadow: 0 0 14px rgba(201, 169, 104, 0.15);
+    }
+
+    .event-choice-name {
+      font-size: 14px;
+      color: var(--pearl);
+      font-weight: 500;
+    }
+
+    .event-choice-price {
+      font-size: 12px;
+      color: var(--gold);
+    }
+
+    /* Sticky Summary Column */
+    .booking-summary-sticky {
+      position: sticky;
+      top: 90px;
+    }
+
+    .summary-card {
+      background: var(--deck);
+      border: 1px solid rgba(201, 169, 104, 0.4);
+      border-radius: 14px;
+      padding: 26px 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(201, 169, 104, 0.08);
+    }
+
+    .summary-card-header {
+      border-bottom: 1px solid var(--rail);
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .summary-card-title {
+      font-family: var(--font-name);
+      font-size: 19px;
+      color: var(--pearl);
+      letter-spacing: 0.06em;
+    }
+
+    .summary-card-subtitle {
+      font-size: 12px;
+      color: var(--mist);
+    }
+
+    .summary-details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13.5px;
+    }
+
+    .summary-item-label {
+      color: var(--mist);
+    }
+
+    .summary-item-value {
+      color: var(--pearl);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .summary-divider-line {
+      height: 1px;
+      background: var(--rail);
+      margin: 12px 0;
+    }
+
+    .summary-quote-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+    }
+
+    .quote-total-val {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      color: var(--pearl);
+      font-weight: 600;
+    }
+
+    .deposit-highlight-row {
+      background: rgba(201, 169, 104, 0.12);
+      border: 1px solid rgba(201, 169, 104, 0.35);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0 18px;
+    }
+
+    .deposit-highlight-label {
+      font-size: 13px;
+      color: var(--pearl);
+      font-weight: 600;
+    }
+
+    .deposit-highlight-amount {
+      font-family: var(--font-heading);
+      font-size: 26px;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .deposit-explanation-text {
+      font-size: 11.5px;
+      color: var(--smoke);
+      line-height: 1.45;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn-pay-lock {
+      width: 100%;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* Confirmation Modal / Screen */
+    .confirmation-view {
+      display: none;
+      background: var(--deck);
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 620px;
+      margin: 30px auto;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(201, 169, 104, 0.2);
+      animation: stepFadeIn 0.35s ease;
+    }
+
+    .confirmation-view.active {
+      display: block;
+    }
+
+    .booking-flow-container.confirmed .booking-layout-grid,
+    .booking-flow-container.confirmed .booking-page-hero {
+      display: none;
+    }
+  </style>
+</head>
+<body class="booking-page-body">
+
+  <!-- ======================================================== -->
+  <!-- HEADER & NAVIGATION                                      -->
+  <!-- ======================================================== -->
+  <header class="booking-site-header">
+    <div class="booking-nav-container">
+      <a href="/" class="brand-group" aria-label="Black Pearl Home">
+        <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" width="190" height="36">
+        <span class="brand-sub-badge">Date Lock</span>
+      </a>
+
+      <div class="booking-header-actions">
+        <a href="/" class="btn-back-home">
+          <span>← Back to Overview</span>
+        </a>
+        <a href="https://wa.me/919820000000?text=Hello%20Black%20Pearl,%20I%20am%20looking%20to%20reserve%20a%20date%20on%20Lady%20Alice." target="_blank" rel="noopener" class="contact-pill highlight" style="padding: 7px 14px; font-size: 12.5px;">
+          <span>WhatsApp Concierge</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN BOOKING PAGE CONTENT                                -->
+  <!-- ======================================================== -->
+  <main class="booking-main-content">
+    <div class="container booking-flow-container" id="bookingFlowContainer">
+      
+      <!-- HERO HEADING -->
+      <div class="booking-page-hero">
+        <span class="booking-eyebrow">ONE CELEBRATION AT A TIME · GATEWAY OF INDIA</span>
+        <h1 class="booking-page-title" id="pageHeroTitle">Reserve Your Private Charter</h1>
+        <p class="booking-page-sub">
+          Lock Lady Alice exclusively for your date with a ₹5,000 token deposit. Your personal concierge coordinates all bespoke details, route, and decor with you directly.
+        </p>
+      </div>
+
+      <!-- 2-COLUMN BOOKING WORKSPACE -->
+      <div class="booking-layout-grid" id="bookingLayoutGrid">
+        
+        <!-- LEFT COLUMN: STREAMLINED FORM -->
+        <div class="booking-form-col">
+          
+          <!-- STEP 1: EVENT / OCCASION SELECTION -->
+          <div class="booking-card">
+            <h2 class="booking-card-title">
+              <span class="card-step-num">1</span>
+              <span>Celebration & Event Type</span>
+            </h2>
+            <p class="booking-card-desc">Select your occasion or choose an exclusive private event charter.</p>
+
+            <!-- FEATURED: PRIVATE EVENT / BESPOKE BUYOUT -->
+            <label class="private-event-featured" id="privateEventFeaturedCard">
+              <input type="radio" name="bookingOccasion" value="Private Event">
+              <div class="private-featured-left">
+                <span class="private-star-icon">★</span>
+                <div>
+                  <div class="private-featured-title">Private Event / Custom Charter</div>
+                  <div class="private-featured-sub">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</div>
+                </div>
+              </div>
+              <span class="private-featured-badge">Bespoke</span>
+            </label>
+
+            <!-- Optional Custom Name for Private Event -->
+            <div class="custom-private-input-wrap" id="customPrivateInputWrap">
+              <div class="form-group">
+                <label for="customEventNameInput" class="form-label">Private Event Name / Concept (Optional)</label>
+                <input type="text" id="customEventNameInput" class="form-input" placeholder="e.g. Mehta Family Private Buyout, Sunset Cocktail Lounge, VIP Brand Offsite">
+              </div>
+            </div>
+
+            <!-- CURATED OCCASION CHOICES -->
+            <div class="events-picker-grid">
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Proposals" checked>
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Sunset Proposal</span>
+                  <span class="event-choice-price">from ₹45,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Coastal sailing cruises">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Coastal Sailing Cruise</span>
+                  <span class="event-choice-price">from ₹85,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Birthday parties">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Milestone Birthday</span>
+                  <span class="event-choice-price">from ₹75,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Engagements">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Ring Ceremony / Engagement</span>
+                  <span class="event-choice-price">from ₹90,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Anniversaries & private dinners">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Anniversary & Dinner</span>
+                  <span class="event-choice-price">from ₹55,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Private parties">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Cocktail & DJ Night</span>
+                  <span class="event-choice-price">from ₹75,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Corporate events">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Corporate Offsite</span>
+                  <span class="event-choice-price">from ₹75,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Bachelor & bachelorette nights">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Bachelorette Send-Off</span>
+                  <span class="event-choice-price">from ₹75,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Pre-wedding & photo shoots">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Pre-Wedding Shoot</span>
+                  <span class="event-choice-price">from ₹55,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Sunrise yoga and wellness">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Sunrise Yoga & Wellness</span>
+                  <span class="event-choice-price">from ₹40,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Festive nights">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Festive Night</span>
+                  <span class="event-choice-price">from ₹90,000</span>
+                </div>
+              </label>
+
+              <label class="event-choice-label">
+                <input type="radio" name="bookingOccasion" value="Family celebrations">
+                <div class="event-choice-pill">
+                  <span class="event-choice-name">Family Celebration</span>
+                  <span class="event-choice-price">from ₹75,000</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- STEP 2: NAVIGATION MODE & DURATION -->
+          <div class="booking-card">
+            <h2 class="booking-card-title">
+              <span class="card-step-num">2</span>
+              <span>Navigation Style & Duration</span>
+            </h2>
+            <p class="booking-card-desc">Choose whether Lady Alice stays anchored or sails active waters.</p>
+
+            <div class="voyage-mode-wrap">
+              <div class="voyage-mode-selector">
+                <label class="voyage-mode-option">
+                  <input type="radio" name="voyageMode" value="paused" checked>
+                  <div class="voyage-mode-card active" id="modeCardPaused">
+                    <div class="mode-card-header">
+                      <span class="mode-name">At Anchor (Paused)</span>
+                      <span class="mode-badge">Standard Rate</span>
+                    </div>
+                    <p class="mode-desc">Anchored peacefully off Gateway of India. Ideal for dinners, static celebrations & skyline photo backdrops.</p>
+                  </div>
+                </label>
+
+                <label class="voyage-mode-option">
+                  <input type="radio" name="voyageMode" value="sailing">
+                  <div class="voyage-mode-card" id="modeCardSailing">
+                    <div class="mode-card-header">
+                      <span class="mode-name">Active Sailing (Underway)</span>
+                      <span class="mode-badge highlight">+Sailing Fuel/Port</span>
+                    </div>
+                    <p class="mode-desc">Cruising across Mumbai Harbour, naval waterways, historic lighthouses & open Arabian Sea.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="duration-selector-wrap" style="margin-top: 18px;">
+              <label class="duration-option">
+                <input type="radio" name="voyageDuration" value="1">
+                <div class="duration-box">
+                  <span class="duration-hours">1 hour</span>
+                  <span class="duration-price" id="durationPrice1">₹45,000</span>
+                </div>
+              </label>
+
+              <label class="duration-option">
+                <input type="radio" name="voyageDuration" value="3" checked>
+                <div class="duration-box featured">
+                  <span class="duration-tag">Popular</span>
+                  <span class="duration-hours">3 hours</span>
+                  <span class="duration-price" id="durationPrice3">₹90,000</span>
+                </div>
+              </label>
+
+              <label class="duration-option">
+                <input type="radio" name="voyageDuration" value="6">
+                <div class="duration-box">
+                  <span class="duration-hours">6 hours</span>
+                  <span class="duration-price" id="durationPrice6">₹1,50,000</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- STEP 3: DATE & TIME SLOT -->
+          <div class="booking-card">
+            <h2 class="booking-card-title">
+              <span class="card-step-num">3</span>
+              <span>Select Date & Sailing Slot</span>
+            </h2>
+            <p class="booking-card-desc">Click any open date to view and select available time slots.</p>
+
+            <div class="calendar-wrapper">
+              <div class="calendar-month-header">
+                <button class="month-nav-btn" id="prevMonthBtn" aria-label="Previous month" type="button">‹</button>
+                <h3 class="current-month-label" id="currentMonthLabel">November 2026</h3>
+                <button class="month-nav-btn" id="nextMonthBtn" aria-label="Next month" type="button">›</button>
+              </div>
+
+              <!-- Legend -->
+              <div class="calendar-legend">
+                <span class="legend-item"><span class="legend-dot dot-free"></span> Open</span>
+                <span class="legend-item"><span class="legend-dot dot-filling"></span> Few Slots Left</span>
+                <span class="legend-item"><span class="legend-dot dot-booked"></span> Reserved</span>
+              </div>
+
+              <!-- Day Headers -->
+              <div class="calendar-days-row">
+                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+              </div>
+
+              <!-- Dynamic Days Grid -->
+              <div class="calendar-grid" id="calendarDaysGrid"></div>
+
+              <!-- Selected Date Banner -->
+              <div class="selected-date-status-box" id="selectedDateStatusBox">
+                <div class="status-date-info">
+                  <h4 id="statusDateTitle">Saturday, 14 November 2026</h4>
+                  <p id="statusDateSlotsCount">3 of 4 slots open</p>
+                </div>
+              </div>
+
+              <!-- Time Slot Choices -->
+              <div class="inline-slots-container">
+                <span class="slots-inline-title">Select Timing on this Date:</span>
+                <div class="slots-list" id="slotsList">
+                  <label class="slot-option-card">
+                    <input type="radio" name="sailingSlot" value="Sunrise" data-time="6:00 am">
+                    <div class="slot-content">
+                      <div class="slot-time-block">
+                        <span class="slot-name">Sunrise</span>
+                        <span class="slot-timing">from 6:00 am (Morning Mist)</span>
+                      </div>
+                      <span class="slot-status-pill free">Open</span>
+                    </div>
+                  </label>
+
+                  <label class="slot-option-card">
+                    <input type="radio" name="sailingSlot" value="Afternoon" data-time="12:00 pm">
+                    <div class="slot-content">
+                      <div class="slot-time-block">
+                        <span class="slot-name">Afternoon</span>
+                        <span class="slot-timing">from 12:00 pm (Lunch & Sun)</span>
+                      </div>
+                      <span class="slot-status-pill free">Open</span>
+                    </div>
+                  </label>
+
+                  <label class="slot-option-card">
+                    <input type="radio" name="sailingSlot" value="Sunset" data-time="4:30 pm" checked>
+                    <div class="slot-content">
+                      <div class="slot-time-block">
+                        <span class="slot-name">Sunset</span>
+                        <span class="slot-timing">from 4:30 pm (Golden Hour & Twilight)</span>
+                      </div>
+                      <span class="slot-status-pill selected">Selected</span>
+                    </div>
+                  </label>
+
+                  <label class="slot-option-card disabled">
+                    <input type="radio" name="sailingSlot" value="Evening" data-time="8:00 pm" disabled>
+                    <div class="slot-content">
+                      <div class="slot-time-block">
+                        <span class="slot-name">Evening</span>
+                        <span class="slot-timing">from 8:00 pm (City Lights & Dinner)</span>
+                      </div>
+                      <span class="slot-status-pill booked">Reserved</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4: GUEST DETAILS (ONLY NECESSARY FIELDS) -->
+          <div class="booking-card">
+            <h2 class="booking-card-title">
+              <span class="card-step-num">4</span>
+              <span>Guest Details</span>
+            </h2>
+            <p class="booking-card-desc">Your contact details for receipt and concierge planning call.</p>
+
+            <form id="bookPageForm" class="guest-form" onsubmit="return false;">
+              <div class="form-grid-row">
+                <div class="form-group">
+                  <label for="bookGuestName" class="form-label">Full Name *</label>
+                  <input type="text" id="bookGuestName" class="form-input" placeholder="e.g. Arjun Mehta" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="bookGuestPhone" class="form-label">WhatsApp Mobile Number *</label>
+                  <input type="tel" id="bookGuestPhone" class="form-input" placeholder="+91 98200 00000" required>
+                </div>
+              </div>
+
+              <div class="form-grid-row">
+                <div class="form-group">
+                  <label for="bookGuestEmail" class="form-label">Email Address (for official receipt) *</label>
+                  <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="bookGuestCount" class="form-label">Expected Number of Guests (1–100) *</label>
+                  <input type="number" id="bookGuestCount" class="form-input" min="1" max="100" value="2" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="bookGuestNotes" class="form-label">Special Requests / Surprise Notes (Optional)</label>
+                <textarea id="bookGuestNotes" class="form-textarea" rows="2" placeholder="e.g. Surprise celebration, specific music, champagne or cake requirement..."></textarea>
+              </div>
+
+              <div class="form-error-msg" id="formErrorMsg"></div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: STICKY RESERVATION SUMMARY & RAZORPAY PAYMENT -->
+        <div class="booking-summary-col">
+          <div class="booking-summary-sticky">
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <h3 class="summary-card-title">Lady Alice · Summary</h3>
+                <span class="summary-card-subtitle">Apollo Bandar, Gateway of India</span>
+              </div>
+
+              <div class="summary-details-list">
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Celebration</span>
+                  <span class="summary-item-value" id="sideSummaryOccasion">Sunset Proposal</span>
+                </div>
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Charter Date</span>
+                  <span class="summary-item-value" id="sideSummaryDate">Sat, 14 Nov 2026</span>
+                </div>
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Time & Slot</span>
+                  <span class="summary-item-value" id="sideSummarySlot">Sunset (4:30 pm)</span>
+                </div>
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Duration</span>
+                  <span class="summary-item-value" id="sideSummaryDuration">3 hours</span>
+                </div>
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Navigation Style</span>
+                  <span class="summary-item-value" id="sideSummaryMode">At Anchor (Paused)</span>
+                </div>
+                <div class="summary-item-row">
+                  <span class="summary-item-label">Expected Capacity</span>
+                  <span class="summary-item-value" id="sideSummaryGuests">2 guests</span>
+                </div>
+
+                <div class="summary-divider-line"></div>
+
+                <div class="summary-quote-row">
+                  <span class="summary-item-label">Estimated Charter Quote</span>
+                  <span class="quote-total-val" id="sideSummaryQuoteTotal">₹90,000</span>
+                </div>
+              </div>
+
+              <!-- DEPOSIT HIGHLIGHT -->
+              <div class="deposit-highlight-row">
+                <span class="deposit-highlight-label">Payable Today to Lock Date</span>
+                <span class="deposit-highlight-amount">₹5,000</span>
+              </div>
+
+              <p class="deposit-explanation-text">
+                Your ₹5,000 deposit locks Lady Alice exclusively for your date. The remaining charter balance is finalized with your dedicated concierge.
+              </p>
+
+              <!-- RAZORPAY TRUST BOX -->
+              <div class="razorpay-secure-box" style="margin-bottom: 18px; padding: 14px 16px;">
+                <div class="razorpay-header-row" style="margin-bottom: 6px; padding-bottom: 6px;">
+                  <div class="razorpay-logo-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="shield-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span class="rzp-badge-text">Powered by <strong>Razorpay</strong></span>
+                  </div>
+                  <span class="rzp-ssl-tag">100% Encrypted</span>
+                </div>
+                <p class="rzp-methods-desc" style="font-size: 11.5px; margin: 0;">
+                  Supports <strong>UPI (GPay, PhonePe, Paytm, QR)</strong>, <strong>Credit/Debit Cards</strong> & <strong>Net Banking</strong>.
+                </p>
+              </div>
+
+              <!-- ACTION BUTTON -->
+              <button class="btn-gold btn-pay-lock" id="btnPagePay5000">
+                <span id="btnPagePayText">Pay ₹5,000 via Razorpay to Lock Date</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- STEP 5: CONFIRMATION & RECEIPT VIEW (APPEARS AFTER PAY)   -->
+      <!-- ======================================================== -->
+      <div class="confirmation-view" id="bookingConfirmationView">
+        <div class="confirmation-success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <div class="step-title-group text-center">
+          <h2 class="step-main-title" style="font-size: 32px;">Your Date is Locked.</h2>
+          <p class="confirmation-ref-code" id="confirmedRefCode">Booking BP-1411-027</p>
+        </div>
+
+        <!-- Receipt Card -->
+        <div class="receipt-card" style="text-align: left; margin: 24px 0;">
+          <div class="receipt-row">
+            <span class="r-label">Celebration</span>
+            <span class="r-val" id="recOccasion">Sunset Proposal</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Charter Date</span>
+            <span class="r-val" id="recDate">Sat, 14 Nov 2026</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Slot & Duration</span>
+            <span class="r-val" id="recSlot">Sunset (4:30 pm) · 3 hours</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Navigation Style</span>
+            <span class="r-val" id="recMode">At Anchor (Paused)</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Guest Contact</span>
+            <span class="r-val" id="recGuest">Arjun Mehta</span>
+          </div>
+          <div class="receipt-row">
+            <span class="r-label">Razorpay Reference</span>
+            <span class="r-val font-mono" id="recPaymentId">pay_verified</span>
+          </div>
+          <div class="receipt-row paid-row">
+            <span class="r-label">Deposit Paid</span>
+            <span class="r-val paid-badge">₹5,000 (Secured via Razorpay)</span>
+          </div>
+        </div>
+
+        <div class="call-promise-box">
+          <p class="call-promise-text">
+            Our lead concierge will call you on <strong id="recPhone">+91 98200 00000</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
+          </p>
+        </div>
+
+        <div class="confirmation-action-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn-outline btn-block" id="btnRecAddToCal" type="button">
+            Add to my calendar (.ics)
+          </button>
+          <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-gold btn-block" id="btnRecChatWa">
+            Chat with Concierge on WhatsApp
+          </a>
+          <a href="/" class="btn-text-subtle" style="margin-top: 8px;">
+            Return to Homepage
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script type="module" src="/book/book.js"></script>
+</body>
+</html>

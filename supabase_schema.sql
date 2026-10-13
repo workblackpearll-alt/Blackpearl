@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS public.holds (
     guests INTEGER NOT NULL DEFAULT 2,
     price TEXT NOT NULL,
     paid_token TEXT NOT NULL DEFAULT '₹5,000',
-    payment_method TEXT DEFAULT 'upi',
+    payment_method TEXT DEFAULT 'razorpay',
+    payment_id TEXT,
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
@@ -30,6 +31,9 @@ CREATE TABLE IF NOT EXISTS public.holds (
     status TEXT NOT NULL DEFAULT 'Held (Deposit Paid)',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+-- Ensure payment_id column exists if table was already created
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS payment_id TEXT;
 
 -- Index for speedy calendar availability lookups
 CREATE INDEX IF NOT EXISTS idx_holds_date_iso ON public.holds(date_iso);
@@ -84,7 +88,7 @@ ALTER TABLE public.voyage_briefs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blocked_dates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_images ENABLE ROW LEVEL SECURITY;
 
--- Holds: Allow public (anon) users to create booking holds and read holds
+-- Holds: Allow public (anon) users to create booking holds, read holds, and update status
 DROP POLICY IF EXISTS "Public can create holds" ON public.holds;
 CREATE POLICY "Public can create holds"
 ON public.holds FOR INSERT
@@ -97,7 +101,14 @@ ON public.holds FOR SELECT
 TO anon, authenticated
 USING (true);
 
--- Voyage Briefs: Allow public to submit briefs and view
+DROP POLICY IF EXISTS "Public can update holds" ON public.holds;
+CREATE POLICY "Public can update holds"
+ON public.holds FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
+-- Voyage Briefs: Allow public to submit briefs, view, and update status
 DROP POLICY IF EXISTS "Public can submit voyage briefs" ON public.voyage_briefs;
 CREATE POLICY "Public can submit voyage briefs"
 ON public.voyage_briefs FOR INSERT
@@ -109,6 +120,13 @@ CREATE POLICY "Public can view voyage briefs"
 ON public.voyage_briefs FOR SELECT
 TO anon, authenticated
 USING (true);
+
+DROP POLICY IF EXISTS "Public can update voyage briefs" ON public.voyage_briefs;
+CREATE POLICY "Public can update voyage briefs"
+ON public.voyage_briefs FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
 
 -- Blocked Dates: Allow public to view blocked dates and crew to add
 DROP POLICY IF EXISTS "Public can view blocked dates" ON public.blocked_dates;
