@@ -65,7 +65,8 @@ export async function saveBookingHold(hold) {
     guests: parseInt(hold.guests, 10) || 1,
     price: hold.price,
     paid_token: hold.paidToken || hold.paid_token || '₹5,000',
-    payment_method: hold.paymentMethod || hold.payment_method || 'upi',
+    payment_method: hold.paymentMethod || hold.payment_method || 'razorpay',
+    payment_id: hold.paymentId || hold.payment_id || null,
     name: hold.name,
     phone: hold.phone,
     email: hold.email,
@@ -86,7 +87,7 @@ export async function saveBookingHold(hold) {
       return { success: true, data: data[0], source: 'supabase' };
     } catch (err) {
       console.error('[Supabase] Exception saving hold:', err);
-      return { success: false, error: err, data: payload, source: 'supabase-exception' };
+      return { success: false, error, err, data: payload, source: 'supabase-exception' };
     }
   }
 
@@ -122,6 +123,7 @@ export async function fetchBookingHolds() {
         price: item.price,
         paidToken: item.paid_token,
         paymentMethod: item.payment_method,
+        paymentId: item.payment_id,
         name: item.name,
         phone: item.phone,
         email: item.email,

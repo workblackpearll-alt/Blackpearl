@@ -1166,6 +1166,11 @@ function openBookingDetailModal(booking) {
         <label>Deposit Paid</label>
         <div>${booking.paidToken || '—'}${booking.paymentMethod ? ` (${booking.paymentMethod})` : ''}</div>
       </div>
+      ${booking.paymentId ? `
+      <div class="detail-field">
+        <label>Razorpay Payment ID</label>
+        <div><code style="color: var(--bp-gold); font-size: 0.82rem; background: rgba(201,169,104,0.1); padding: 2px 6px; border-radius: 4px;">${booking.paymentId}</code></div>
+      </div>` : ''}
       <div class="detail-field">
         <label>Current Status</label>
         <div><span class="status-select-pill status-confirmed">${booking.status || 'Held'}</span></div>

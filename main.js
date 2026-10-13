@@ -422,193 +422,33 @@ function initFaqAccordion() {
    5-STEP BOOKING ENGINE
    ======================================================== */
 function initBookingEngine() {
-  const modal = document.getElementById('bookingModal');
-  const closeBtn = document.getElementById('modalCloseBtn');
   const openBtns = [
     document.getElementById('openBookingBtn'),
     document.getElementById('heroCheckDatesBtn'),
     document.getElementById('workflowCheckDatesBtn'),
     document.getElementById('footerBookBtn'),
-    document.getElementById('mobileStickyBookBtn')
+    document.getElementById('mobileStickyBookBtn'),
+    document.getElementById('planningHoldBtn')
   ];
 
   openBtns.forEach(btn => {
     if (btn) {
-      btn.addEventListener('click', () => {
-        const occ = btn.getAttribute('data-occasion') || 'Proposals';
+      btn.addEventListener('click', (e) => {
+        const occ = btn.getAttribute('data-occasion') || 'General';
         openBookingModal(occ);
       });
     }
   });
-
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeBookingModal);
-  }
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeBookingModal();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-      closeBookingModal();
-    }
-  });
-
-  // Step 1: Occasion selection change
-  document.querySelectorAll('input[name="bookingOccasion"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      state.selectedOccasion = radio.value;
-      state.occasionBasePrice = baseOccasionPrices[radio.value] || 75000;
-      updatePriceCalculations();
-      updateStepLabels();
-    });
-  });
-
-  // Step Navigation Buttons (Next / Back)
-  document.querySelectorAll('.btn-step-next').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const nextStep = parseInt(btn.getAttribute('data-to'), 10);
-      goToStep(nextStep);
-    });
-  });
-
-  document.querySelectorAll('.btn-step-back').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const prevStep = parseInt(btn.getAttribute('data-to'), 10);
-      goToStep(prevStep);
-    });
-  });
-
-  // Step 2: Calendar month navigation
-  const prevMonthBtn = document.getElementById('prevMonthBtn');
-  const nextMonthBtn = document.getElementById('nextMonthBtn');
-  if (prevMonthBtn && nextMonthBtn) {
-    prevMonthBtn.addEventListener('click', () => {
-      state.currentMonth--;
-      if (state.currentMonth < 0) {
-        state.currentMonth = 11;
-        state.currentYear--;
-      }
-      renderCalendar();
-    });
-    nextMonthBtn.addEventListener('click', () => {
-      state.currentMonth++;
-      if (state.currentMonth > 11) {
-        state.currentMonth = 0;
-        state.currentYear++;
-      }
-      renderCalendar();
-    });
-  }
-
-  // Step 3: Voyage Mode (Paused vs Sailing)
-  document.querySelectorAll('input[name="voyageMode"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      state.voyageMode = radio.value;
-      document.querySelectorAll('.voyage-mode-card').forEach(c => c.classList.remove('active'));
-      const activeCard = radio.closest('.voyage-mode-option')?.querySelector('.voyage-mode-card');
-      if (activeCard) activeCard.classList.add('active');
-      updatePriceCalculations();
-    });
-  });
-
-  // Step 3: Duration & Slot Selection
-  document.querySelectorAll('input[name="voyageDuration"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      state.selectedDuration = parseInt(radio.value, 10);
-      updatePriceCalculations();
-    });
-  });
-
-  document.querySelectorAll('input[name="sailingSlot"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      state.selectedSlot = radio.value;
-      state.selectedSlotTime = radio.getAttribute('data-time');
-    });
-  });
-
-  // Step 4: Form Submit & Validation
-  const step4NextBtn = document.getElementById('step4NextBtn');
-  if (step4NextBtn) {
-    step4NextBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (validateGuestForm()) {
-        goToStep(5);
-      }
-    });
-  }
-
-  // Step 5: Pay ₹5,000 Action
-  const btnPay5000 = document.getElementById('btnPay5000');
-  if (btnPay5000) {
-    btnPay5000.addEventListener('click', handlePayHoldDeposit);
-  }
-
-  // Step 6: Confirmation Actions
-  const btnAddToCal = document.getElementById('btnAddToCalendar');
-  if (btnAddToCal) {
-    btnAddToCal.addEventListener('click', generateICalendarFile);
-  }
-
-  const btnPrintReceipt = document.getElementById('btnPrintReceipt');
-  if (btnPrintReceipt) {
-    btnPrintReceipt.addEventListener('click', () => window.print());
-  }
-
-  renderCalendar();
-  updatePriceCalculations();
 }
 
 function openBookingModal(occasionName = 'Proposals') {
-  const modal = document.getElementById('bookingModal');
-  if (!modal) return;
-
-  // Set selected occasion radio if match exists
-  if (occasionName && occasionName !== 'General') {
-    const radio = document.querySelector(`input[name="bookingOccasion"][value="${occasionName}"]`);
-    if (radio) {
-      radio.checked = true;
-      state.selectedOccasion = occasionName;
-      state.occasionBasePrice = baseOccasionPrices[occasionName] || 75000;
-    }
-  }
-
-  // If Coastal sailing cruise is selected, pre-set voyageMode to sailing; else paused
-  if (occasionName === 'Coastal sailing cruises') {
-    state.voyageMode = 'sailing';
-  } else {
-    state.voyageMode = 'paused';
-  }
-
-  const modeRadio = document.querySelector(`input[name="voyageMode"][value="${state.voyageMode}"]`);
-  if (modeRadio) {
-    modeRadio.checked = true;
-    document.querySelectorAll('.voyage-mode-card').forEach(c => c.classList.remove('active'));
-    const parentCard = modeRadio.closest('.voyage-mode-option')?.querySelector('.voyage-mode-card');
-    if (parentCard) parentCard.classList.add('active');
-  }
-
-  updatePriceCalculations();
-  updateStepLabels();
-  goToStep(1);
-
-  modal.classList.add('active');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  // Track booking modal open
-  try {
-    trackPageView(`/book/${(occasionName || 'general').toLowerCase().replace(/\s+/g, '-')}`);
-  } catch (e) {}
+  const occ = occasionName && occasionName !== 'General' ? occasionName : '';
+  const targetUrl = occ ? `/book?occasion=${encodeURIComponent(occ)}` : '/book';
+  window.location.href = targetUrl;
 }
 
 function closeBookingModal() {
-  const modal = document.getElementById('bookingModal');
-  if (!modal) return;
-  modal.classList.remove('active');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
+  // Legacy stub for safety
 }
 
 function goToStep(stepNum) {
@@ -617,25 +457,31 @@ function goToStep(stepNum) {
   const stepText = document.getElementById('stepIndicatorText');
   const stops = document.querySelectorAll('.progress-stops .stop');
 
-  const positions = {
-    1: '0%',
-    2: '25%',
-    3: '50%',
-    4: '75%',
-    5: '100%',
-    6: '100%'
-  };
+  if (stepNum === 'confirmation' || stepNum === 3 || stepNum === 6) {
+    if (pearl) pearl.style.left = '100%';
+    if (stepText) stepText.textContent = 'Confirmed: Date Locked';
+    stops.forEach(stop => stop.classList.add('active'));
 
-  if (pearl && positions[stepNum]) {
-    pearl.style.left = positions[stepNum];
+    document.querySelectorAll('.booking-step').forEach(step => step.classList.remove('active'));
+    const confirmStep = document.getElementById('stepConfirmation');
+    if (confirmStep) confirmStep.classList.add('active');
+    return;
+  }
+
+  const num = parseInt(stepNum, 10) || 1;
+
+  if (pearl) {
+    pearl.style.left = num === 1 ? '0%' : '100%';
   }
 
   if (stepText) {
-    stepText.textContent = stepNum <= 5 ? `Step ${stepNum} of 5` : 'Date Confirmed';
+    stepText.textContent = num === 1
+      ? 'Step 1 of 2: Experience & Schedule'
+      : 'Step 2 of 2: Guest Details & Payment';
   }
 
   stops.forEach((stop, index) => {
-    if (index + 1 <= stepNum) {
+    if (index + 1 <= num) {
       stop.classList.add('active');
     } else {
       stop.classList.remove('active');
@@ -644,17 +490,12 @@ function goToStep(stepNum) {
 
   // Switch visible step panels
   document.querySelectorAll('.booking-step').forEach(step => step.classList.remove('active'));
+  const target = document.getElementById(`step${num}`);
+  if (target) target.classList.add('active');
 
-  if (stepNum === 6) {
-    document.getElementById('stepConfirmation').classList.add('active');
-  } else {
-    const target = document.getElementById(`step${stepNum}`);
-    if (target) target.classList.add('active');
-  }
-
-  // If entering Step 5, populate summary review
-  if (stepNum === 5) {
-    populateStep5Summary();
+  // If entering Step 2, populate summary review
+  if (num === 2) {
+    populateStep2Summary();
   }
 }
 
@@ -683,6 +524,15 @@ function updatePriceCalculations() {
   if (el1) el1.textContent = formatCurrency(p1);
   if (el3) el3.textContent = formatCurrency(p3);
   if (el6) el6.textContent = formatCurrency(p6);
+
+  // Update live pricing banner in Step 1
+  const activeAddon = isSailing ? (sailingSurcharges[state.selectedDuration] || 45000) : 0;
+  const calculatedTotal = Math.round(base * priceMultipliers[state.selectedDuration] + activeAddon);
+  const liveQuoteEl = document.getElementById('liveQuoteTotal');
+  if (liveQuoteEl) liveQuoteEl.textContent = formatCurrency(calculatedTotal);
+
+  const summaryRough = document.getElementById('summaryRoughPrice');
+  if (summaryRough) summaryRough.textContent = formatCurrency(calculatedTotal);
 }
 
 function formatCurrency(amount) {
@@ -792,47 +642,52 @@ function updateSelectedDateBanner(day, monthIdx, year, isFilling) {
 }
 
 /* ========================================================
-   GUEST DETAILS FORM VALIDATION (STEP 4)
+   GUEST DETAILS FORM VALIDATION (STEP 2)
    ======================================================== */
 function validateGuestForm() {
-  const name = document.getElementById('guestFullName').value.trim();
-  const phone = document.getElementById('guestPhone').value.trim();
-  const email = document.getElementById('guestEmail').value.trim();
-  const address = document.getElementById('guestAddress').value.trim();
-  const count = parseInt(document.getElementById('guestCount').value, 10);
-  const notes = document.getElementById('guestNotes').value.trim();
+  const nameEl = document.getElementById('guestFullName');
+  const phoneEl = document.getElementById('guestPhone');
+  const emailEl = document.getElementById('guestEmail');
+  const countEl = document.getElementById('guestCount');
+  const notesEl = document.getElementById('guestNotes');
   const errBox = document.getElementById('formErrorMsg');
 
+  const name = nameEl ? nameEl.value.trim() : '';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const count = countEl ? parseInt(countEl.value, 10) : 2;
+  const notes = notesEl ? notesEl.value.trim() : '';
+
   if (!name) {
-    showFormError('Please enter your full name so our team knows who to address.');
+    showFormError('Please enter your full name so our concierge knows who to address.');
+    if (nameEl) nameEl.focus();
     return false;
   }
-  if (!phone || phone.length < 9) {
-    showFormError('Please enter a valid WhatsApp mobile number for event planning.');
+  if (!phone || phone.replace(/\D/g, '').length < 9) {
+    showFormError('Please enter a valid WhatsApp mobile number for booking confirmation.');
+    if (phoneEl) phoneEl.focus();
     return false;
   }
   if (!email || !email.includes('@')) {
-    showFormError('Please enter a valid email address for your confirmation receipt.');
-    return false;
-  }
-  if (!address) {
-    showFormError('Please enter your city/neighborhood (e.g. Bandra, Mumbai).');
+    showFormError('Please enter a valid email address for your official receipt.');
+    if (emailEl) emailEl.focus();
     return false;
   }
   if (!count || count < 1 || count > 100) {
-    showFormError('Guest count must be between 1 and 100.');
+    showFormError('Guest count must be between 1 and 100 guests.');
+    if (countEl) countEl.focus();
     return false;
   }
 
-  errBox.style.display = 'none';
+  if (errBox) errBox.style.display = 'none';
 
   state.guestDetails = {
     fullName: name,
     phone,
     email,
-    address,
+    address: '',
     guestCount: count,
-    notes
+    notes: notes || 'None'
   };
 
   return true;
@@ -847,64 +702,146 @@ function showFormError(msg) {
 }
 
 /* ========================================================
-   STEP 5 SUMMARY & PAYMENT SIMULATION
+   STEP 2 SUMMARY & RAZORPAY PAYMENT ENGINE
    ======================================================== */
-function populateStep5Summary() {
+function populateStep2Summary() {
   const isSailing = state.voyageMode === 'sailing';
   const sailingAddon = isSailing ? (sailingSurcharges[state.selectedDuration] || 45000) : 0;
   const calculatedTotal = Math.round(state.occasionBasePrice * priceMultipliers[state.selectedDuration] + sailingAddon);
 
-  document.getElementById('summaryOccasion').textContent = state.selectedOccasion;
+  const occEl = document.getElementById('summaryOccasion');
+  if (occEl) occEl.textContent = state.selectedOccasion;
 
   const dateObj = new Date(state.selectedDate);
   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
   const mName = monthNames[dateObj.getMonth()].substring(0, 3);
-  document.getElementById('summaryDate').textContent = `${dayName}, ${dateObj.getDate()} ${mName} ${dateObj.getFullYear()}`;
+  const dateEl = document.getElementById('summaryDate');
+  if (dateEl) dateEl.textContent = `${dayName}, ${dateObj.getDate()} ${mName} ${dateObj.getFullYear()}`;
 
-  document.getElementById('summarySlot').textContent = `${state.selectedSlot}, ${state.selectedSlotTime}`;
-  document.getElementById('summaryDuration').textContent = `${state.selectedDuration} hours`;
+  const slotEl = document.getElementById('summarySlot');
+  if (slotEl) slotEl.textContent = `${state.selectedSlot}, ${state.selectedSlotTime}`;
+
+  const durEl = document.getElementById('summaryDuration');
+  if (durEl) durEl.textContent = `${state.selectedDuration} hours`;
 
   const modeEl = document.getElementById('summaryVoyageMode');
   if (modeEl) {
     modeEl.textContent = isSailing ? 'Active Sailing (Underway)' : 'Paused (At Anchor)';
   }
 
-  document.getElementById('summaryGuests').textContent = `${state.guestDetails.guestCount} guests`;
-  document.getElementById('summaryRoughPrice').textContent = formatCurrency(calculatedTotal);
+  const countInput = document.getElementById('guestCount');
+  const countVal = countInput ? countInput.value : (state.guestDetails.guestCount || 2);
+  const guestsEl = document.getElementById('summaryGuests');
+  if (guestsEl) guestsEl.textContent = `${countVal} guests`;
+
+  const roughEl = document.getElementById('summaryRoughPrice');
+  if (roughEl) roughEl.textContent = formatCurrency(calculatedTotal);
 }
 
-function handlePayHoldDeposit() {
+function handleRazorpayPayment() {
   const payBtn = document.getElementById('btnPay5000');
   const payText = document.getElementById('btnPayText');
+  const errBox = document.getElementById('formErrorMsg');
 
-  payBtn.disabled = true;
-  payText.textContent = 'Contacting payment gateway...';
+  if (!validateGuestForm()) {
+    return;
+  }
 
-  // Razorpay-style smooth processing animation
-  setTimeout(() => {
-    payText.textContent = 'Securing ₹5,000 hold...';
-  }, 900);
+  if (payBtn) payBtn.disabled = true;
+  if (payText) payText.textContent = 'Connecting to Razorpay...';
 
-  setTimeout(() => {
-    payText.textContent = 'Hold Confirmed!';
-    completeBookingAndCelebrate();
-    payBtn.disabled = false;
-    payText.textContent = 'Pay ₹5,000 to hold date';
-  }, 1900);
-}
+  // Read Razorpay Key from environment variables
+  const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-function completeBookingAndCelebrate() {
-  // Generate authentic booking code: BP-{DDMM}-{RANDOM}
+  // Generate authentic booking reference code: BP-{DDMM}-{RANDOM}
   const dateObj = new Date(state.selectedDate);
   const dd = String(dateObj.getDate()).padStart(2, '0');
   const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
   const randNum = String(Math.floor(10 + Math.random() * 90));
   const bookingCode = `BP-${dd}${mm}-${randNum}`;
 
+  // Check if Razorpay Checkout script is loaded and a configured key exists
+  const hasRealKey = rzpKey && rzpKey.trim().length > 0 && !rzpKey.includes('your_razorpay_key');
+
+  if (typeof window.Razorpay === 'function' && hasRealKey) {
+    try {
+      const options = {
+        key: rzpKey.trim(),
+        amount: 5000 * 100, // ₹5,000 in paise (500000)
+        currency: 'INR',
+        name: 'Black Pearl · Lady Alice',
+        description: `${state.selectedOccasion} - Date Lock Deposit (Ref: ${bookingCode})`,
+        image: '/assets/black-pearl-mark.svg',
+        prefill: {
+          name: state.guestDetails.fullName,
+          email: state.guestDetails.email,
+          contact: state.guestDetails.phone.replace(/[^0-9]/g, '').slice(-10)
+        },
+        notes: {
+          booking_code: bookingCode,
+          occasion: state.selectedOccasion,
+          charter_date: state.selectedDate,
+          slot: `${state.selectedSlot} (${state.selectedSlotTime})`,
+          duration: `${state.selectedDuration} hours`,
+          voyage_mode: state.voyageMode === 'sailing' ? 'Active Sailing' : 'Paused (At Anchor)',
+          guest_count: state.guestDetails.guestCount
+        },
+        theme: {
+          color: '#C9A968' // Black Pearl Champagne Gold
+        },
+        modal: {
+          ondismiss: function () {
+            console.log('[Razorpay] Checkout dismissed by guest.');
+            if (payBtn) payBtn.disabled = false;
+            if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
+          }
+        },
+        handler: function (response) {
+          console.log('[Razorpay] Payment successful! Payment ID:', response.razorpay_payment_id);
+          const paymentId = response.razorpay_payment_id || `pay_${Date.now()}`;
+          completeBookingAndCelebrate(bookingCode, paymentId);
+          if (payBtn) payBtn.disabled = false;
+          if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
+        }
+      };
+
+      const rzpInstance = new window.Razorpay(options);
+      rzpInstance.on('payment.failed', function (resp) {
+        console.error('[Razorpay] Payment failed:', resp.error);
+        if (errBox) {
+          errBox.textContent = `Payment failed: ${resp.error.description || 'Transaction was declined.'} Please try again.`;
+          errBox.style.display = 'block';
+        }
+        if (payBtn) payBtn.disabled = false;
+        if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
+      });
+
+      rzpInstance.open();
+      return;
+    } catch (err) {
+      console.warn('[Razorpay] Exception opening checkout, falling back to simulated payment:', err);
+    }
+  }
+
+  // Smooth fallback simulation when key is not yet configured or in test mode
+  console.info('[Razorpay] Test/Demo mode active. Simulating ₹5,000 hold deposit...');
+  setTimeout(() => {
+    if (payText) payText.textContent = 'Verifying ₹5,000 deposit...';
+  }, 600);
+
+  setTimeout(() => {
+    const mockPaymentId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    completeBookingAndCelebrate(bookingCode, mockPaymentId);
+    if (payBtn) payBtn.disabled = false;
+    if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
+  }, 1400);
+}
+
+function completeBookingAndCelebrate(bookingCode, paymentId = 'pay_verified') {
+  const dateObj = new Date(state.selectedDate);
   const isSailing = state.voyageMode === 'sailing';
   const sailingAddon = isSailing ? (sailingSurcharges[state.selectedDuration] || 45000) : 0;
   const calculatedTotal = Math.round(state.occasionBasePrice * priceMultipliers[state.selectedDuration] + sailingAddon);
-  const selectedPaymentMethod = document.querySelector('input[name="payMethod"]:checked')?.value || 'upi';
 
   const newHold = {
     id: bookingCode,
@@ -917,11 +854,12 @@ function completeBookingAndCelebrate() {
     guests: state.guestDetails.guestCount,
     price: formatCurrency(calculatedTotal),
     paidToken: '₹5,000',
-    paymentMethod: selectedPaymentMethod,
+    paymentMethod: 'razorpay',
+    paymentId: paymentId,
     name: state.guestDetails.fullName,
     phone: state.guestDetails.phone,
     email: state.guestDetails.email,
-    address: state.guestDetails.address || '',
+    address: '',
     notes: state.guestDetails.notes || 'None',
     status: 'Held (Deposit Paid)'
   };
@@ -945,24 +883,39 @@ function completeBookingAndCelebrate() {
     .catch(err => console.error('Error storing booking in Supabase:', err));
 
   // Populate Confirmation Screen
-  document.getElementById('confirmedBookingRef').textContent = `Booking ${bookingCode}`;
-  document.getElementById('rOccasion').textContent = newHold.occasion;
-  document.getElementById('rDate').textContent = newHold.date;
-  document.getElementById('rSlot').textContent = `${newHold.slot} · ${newHold.duration}`;
+  const refEl = document.getElementById('confirmedBookingRef');
+  if (refEl) refEl.textContent = `Booking ${bookingCode}`;
+
+  const rOcc = document.getElementById('rOccasion');
+  if (rOcc) rOcc.textContent = newHold.occasion;
+
+  const rDt = document.getElementById('rDate');
+  if (rDt) rDt.textContent = newHold.date;
+
+  const rSl = document.getElementById('rSlot');
+  if (rSl) rSl.textContent = `${newHold.slot} · ${newHold.duration}`;
+
   const rMode = document.getElementById('rVoyageMode');
   if (rMode) rMode.textContent = newHold.voyageMode;
-  document.getElementById('rGuest').textContent = newHold.name;
-  document.getElementById('rPhone').textContent = newHold.phone;
+
+  const rGst = document.getElementById('rGuest');
+  if (rGst) rGst.textContent = newHold.name;
+
+  const rPh = document.getElementById('rPhone');
+  if (rPh) rPh.textContent = newHold.phone;
+
+  const rPayId = document.getElementById('rPaymentId');
+  if (rPayId) rPayId.textContent = paymentId;
 
   // WhatsApp concierge prefilled link
   const waBtn = document.getElementById('btnChatWaConfirmation');
   if (waBtn) {
-    const waText = encodeURIComponent(`Hello Black Pearl team, I have just held date ${newHold.date} for our ${newHold.occasion} on Lady Alice. My booking code is ${bookingCode}. Please call me on ${newHold.phone} to plan the evening.`);
+    const waText = encodeURIComponent(`Hello Black Pearl team, I have just secured date ${newHold.date} for our ${newHold.occasion} on Lady Alice (Deposit ₹5,000 paid via Razorpay). My booking code is ${bookingCode} (Payment ID: ${paymentId}). Please call me on ${newHold.phone} to plan the evening.`);
     waBtn.href = `https://wa.me/919820000000?text=${waText}`;
   }
 
   // Go to confirmation step
-  goToStep(6);
+  goToStep('confirmation');
 
   // Trigger champagne gold & pearl confetti burst
   confetti({

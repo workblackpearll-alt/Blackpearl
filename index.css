@@ -3367,63 +3367,217 @@ a:hover {
   color: var(--gold);
 }
 
-.payment-methods-box {
-  background: rgba(5, 5, 6, 0.4);
-  border: 1px solid var(--rail);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
+.step-section-block {
+  margin-bottom: 24px;
 }
 
-.payment-methods-title {
-  font-size: 13px;
+.step-section-tag {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.inline-slots-container {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--rail);
+}
+
+.slots-inline-title {
+  display: block;
+  font-size: 12px;
   color: var(--mist);
-  display: block;
   margin-bottom: 10px;
+  font-weight: 500;
 }
 
-.pay-method-option {
-  display: block;
-  cursor: pointer;
-  margin-bottom: 8px;
-}
-
-.pay-method-option input {
-  position: absolute;
-  opacity: 0;
-}
-
-.pay-method-content {
-  background: rgba(14, 15, 18, 0.8);
-  border: 1px solid var(--rail);
-  border-radius: 8px;
-  padding: 10px 14px;
+.live-pricing-strip {
+  background: linear-gradient(135deg, rgba(201, 169, 104, 0.12) 0%, rgba(14, 15, 18, 0.95) 100%);
+  border: 1px solid rgba(201, 169, 104, 0.35);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all var(--transition-fast);
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.pay-method-option input:checked + .pay-method-content {
-  border-color: var(--gold);
-  background: rgba(201, 169, 104, 0.08);
+.pricing-strip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.method-name {
-  font-size: 14px;
+.strip-label {
+  font-size: 11px;
+  color: var(--mist);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.strip-total-quote {
+  font-family: var(--font-heading);
+  font-size: 24px;
   color: var(--pearl);
+  font-weight: 600;
 }
 
-.method-sub {
+.pricing-strip-deposit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.deposit-label {
   font-size: 12px;
+  color: var(--mist);
+}
+
+.deposit-amount {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.deposit-hint {
+  font-size: 11px;
   color: var(--smoke);
+}
+
+.charter-review-capsule {
+  background: rgba(5, 5, 6, 0.7);
+  border: 1px solid var(--rail);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+}
+
+.capsule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rail-subtle);
+}
+
+.capsule-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.btn-edit-capsule {
+  background: none;
+  border: none;
+  color: var(--mist);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  padding: 0;
+}
+
+.btn-edit-capsule:hover {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+.capsule-table {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.form-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 580px) {
+  .form-grid-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .pricing-strip-deposit {
+    align-items: flex-start;
+  }
+}
+
+.razorpay-secure-box {
+  background: rgba(14, 15, 18, 0.85);
+  border: 1px solid rgba(201, 169, 104, 0.3);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: inset 0 0 20px rgba(201, 169, 104, 0.04);
+}
+
+.razorpay-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rail);
+}
+
+.razorpay-logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold);
+}
+
+.razorpay-logo-badge .shield-icon {
+  stroke: var(--gold);
+}
+
+.rzp-badge-text {
+  font-size: 13.5px;
+  color: var(--pearl);
+  letter-spacing: 0.02em;
+}
+
+.rzp-ssl-tag {
+  font-size: 11px;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.1);
+  border: 1px solid rgba(82, 196, 26, 0.25);
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.rzp-methods-desc {
+  font-size: 12.5px;
+  color: var(--mist);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.font-mono {
+  font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
 }
 
 .hold-disclaimer {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--smoke);
   text-align: center;
-  margin-bottom: 22px;
+  margin-top: 10px;
 }
 
 /* Step 6: Confirmation Screen */

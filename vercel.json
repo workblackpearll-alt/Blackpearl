@@ -11,7 +11,15 @@
       "destination": "/admin/index.html"
     },
     {
-      "source": "/((?!assets/|admin/|.*\\..*).*)",
+      "source": "/book/:path*",
+      "destination": "/book/index.html"
+    },
+    {
+      "source": "/book",
+      "destination": "/book/index.html"
+    },
+    {
+      "source": "/((?!assets/|admin/|book/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
