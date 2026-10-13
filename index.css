@@ -248,27 +248,25 @@ a:hover {
   }
 }
 
-/* Buttons: Bespoke Luxury Design System */
+/* Buttons: Bespoke Luxury Sharp Rectangle Design System */
 .btn-gold {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: linear-gradient(180deg, #FAF7F2 0%, #EDE4D4 100%);
+  background: #FFFFFF;
   color: #0E0F12;
   font-family: var(--font-body);
-  font-weight: 550;
-  font-size: 14.5px;
-  letter-spacing: 0.03em;
-  padding: 13px 30px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  border-radius: 0 !important;
+  border: 1px solid #FFFFFF;
   cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.2), 
-    0 8px 24px -4px rgba(0, 0, 0, 0.45), 
-    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
@@ -276,20 +274,14 @@ a:hover {
 
 .btn-gold:hover {
   transform: translateY(-2px);
-  background: linear-gradient(180deg, #FFFFFF 0%, #F4ECE0 100%);
+  background: #C5A880;
   color: #0E0F12;
-  border-color: #FFFFFF;
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.25), 
-    0 12px 30px -4px rgba(0, 0, 0, 0.55), 
-    inset 0 1px 1px #FFFFFF;
+  border-color: #C5A880;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
 }
 
 .btn-gold:active {
   transform: translateY(0);
-  box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.3), 
-    inset 0 1px 1px rgba(255, 255, 255, 0.7);
 }
 
 .btn-outline {
@@ -297,31 +289,28 @@ a:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(18, 19, 26, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  color: var(--mist);
+  background: transparent;
+  color: #FFFFFF;
   font-family: var(--font-body);
-  font-weight: 450;
-  font-size: 14.5px;
-  letter-spacing: 0.025em;
-  padding: 13px 28px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-weight: 500;
+  font-size: 13.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 13px 26px;
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
   cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s ease;
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .btn-outline:hover {
-  background: rgba(30, 32, 44, 0.85);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #FFFFFF;
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.38);
 }
 
 .btn-outline:active {
@@ -351,7 +340,7 @@ a:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 14px 30px;
-  border-radius: 0;
+  border-radius: 0 !important;
   border: 1px solid rgba(255, 255, 255, 0.95);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -395,7 +384,7 @@ a:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 14px 30px;
-  border-radius: 0;
+  border-radius: 0 !important;
   border: 1px solid rgba(255, 255, 255, 0.45);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -424,7 +413,7 @@ a:hover {
 .arrow-glyph {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
+  border-radius: 0 !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -993,7 +982,7 @@ a:hover {
   font-size: 15px;
   font-weight: 400;
   padding: 8px 18px;
-  border-radius: 9999px;
+  border-radius: 0 !important;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -1051,7 +1040,7 @@ a:hover {
   color: var(--pearl);
   font-size: 12px;
   padding: 5px 12px;
-  border-radius: 9999px;
+  border-radius: 0 !important;
   border: 1px solid var(--rail);
   letter-spacing: 0.05em;
 }
@@ -1243,7 +1232,7 @@ a:hover {
   font-weight: 450;
   letter-spacing: 0.02em;
   padding: 9px 20px;
-  border-radius: 9999px;
+  border-radius: 0 !important;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
@@ -1279,7 +1268,7 @@ a:hover {
   padding: 0 6px;
   font-size: 11px;
   font-weight: 600;
-  border-radius: 9999px;
+  border-radius: 0 !important;
   background: rgba(255, 255, 255, 0.08);
   color: var(--mist);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1377,7 +1366,7 @@ a:hover {
   right: 16px;
   z-index: 3;
   padding: 5px 12px;
-  border-radius: 9999px;
+  border-radius: 0 !important;
   font-size: 11px;
   letter-spacing: 0.08em;
   font-weight: 500;
@@ -2388,7 +2377,7 @@ a:hover {
   gap: 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  border-radius: 0 !important;
   padding: 9px 18px;
   font-size: 13px;
   color: var(--pearl);
@@ -2448,115 +2437,311 @@ a:hover {
 }
 
 /* ========================================================
-   FOOTER
+/* ========================================================
+   FOOTER: ARCHITECTURAL LUXURY BESPOKE DESIGN
    ======================================================== */
 .site-footer {
-  background: var(--deck);
-  border-top: 1px solid var(--rail);
-  padding: 60px 0 30px;
+  background: #07080A;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  padding: 80px 0 0;
+  color: var(--mist, #A0A5B5);
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(197, 168, 128, 0.45) 50%, transparent 100%);
+  pointer-events: none;
 }
 
 .footer-content {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
-  gap: 40px;
-  margin-bottom: 40px;
+  grid-template-columns: 1.4fr 1fr 1fr 1.35fr;
+  gap: 48px;
+  margin-bottom: 56px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
 }
 
 .footer-logo {
-  height: 32px;
+  height: 34px;
   width: auto;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .footer-about {
   font-size: 14px;
-  color: var(--mist);
-  line-height: 1.6;
-  margin-bottom: 14px;
+  color: #9CA3AF;
+  line-height: 1.65;
+  margin-bottom: 18px;
+  font-weight: 300;
+}
+
+.footer-location-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #8E95A5;
+  margin-bottom: 18px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(197, 168, 128, 0.4);
+}
+
+.footer-location-meta strong {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .footer-tagline-motto {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: 16px;
-  color: var(--gold);
+  font-size: 15px;
+  color: var(--gold, #C5A880);
+  letter-spacing: 0.02em;
 }
 
 .footer-heading {
-  font-size: 20px;
-  color: var(--pearl);
-  margin-bottom: 18px;
+  font-family: var(--font-sans, var(--font-body));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-links-col ul {
   list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .footer-links-col a {
   font-size: 14px;
-  color: var(--mist);
-  transition: color var(--transition-fast);
+  color: #9CA3AF;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .footer-links-col a:hover {
-  color: var(--gold);
+  color: #FFFFFF;
+  transform: translateX(3px);
 }
 
-.footer-text-sm {
+/* Luxury Hold A Date Architectural Box */
+.footer-actions-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-reservation-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(197, 168, 128, 0.28);
+  padding: 24px;
+  position: relative;
+  border-radius: 0 !important;
+}
+
+.footer-card-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold, #C5A880);
+  margin-bottom: 6px;
+}
+
+.footer-card-title {
+  font-family: var(--font-heading, "Cormorant Garamond", serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.footer-card-desc {
   font-size: 13px;
-  color: var(--mist);
-  line-height: 1.5;
-  margin-bottom: 16px;
+  color: #9CA3AF;
+  line-height: 1.55;
+  margin-bottom: 18px;
+  font-weight: 300;
+}
+
+/* The sharp rectangular CTA button */
+.footer-cta-btn,
+.footer-actions-col .btn-gold,
+.footer-actions-col .btn-solid-white {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #FFFFFF;
+  color: #08090C;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  border: 1px solid #FFFFFF;
+  border-radius: 0 !important;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.footer-cta-btn:hover,
+.footer-actions-col .btn-gold:hover,
+.footer-actions-col .btn-solid-white:hover {
+  background: var(--gold, #C5A880);
+  border-color: var(--gold, #C5A880);
+  color: #08090C;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.footer-trust-notes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  color: #8E95A5;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-trust-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #C5A880);
 }
 
 .crew-portal-trigger-wrap {
-  margin-top: 18px;
+  margin-top: 16px;
 }
 
 .crew-portal-link {
-  background: rgba(5, 5, 6, 0.7);
-  border: 1px dashed var(--gold-deep);
-  color: var(--smoke);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(197, 168, 128, 0.25);
+  color: #8E95A5;
   font-family: var(--font-body);
-  font-size: 12px;
-  padding: 6px 14px;
-  border-radius: 9999px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 0 !important;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: all var(--transition-fast);
+  gap: 10px;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .crew-portal-link:hover {
-  border-color: var(--gold);
-  color: var(--gold);
+  border-color: var(--gold, #C5A880);
+  color: #FFFFFF;
+  background: rgba(197, 168, 128, 0.08);
 }
 
 .crew-badge {
-  background: var(--gold);
-  color: var(--black);
+  background: var(--gold, #C5A880);
+  color: #08090C;
   font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 9999px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 0 !important;
+  letter-spacing: 0.04em;
 }
 
 .footer-bottom-bar {
-  border-top: 1px solid var(--rail);
-  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(4, 4, 6, 0.6);
+  padding: 28px 0;
 }
 
 .footer-bottom-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  color: var(--smoke);
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12.5px;
+  color: #6B7280;
+}
+
+.footer-legal-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.footer-legal-links a {
+  color: #8E95A5;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-size: 12.5px;
+}
+
+.footer-legal-links a:hover {
+  color: #FFFFFF;
+}
+
+.footer-legal-divider {
+  width: 1px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 
@@ -5168,3 +5353,42 @@ a:hover {
     opacity: 1;
   }
 }
+
+/* ========================================================
+   GLOBAL MANDATE: ALL BUTTONS SHARP RECTANGLES
+   ======================================================== */
+button,
+input[type="button"],
+input[type="submit"],
+.btn,
+.btn-gold,
+.btn-outline,
+.btn-solid-white,
+.btn-line-white,
+.btn-pill-cta,
+.btn-pill-glass,
+.btn-pill-nav,
+.btn-book-event,
+.btn-brief-submit,
+.btn-pay-lock,
+.btn-back-home,
+.contact-pill,
+.filter-chip,
+.space-tab,
+.crew-portal-link,
+.card-action-btn,
+.event-card-badge,
+.filter-count,
+.crew-badge,
+.arrow-glyph,
+.mobile-wa-icon-btn,
+.mobile-sticky-book-btn,
+.btn-micro-badge,
+.modal-close-btn,
+.clean-btn-close,
+.clean-btn-prev,
+.clean-btn-next,
+.footer-cta-btn {
+  border-radius: 0 !important;
+}
+

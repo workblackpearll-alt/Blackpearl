@@ -451,7 +451,7 @@ function validateGuestForm() {
   const notes = notesEl ? notesEl.value.trim() : '';
 
   if (!name) {
-    showFormError('Please enter your full name so our concierge knows who to address.');
+    showFormError('Please enter your full name so our team knows who to address.');
     if (nameEl) nameEl.focus();
     return false;
   }
@@ -748,7 +748,7 @@ function renderConfirmationReceipt(hold) {
 
   if (waBtn) {
     const waText = encodeURIComponent(
-      `Hello Black Pearl Concierge, I have locked date ${hold.date} for our ${hold.occasion} on Lady Alice. ` +
+      `Hello Black Pearl Team, I have locked date ${hold.date} for our ${hold.occasion} on Lady Alice. ` +
       `Booking Ref: ${hold.id} (Deposit ₹5,000 paid via Razorpay, ID: ${hold.paymentId}). ` +
       `Please contact me on ${hold.phone} to coordinate details.`
     );

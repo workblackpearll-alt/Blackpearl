@@ -796,7 +796,7 @@ function renderInquiriesTable() {
     tr.className = 'inquiry-table-row';
 
     const cleanPhone = (brief.phone || '').replace(/\D/g, '');
-    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(brief.name || 'Sir')},%20this%20is%20Black%20Pearl%20concierge%20regarding%20your%20charter%20inquiry.` : '#';
+    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(brief.name || 'Sir')},%20this%20is%20Black%20Pearl%20regarding%20your%20charter%20inquiry.` : '#';
 
     tr.innerHTML = `
       <td class="font-mono text-muted">${formatDisplayDate(brief.created_at || new Date())}</td>
