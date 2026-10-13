@@ -3,9 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reserve Date | Black Pearl · Lady Alice Luxury Yacht Mumbai</title>
+  <title>Reserve Date & Private Charter | Black Pearl · Lady Alice Gateway of India</title>
   <meta name="description" content="Reserve your private luxury charter on Lady Alice at Gateway of India, Mumbai. One private booking at a time. Lock your date with a ₹5,000 deposit via Razorpay.">
+  <link rel="canonical" href="https://blackpearlmumbai.com/book">
   <meta name="theme-color" content="#050506">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Black Pearl Mumbai">
+  <meta property="og:url" content="https://blackpearlmumbai.com/book">
+  <meta property="og:title" content="Reserve Date & Private Charter | Black Pearl · Lady Alice">
+  <meta property="og:description" content="Lock Lady Alice exclusively for your date with a ₹5,000 token deposit via Razorpay.">
+  <meta property="og:image" content="https://blackpearlmumbai.com/assets/images/lady-alice-mumbai-night-skyline.jpg">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/black-pearl-mark.svg">
@@ -17,19 +26,24 @@
 
   <link rel="stylesheet" href="/index.css">
   <style>
-    /* Dedicated Booking Page Layout Styles */
+    /* ========================================================
+       BOOKING PAGE: ARCHITECTURAL MONOCHROME MINIMAL LUXURY
+       Pure Black, Crisp White, Hairline Grayscale, Understated Matte Accents
+       ======================================================== */
     body.booking-page-body {
-      background-color: var(--black);
-      color: var(--pearl);
+      background-color: #07080A;
+      color: #FFFFFF;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      font-family: var(--font-body, -apple-system, sans-serif);
+      -webkit-font-smoothing: antialiased;
     }
 
     .booking-site-header {
-      background: rgba(9, 10, 13, 0.95);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--rail);
+      background: rgba(7, 8, 10, 0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding: 16px 0;
       position: sticky;
       top: 0;
@@ -54,10 +68,11 @@
 
     .brand-sub-badge {
       font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--gold);
-      border-left: 1px solid var(--rail);
+      letter-spacing: 0.16em;
+      color: #9CA3AF;
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
       padding-left: 14px;
       display: inline-block;
     }
@@ -65,138 +80,173 @@
     .booking-header-actions {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     .btn-back-home {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 13px;
-      color: var(--mist);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #9CA3AF;
       text-decoration: none;
-      transition: color var(--transition-fast);
-      padding: 8px 14px;
-      border: 1px solid var(--rail);
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.03);
+      transition: all 0.2s ease;
+      padding: 9px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 0 !important;
+      background: rgba(255, 255, 255, 0.02);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
     .btn-back-home:hover {
-      color: var(--pearl);
-      border-color: rgba(201, 169, 104, 0.4);
-      background: rgba(201, 169, 104, 0.06);
+      color: #FFFFFF;
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .booking-header-actions .contact-pill {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 9px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 0 !important;
+      background: #FFFFFF;
+      color: #08090C !important;
+      transition: all 0.2s ease;
+    }
+
+    .booking-header-actions .contact-pill:hover {
+      background: #E5E7EB;
+      border-color: #E5E7EB;
+      color: #08090C !important;
+      transform: translateY(-1px);
     }
 
     .booking-main-content {
       flex: 1;
-      padding: 40px 0 80px;
+      padding: 48px 0 96px;
     }
 
     .booking-page-hero {
       text-align: center;
-      margin-bottom: 36px;
+      margin-bottom: 44px;
     }
 
     .booking-eyebrow {
-      font-size: 12px;
+      font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
-      color: var(--gold);
-      margin-bottom: 8px;
+      letter-spacing: 0.18em;
+      color: #9CA3AF;
+      margin-bottom: 12px;
       display: block;
     }
 
     .booking-page-title {
-      font-family: var(--font-name);
-      font-size: 38px;
-      color: var(--pearl);
-      margin-bottom: 10px;
-      font-weight: 400;
-      letter-spacing: 0.04em;
+      font-family: var(--font-heading, "Cormorant Garamond", serif);
+      font-size: clamp(32px, 4vw, 44px);
+      color: #FFFFFF;
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.15;
     }
 
     .booking-page-sub {
       font-size: 15px;
-      color: var(--mist);
-      max-width: 580px;
+      color: #9CA3AF;
+      max-width: 600px;
       margin: 0 auto;
-      line-height: 1.5;
+      line-height: 1.6;
+      font-weight: 300;
     }
 
     /* 2-Column Split: Form on Left, Sticky Summary on Right */
     .booking-layout-grid {
       display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 32px;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 36px;
       align-items: start;
     }
 
     @media (max-width: 960px) {
       .booking-layout-grid {
         grid-template-columns: 1fr;
-        gap: 28px;
+        gap: 32px;
       }
     }
 
-    /* Section Cards */
+    /* Architectural Minimal Cards */
     .booking-card {
-      background: var(--deck);
-      border: 1px solid var(--rail);
-      border-radius: 14px;
-      padding: 26px 28px;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      background: #0A0B0E;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 32px 30px;
+      margin-bottom: 28px;
+      box-shadow: none;
     }
 
     .booking-card-title {
-      font-family: var(--font-heading);
-      font-size: 22px;
-      color: var(--pearl);
+      font-family: var(--font-body, -apple-system, sans-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFFFFF;
       margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
     .card-step-num {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: rgba(201, 169, 104, 0.15);
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-size: 13px;
+      width: 22px;
+      height: 22px;
+      border-radius: 0 !important;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      font-size: 11px;
       font-family: var(--font-body);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0;
     }
 
     .booking-card-desc {
-      font-size: 13px;
-      color: var(--mist);
-      margin-bottom: 20px;
+      font-size: 13.5px;
+      color: #9CA3AF;
+      margin-bottom: 24px;
+      font-weight: 300;
+      line-height: 1.5;
     }
 
-    /* Private Event Featured Banner Option */
+    /* Private Event Featured Option: Crisp Architectural Card */
     .private-event-featured {
-      background: linear-gradient(135deg, rgba(201, 169, 104, 0.14) 0%, rgba(14, 15, 18, 0.9) 100%);
-      border: 1.5px solid var(--gold);
-      border-radius: 10px;
-      padding: 16px 18px;
-      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0 !important;
+      padding: 18px 20px;
+      margin-bottom: 18px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: all var(--transition-fast);
+      transition: all 0.2s ease;
       position: relative;
+      box-shadow: none;
     }
 
     .private-event-featured:hover {
-      box-shadow: 0 0 20px rgba(201, 169, 104, 0.25);
+      border-color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: none;
     }
 
     .private-event-featured input[type="radio"] {
@@ -206,47 +256,52 @@
 
     .private-event-featured.active,
     .private-event-featured:has(input:checked) {
-      background: linear-gradient(135deg, rgba(201, 169, 104, 0.22) 0%, rgba(14, 15, 18, 0.95) 100%);
-      box-shadow: 0 0 24px rgba(201, 169, 104, 0.3);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #FFFFFF;
+      box-shadow: none;
     }
 
     .private-featured-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .private-star-icon {
-      font-size: 22px;
-      color: var(--gold);
+      font-size: 18px;
+      color: #FFFFFF;
     }
 
     .private-featured-title {
-      font-family: var(--font-heading);
-      font-size: 19px;
-      color: var(--pearl);
+      font-family: var(--font-body);
+      font-size: 15.5px;
+      color: #FFFFFF;
       font-weight: 600;
+      letter-spacing: 0.02em;
     }
 
     .private-featured-sub {
-      font-size: 12px;
-      color: var(--mist);
+      font-size: 12.5px;
+      color: #9CA3AF;
+      font-weight: 300;
+      margin-top: 2px;
     }
 
     .private-featured-badge {
-      font-size: 11px;
-      padding: 4px 10px;
-      background: var(--gold);
-      color: var(--black);
-      border-radius: 9999px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      font-size: 10px;
+      padding: 4px 9px;
+      background: #FFFFFF;
+      color: #08090C;
+      border-radius: 0 !important;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .custom-private-input-wrap {
-      margin-top: 14px;
+      margin-top: 16px;
       display: none;
-      animation: stepFadeIn 0.3s ease;
+      animation: stepFadeIn 0.25s ease;
     }
 
     .custom-private-input-wrap.active {
@@ -279,67 +334,556 @@
     }
 
     .event-choice-pill {
-      background: rgba(5, 5, 6, 0.7);
-      border: 1px solid var(--rail);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 14px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      transition: all var(--transition-fast);
+      transition: all 0.2s ease;
     }
 
     .event-choice-label:hover .event-choice-pill {
-      border-color: rgba(201, 169, 104, 0.4);
+      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .event-choice-label input:checked + .event-choice-pill {
-      border-color: var(--gold);
-      background: rgba(201, 169, 104, 0.12);
-      box-shadow: 0 0 14px rgba(201, 169, 104, 0.15);
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
     }
 
     .event-choice-name {
-      font-size: 14px;
-      color: var(--pearl);
+      font-size: 13.5px;
+      color: #FFFFFF;
       font-weight: 500;
     }
 
     .event-choice-price {
       font-size: 12px;
-      color: var(--gold);
+      color: #9CA3AF;
+      font-weight: 400;
     }
 
-    /* Sticky Summary Column */
-    .booking-summary-sticky {
-      position: sticky;
-      top: 90px;
+    .event-choice-label input:checked + .event-choice-pill .event-choice-price {
+      color: #FFFFFF;
+      font-weight: 600;
     }
 
-    .summary-card {
-      background: var(--deck);
-      border: 1px solid rgba(201, 169, 104, 0.4);
-      border-radius: 14px;
-      padding: 26px 24px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(201, 169, 104, 0.08);
+    /* Navigation Mode Selector */
+    .voyage-mode-wrap {
+      margin-bottom: 22px;
     }
 
-    .summary-card-header {
-      border-bottom: 1px solid var(--rail);
-      padding-bottom: 14px;
+    .voyage-mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .voyage-mode-selector {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .voyage-mode-option {
+      position: relative;
+      cursor: pointer;
+      display: block;
+    }
+
+    .voyage-mode-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .voyage-mode-card {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 16px 18px;
+      transition: all 0.2s ease;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .voyage-mode-option:hover .voyage-mode-card {
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .voyage-mode-card.active,
+    .voyage-mode-option input:checked + .voyage-mode-card {
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: none;
+    }
+
+    .mode-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mode-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .mode-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 0 !important;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #9CA3AF;
+      background: transparent;
+    }
+
+    .mode-badge.highlight {
+      border-color: #FFFFFF;
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .mode-desc {
+      font-size: 12.5px;
+      color: #9CA3AF;
+      line-height: 1.5;
+      margin: 0;
+      font-weight: 300;
+    }
+
+    /* Duration Selector */
+    .duration-selector-wrap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .duration-option {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .duration-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .duration-box {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 16px 12px;
+      text-align: center;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .duration-option:hover .duration-box {
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .duration-option input:checked + .duration-box {
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+
+    .duration-tag {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFFFF;
+      color: #08090C;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 0 !important;
+    }
+
+    .duration-hours {
+      display: block;
+      font-size: 13px;
+      color: #9CA3AF;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    .duration-option input:checked + .duration-box .duration-hours {
+      color: #FFFFFF;
+    }
+
+    .duration-price {
+      font-size: 17px;
+      font-weight: 600;
+      color: #FFFFFF;
+      font-family: var(--font-body);
+    }
+
+    /* Calendar Styling */
+    .calendar-wrapper {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 20px;
+    }
+
+    .calendar-month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 16px;
     }
 
+    .month-nav-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 0 !important;
+      color: #FFFFFF;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .month-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #FFFFFF;
+    }
+
+    .current-month-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+      letter-spacing: 0.04em;
+    }
+
+    .calendar-legend {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      font-size: 11.5px;
+      color: #8E95A5;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 0 !important;
+    }
+
+    .legend-dot.dot-free { background: #52c41a; }
+    .legend-dot.dot-filling { background: #D1D5DB; }
+    .legend-dot.dot-booked { background: #4B5563; }
+
+    .calendar-days-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6B7280;
+      margin-bottom: 8px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .cal-day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 !important;
+      font-size: 13px;
+      color: #D1D5DB;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .cal-day-cell:hover:not(.disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+    }
+
+    .cal-day-cell.selected {
+      background: #FFFFFF !important;
+      color: #08090C !important;
+      font-weight: 700;
+      box-shadow: none !important;
+      border-color: #FFFFFF !important;
+    }
+
+    .cal-day-cell.selected .day-dot {
+      background: #08090C !important;
+    }
+
+    .cal-day-cell.disabled {
+      color: #4B5563;
+      opacity: 0.35;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .day-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 0 !important;
+      margin-top: 2px;
+    }
+
+    .day-dot.free { background: #52c41a; }
+    .day-dot.filling { background: #9CA3AF; }
+    .day-dot.booked { background: #4B5563; }
+
+    .selected-date-status-box {
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0 !important;
+    }
+
+    .status-date-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-bottom: 2px;
+    }
+
+    .status-date-info p {
+      font-size: 12.5px;
+      color: #9CA3AF;
+      margin: 0;
+    }
+
+    /* Slots */
+    .inline-slots-container {
+      margin-top: 20px;
+    }
+
+    .slots-inline-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9CA3AF;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .slots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .slot-option-card {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .slot-option-card input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .slot-content {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+
+    .slot-option-card:hover .slot-content {
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .slot-option-card input:checked + .slot-content {
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .slot-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .slot-timing {
+      font-size: 12.5px;
+      color: #9CA3AF;
+    }
+
+    .slot-status-pill {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 0 !important;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .slot-status-pill.free {
+      color: #9CA3AF;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .slot-status-pill.selected {
+      background: #FFFFFF;
+      color: #08090C;
+      border-color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .slot-status-pill.booked {
+      color: #4B5563;
+      border-color: rgba(255, 255, 255, 0.08);
+      background: transparent;
+    }
+
+    /* Guest Form Fields */
+    .guest-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-grid-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9CA3AF;
+    }
+
+    .form-input, .form-textarea {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 0 !important;
+      padding: 13px 14px;
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.03);
+      box-shadow: none;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: #4B5563;
+    }
+
+    .form-error-msg {
+      display: none;
+      color: #F87171;
+      font-size: 13px;
+      padding: 10px 14px;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      background: rgba(248, 113, 113, 0.08);
+      border-radius: 0 !important;
+    }
+
+    /* Right Sticky Summary Card */
+    .booking-summary-sticky {
+      position: sticky;
+      top: 96px;
+    }
+
+    .summary-card {
+      background: #0A0B0E;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 0 !important;
+      padding: 28px 24px;
+      box-shadow: none;
+    }
+
+    .summary-card-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+
     .summary-card-title {
-      font-family: var(--font-name);
-      font-size: 19px;
-      color: var(--pearl);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFFFFF;
       letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
     }
 
     .summary-card-subtitle {
-      font-size: 12px;
-      color: var(--mist);
+      font-size: 11.5px;
+      color: #8E95A5;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .summary-details-list {
@@ -356,19 +900,19 @@
     }
 
     .summary-item-label {
-      color: var(--mist);
+      color: #9CA3AF;
     }
 
     .summary-item-value {
-      color: var(--pearl);
+      color: #FFFFFF;
       font-weight: 500;
       text-align: right;
     }
 
     .summary-divider-line {
       height: 1px;
-      background: var(--rail);
-      margin: 12px 0;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 10px 0;
     }
 
     .summary-quote-row {
@@ -379,73 +923,287 @@
     }
 
     .quote-total-val {
-      font-family: var(--font-heading);
-      font-size: 22px;
-      color: var(--pearl);
-      font-weight: 600;
+      font-size: 20px;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-family: var(--font-body);
     }
 
+    /* Deposit Highlight: Minimal Architectural Grayscale Box */
     .deposit-highlight-row {
-      background: rgba(201, 169, 104, 0.12);
-      border: 1px solid rgba(201, 169, 104, 0.35);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 0 !important;
+      padding: 14px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 12px 0 18px;
+      margin: 14px 0 14px;
+      box-shadow: none;
     }
 
     .deposit-highlight-label {
-      font-size: 13px;
-      color: var(--pearl);
+      font-size: 11px;
+      color: #9CA3AF;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     .deposit-highlight-amount {
-      font-family: var(--font-heading);
       font-size: 26px;
-      color: var(--gold);
+      color: #FFFFFF;
       font-weight: 700;
+      font-family: var(--font-body);
     }
 
     .deposit-explanation-text {
-      font-size: 11.5px;
-      color: var(--smoke);
-      line-height: 1.45;
+      font-size: 12px;
+      color: #8E95A5;
+      line-height: 1.5;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      font-weight: 300;
     }
 
-    .btn-pay-lock {
-      width: 100%;
-      padding: 16px;
-      font-size: 15px;
+    .razorpay-secure-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      box-shadow: none;
+    }
+
+    .razorpay-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .razorpay-logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #FFFFFF;
+    }
+
+    .razorpay-logo-badge .shield-icon {
+      stroke: #FFFFFF;
+    }
+
+    .rzp-badge-text {
+      font-size: 13px;
+      color: #FFFFFF;
+    }
+
+    .rzp-ssl-tag {
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9CA3AF;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 2px 7px;
+      border-radius: 0 !important;
+    }
+
+    .rzp-methods-desc {
+      font-size: 11.5px;
+      color: #8E95A5;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Checkout CTA Button: Crisp Solid White Architecture */
+    .btn-pay-lock,
+    #btnPagePay5000 {
+      width: 100%;
+      background: #FFFFFF !important;
+      color: #08090C !important;
+      border: 1px solid #FFFFFF !important;
+      border-radius: 0 !important;
+      padding: 16px;
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .btn-pay-lock:hover,
+    #btnPagePay5000:hover {
+      background: #E5E7EB !important;
+      border-color: #E5E7EB !important;
+      color: #08090C !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     }
 
     /* Confirmation Modal / Screen */
     .confirmation-view {
       display: none;
-      background: var(--deck);
-      border: 1px solid var(--gold);
-      border-radius: 16px;
-      padding: 40px 30px;
+      background: #0A0B0E;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0 !important;
+      padding: 44px 32px;
       max-width: 620px;
       margin: 30px auto;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(201, 169, 104, 0.2);
-      animation: stepFadeIn 0.35s ease;
+      box-shadow: none;
+      animation: stepFadeIn 0.3s ease;
     }
 
     .confirmation-view.active {
       display: block;
     }
 
+    .confirmation-success-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 0 !important;
+      background: #FFFFFF;
+      color: #08090C;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      box-shadow: none;
+    }
+
+    .confirmation-ref-code {
+      font-family: var(--font-body);
+      font-size: 17px;
+      font-weight: 600;
+      color: #FFFFFF;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .receipt-card {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 20px 22px;
+      margin: 24px 0;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 0;
+      font-size: 13.5px;
+    }
+
+    .receipt-row .r-label {
+      color: #9CA3AF;
+    }
+
+    .receipt-row .r-val {
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    .receipt-row.paid-row {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 10px;
+      padding-top: 12px;
+    }
+
+    .receipt-row.paid-row .paid-badge {
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .call-promise-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0 !important;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .call-promise-text {
+      font-size: 13.5px;
+      color: #9CA3AF;
+      line-height: 1.6;
+      margin: 0;
+      font-weight: 300;
+    }
+
+    .call-promise-text strong {
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .confirmation-action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .confirmation-action-buttons .btn-gold {
+      background: #FFFFFF !important;
+      color: #08090C !important;
+      border: 1px solid #FFFFFF !important;
+      border-radius: 0 !important;
+    }
+
+    .confirmation-action-buttons .btn-gold:hover {
+      background: #E5E7EB !important;
+      border-color: #E5E7EB !important;
+      color: #08090C !important;
+    }
+
+    .confirmation-action-buttons .btn-outline {
+      border-radius: 0 !important;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
     .booking-flow-container.confirmed .booking-layout-grid,
     .booking-flow-container.confirmed .booking-page-hero {
       display: none;
+    }
+
+    /* Universal Sharp Edge Mandate on Booking Page */
+    button,
+    input,
+    select,
+    textarea,
+    .btn,
+    .btn-gold,
+    .btn-outline,
+    .btn-pay-lock,
+    .btn-back-home,
+    .contact-pill,
+    .private-featured-badge,
+    .event-choice-pill,
+    .deposit-highlight-row,
+    .confirmation-view,
+    .cal-day-cell,
+    .duration-box,
+    .voyage-mode-card,
+    .slot-content,
+    .slot-status-pill,
+    .mode-badge,
+    .duration-tag,
+    .month-nav-btn,
+    .selected-date-status-box,
+    .receipt-card,
+    .call-promise-box {
+      border-radius: 0 !important;
     }
   </style>
 </head>
@@ -462,11 +1220,20 @@
       </a>
 
       <div class="booking-header-actions">
+        <a href="/gallery" class="btn-back-home">
+          <span>Gallery</span>
+        </a>
+        <a href="/about" class="btn-back-home">
+          <span>About</span>
+        </a>
+        <a href="/contact" class="btn-back-home">
+          <span>Contact</span>
+        </a>
         <a href="/" class="btn-back-home">
-          <span>← Back to Overview</span>
+          <span>← Home</span>
         </a>
         <a href="https://wa.me/919820000000?text=Hello%20Black%20Pearl,%20I%20am%20looking%20to%20reserve%20a%20date%20on%20Lady%20Alice." target="_blank" rel="noopener" class="contact-pill highlight" style="padding: 7px 14px; font-size: 12.5px;">
-          <span>WhatsApp Concierge</span>
+          <span>Direct WhatsApp</span>
         </a>
       </div>
     </div>
@@ -483,7 +1250,7 @@
         <span class="booking-eyebrow">ONE CELEBRATION AT A TIME · GATEWAY OF INDIA</span>
         <h1 class="booking-page-title" id="pageHeroTitle">Reserve Your Private Charter</h1>
         <p class="booking-page-sub">
-          Lock Lady Alice exclusively for your date with a ₹5,000 token deposit. Your personal concierge coordinates all bespoke details, route, and decor with you directly.
+          Lock Lady Alice exclusively for your date with a ₹5,000 token deposit. Our charter team coordinates all bespoke details, route, and decor with you directly.
         </p>
       </div>
 
@@ -505,7 +1272,7 @@
             <label class="private-event-featured" id="privateEventFeaturedCard">
               <input type="radio" name="bookingOccasion" value="Private Event">
               <div class="private-featured-left">
-                <span class="private-star-icon">★</span>
+                <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" style="color: #FFFFFF; flex-shrink: 0;"><polygon points="12 2 22 12 12 22 2 12"/></svg>
                 <div>
                   <div class="private-featured-title">Private Event / Custom Charter</div>
                   <div class="private-featured-sub">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</div>
@@ -780,7 +1547,7 @@
               <span class="card-step-num">4</span>
               <span>Guest Details</span>
             </h2>
-            <p class="booking-card-desc">Your contact details for receipt and concierge planning call.</p>
+            <p class="booking-card-desc">Your contact details for receipt and planning consultation.</p>
 
             <form id="bookPageForm" class="guest-form" onsubmit="return false;">
               <div class="form-grid-row">
@@ -868,7 +1635,7 @@
               </div>
 
               <p class="deposit-explanation-text">
-                Your ₹5,000 deposit locks Lady Alice exclusively for your date. The remaining charter balance is finalized with your dedicated concierge.
+                Your ₹5,000 deposit locks Lady Alice exclusively for your date. The remaining charter balance is finalized directly with our team.
               </p>
 
               <!-- RAZORPAY TRUST BOX -->
@@ -886,7 +1653,7 @@
               </div>
 
               <!-- ACTION BUTTON -->
-              <button class="btn-gold btn-pay-lock" id="btnPagePay5000">
+              <button class="btn-pay-lock" id="btnPagePay5000">
                 <span id="btnPagePayText">Pay ₹5,000 via Razorpay to Lock Date</span>
               </button>
             </div>
@@ -942,7 +1709,7 @@
 
         <div class="call-promise-box">
           <p class="call-promise-text">
-            Our lead concierge will call you on <strong id="recPhone">+91 98200 00000</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
+            Our charter team will call you on <strong id="recPhone">+91 98200 00000</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
           </p>
         </div>
 
@@ -950,8 +1717,8 @@
           <button class="btn-outline btn-block" id="btnRecAddToCal" type="button">
             Add to my calendar (.ics)
           </button>
-          <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-gold btn-block" id="btnRecChatWa">
-            Chat with Concierge on WhatsApp
+          <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-pay-lock btn-block" id="btnRecChatWa" style="text-decoration: none;">
+            Chat with Our Team on WhatsApp
           </a>
           <a href="/" class="btn-text-subtle" style="margin-top: 8px;">
             Return to Homepage
@@ -961,6 +1728,76 @@
 
     </div>
   </main>
+
+  <!-- ======================================================== -->
+  <!-- STANDARDIZED ARCHITECTURAL LUXURY FOOTER                -->
+  <!-- ======================================================== -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand-col">
+        <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" class="footer-logo" width="180" height="34">
+        <p class="footer-about">Black Pearl hosts private maritime celebrations on Lady Alice, an exclusive 100-guest vessel berthed at the Gateway of India. Planned end to end, bespoke-curated, and yours alone for the evening.</p>
+        <div class="footer-location-meta">
+          <div><strong>Berth:</strong> Jetty No. 5, Gateway of India, Colaba, Mumbai 400001</div>
+          <div><strong>Vessel:</strong> Lady Alice · MPA Regd. #IV-2041</div>
+          <div><strong>Charter Desk:</strong> +91 99300 00000 · 10 AM – 10 PM IST</div>
+        </div>
+        <p class="footer-tagline-motto">The sea, privately. · One ship. Your hundred.</p>
+      </div>
+
+      <div class="footer-links-col">
+        <h4 class="footer-heading">The Experience</h4>
+        <ul>
+          <li><a href="/about">About Us & Heritage</a></li>
+          <li><a href="/#ship">The Ship & Specs</a></li>
+          <li><a href="/gallery">Visual Gallery</a></li>
+          <li><a href="/contact">Charter Concierge</a></li>
+          <li><a href="/contact#boarding">Boarding at Gateway</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h4 class="footer-heading">Occasions</h4>
+        <ul>
+          <li><a href="/book?occasion=Coastal%20sailing%20cruises">Harbour & Coastal Sailing</a></li>
+          <li><a href="/book?occasion=Proposals">Sunset Proposals</a></li>
+          <li><a href="/book?occasion=Engagements">Ring Ceremonies</a></li>
+          <li><a href="/book?occasion=Birthday%20parties">Milestone Birthdays</a></li>
+          <li><a href="/book?occasion=Private%20Event">Bespoke Buyout Charter</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-actions-col">
+        <div class="footer-reservation-card">
+          <span class="footer-card-eyebrow">Direct Consultation</span>
+          <h4 class="footer-card-title">Need Custom Timings?</h4>
+          <p class="footer-card-desc">Have a specific itinerary, multi-day shoot, or high-profile buyout? Our charter desk assists 7 days a week.</p>
+          <a href="https://wa.me/919820000000?text=Hello%20Black%20Pearl,%20I%20have%20a%20special%20charter%20enquiry." target="_blank" rel="noopener" class="footer-cta-btn">
+            <span>WhatsApp Charter Desk</span>
+            <span>→</span>
+          </a>
+          <div class="footer-trust-notes">
+            <span class="footer-trust-item"><span class="footer-trust-dot"></span> Gateway Jetty 5</span>
+            <span class="footer-trust-item"><span class="footer-trust-dot"></span> 100% Refundable</span>
+            <span class="footer-trust-item"><span class="footer-trust-dot"></span> Razorpay Secured</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <div class="container footer-bottom-inner">
+        <p class="copyright">© 2026 Black Pearl · Lady Alice. Registered with Mumbai Port Authority. Jetty 5, Gateway of India, Colaba, Mumbai.</p>
+        <div class="footer-legal-links">
+          <a href="/terms">Terms & Conditions</a>
+          <span class="footer-legal-divider"></span>
+          <a href="/privacy">Privacy Policy</a>
+          <span class="footer-legal-divider"></span>
+          <a href="/cancellation">Cancellation & Refund</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module" src="/book/book.js"></script>

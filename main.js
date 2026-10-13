@@ -659,7 +659,7 @@ function validateGuestForm() {
   const notes = notesEl ? notesEl.value.trim() : '';
 
   if (!name) {
-    showFormError('Please enter your full name so our concierge knows who to address.');
+    showFormError('Please enter your full name so our team knows who to address.');
     if (nameEl) nameEl.focus();
     return false;
   }
@@ -907,7 +907,7 @@ function completeBookingAndCelebrate(bookingCode, paymentId = 'pay_verified') {
   const rPayId = document.getElementById('rPaymentId');
   if (rPayId) rPayId.textContent = paymentId;
 
-  // WhatsApp concierge prefilled link
+  // WhatsApp direct team prefilled link
   const waBtn = document.getElementById('btnChatWaConfirmation');
   if (waBtn) {
     const waText = encodeURIComponent(`Hello Black Pearl team, I have just secured date ${newHold.date} for our ${newHold.occasion} on Lady Alice (Deposit ₹5,000 paid via Razorpay). My booking code is ${bookingCode} (Payment ID: ${paymentId}). Please call me on ${newHold.phone} to plan the evening.`);
@@ -1454,7 +1454,7 @@ function initVoyageBriefSection() {
 
         updatePriceCalculations();
 
-        // Also open WhatsApp in new tab for direct concierge contact
+        // Also open WhatsApp in new tab for direct team contact
         window.open(`https://wa.me/919820000000?text=${waMessage}`, '_blank');
 
         submitBtn.disabled = false;

@@ -19,7 +19,59 @@
       "destination": "/book/index.html"
     },
     {
-      "source": "/((?!assets/|admin/|book/|.*\\..*).*)",
+      "source": "/gallery/:path*",
+      "destination": "/gallery/index.html"
+    },
+    {
+      "source": "/gallery",
+      "destination": "/gallery/index.html"
+    },
+    {
+      "source": "/about/:path*",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/contact/:path*",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/terms/:path*",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/privacy/:path*",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/cancellation/:path*",
+      "destination": "/cancellation/index.html"
+    },
+    {
+      "source": "/cancellation",
+      "destination": "/cancellation/index.html"
+    },
+    {
+      "source": "/refund",
+      "destination": "/cancellation/index.html"
+    },
+    {
+      "source": "/((?!assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
