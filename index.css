@@ -788,6 +788,7 @@ a:hover {
   justify-content: flex-start;
   gap: 14px;
   width: 100%;
+  margin-top: 14px;
   opacity: 0;
   animation: heroFadeSlideUp 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
 }
@@ -4403,6 +4404,7 @@ a:hover {
     flex-direction: column;
     width: 100%;
     gap: 12px;
+    margin-top: 18px;
   }
   .hero-cta-group .btn-pill-cta,
   .hero-cta-group .btn-pill-glass {
@@ -4644,7 +4646,7 @@ a:hover {
     margin-right: -16px;
     padding: 0 16px;
     box-sizing: border-box;
-    margin-top: 80px; /* pushed lower from description */
+    margin-top: 96px; /* pushed slightly lower from description */
   }
 
   .hero-cta-group .btn-pill-cta,
