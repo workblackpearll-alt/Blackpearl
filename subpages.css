@@ -143,6 +143,26 @@
   flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+  .hero-cta-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .hero-cta-row .btn-solid-white,
+  .hero-cta-row .btn-line-white {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 20px;
+    font-size: 13.5px;
+    justify-content: center;
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
+}
+
 /* --- MINIMAL SUBPAGE HERO (FOR CONTACT, TERMS, PRIVACY) --- */
 .minimal-page-header {
   padding: 130px 0 44px;
@@ -477,46 +497,117 @@
   background: var(--color-white);
 }
 
-/* Clean Photo Grid */
+/* Clean Photo Grid - Interlocking Geometric Quadrilaterals */
 .clean-photo-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-@media (max-width: 992px) {
-  .clean-photo-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-  }
-}
-
-@media (max-width: 600px) {
-  .clean-photo-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 240px;
+  grid-auto-flow: dense;
+  gap: 10px; /* Refined thin architectural margin */
 }
 
 .clean-photo-item {
   position: relative;
   background: var(--color-surface);
-  border-radius: 4px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   border: 1px solid var(--color-border);
-  aspect-ratio: 4 / 3;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease,
+              box-shadow 0.45s ease;
 }
 
+/* Geometric Quadrilateral Variations */
+.clean-photo-item.span-sq {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.clean-photo-item.span-wide {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.clean-photo-item.span-tall {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.clean-photo-item.span-hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* Backward compatibility for span-2col */
 .clean-photo-item.span-2col {
   grid-column: span 2;
-  aspect-ratio: 16 / 9;
+  grid-row: span 1;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 992px) {
+  .clean-photo-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 210px;
+    gap: 8px;
+  }
+}
+
+/* Mobile Layout: 2-column interlocking random quadrilaterals (squares, tall, wide, hero) */
+@media (max-width: 640px) {
+  .clean-photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 155px;
+    grid-auto-flow: dense;
+    gap: 6px; /* Thin, refined editorial margin between photos */
+  }
+
+  .clean-photo-item {
+    border-radius: 8px;
+  }
+
+  .clean-photo-item.span-hero {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .clean-photo-item.span-wide,
   .clean-photo-item.span-2col {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .clean-photo-item.span-tall {
     grid-column: span 1;
-    aspect-ratio: 4 / 3;
+    grid-row: span 2;
+  }
+
+  .clean-photo-item.span-sq {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  .clean-photo-overlay {
+    padding: 12px;
+  }
+
+  .clean-photo-title {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .clean-photo-item.span-hero .clean-photo-title {
+    font-size: 17px;
+  }
+
+  .clean-photo-cat {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+  }
+
+  .clean-photo-sub {
+    display: none; /* Keep clean aesthetic on mobile quadrilaterals */
   }
 }
 
