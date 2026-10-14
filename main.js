@@ -1397,7 +1397,7 @@ function initVoyageBriefSection() {
     submitBtn.innerHTML = '<span>PROCESSING BRIEF...</span>';
 
     setTimeout(() => {
-      submitBtn.innerHTML = '<span>VOYAGE BRIEF READY</span> <span class="btn-submit-icon">→</span>';
+      submitBtn.innerHTML = '<span>VOYAGE BRIEF READY</span>';
 
       // Confetti celebration (Strict palette: Gold, White, Champagne)
       confetti({
@@ -1703,6 +1703,17 @@ function renderDynamicGalleryImages(images) {
       }
     }
   });
+
+  // Strictly enforce 9 photos max on home page gallery
+  if (galleryGrid) {
+    const MAX_HOME_PHOTOS = 9;
+    const items = galleryGrid.querySelectorAll('.gallery-item');
+    if (items.length > MAX_HOME_PHOTOS) {
+      for (let i = MAX_HOME_PHOTOS; i < items.length; i++) {
+        items[i].remove();
+      }
+    }
+  }
 }
 
 

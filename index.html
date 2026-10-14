@@ -106,10 +106,6 @@
       </nav>
 
       <div class="header-actions">
-        <a href="/book" class="btn-pill-cta btn-pill-nav" id="openBookingBtn" data-occasion="General">
-          <span>Check Dates</span>
-          <span class="arrow-glyph">↗</span>
-        </a>
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
           <span></span>
           <span></span>
@@ -130,7 +126,6 @@
       <div class="mobile-drawer-cta">
         <a href="/book" class="btn-pill-cta btn-block" id="mobileDrawerBookingBtn">
           <span>Check Available Dates</span>
-          <span class="arrow-glyph">↗</span>
         </a>
       </div>
     </div>
@@ -214,9 +209,9 @@
         </div>
 
         <div style="text-align: center; margin-top: 36px; display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; font-size: 14.5px;">
-          <a href="/about" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Learn About Lady Alice's Story & Heritage ↗</a>
-          <a href="/gallery" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Explore Deck Spaces in Visual Gallery ↗</a>
-          <a href="/contact#boarding" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Boarding Guide at Jetty 5 ↗</a>
+          <a href="/about" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Learn About Lady Alice's Story & Heritage</a>
+          <a href="/gallery" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Explore Deck Spaces in Visual Gallery</a>
+          <a href="/contact#boarding" style="color: var(--smoke); text-decoration: underline; text-underline-offset: 4px;">Boarding Guide at Jetty 5</a>
         </div>
       </div>
     </section>
@@ -617,7 +612,6 @@
                 <!-- Submit Button -->
                 <button type="submit" class="btn-brief-submit" id="btnSubmitBrief">
                   <span>SUBMIT VOYAGE BRIEF</span>
-                  <span class="btn-submit-icon">→</span>
                 </button>
               </form>
             </div>
@@ -749,8 +743,8 @@
             </div>
           </div>
 
-          <!-- 5. Wide Rectangle 2x1: Candlelight Dinner Under Stars -->
-          <div class="gallery-item span-wide" data-src="/assets/images/private-dining.jpg" data-title="Candlelight Private Dining" data-subtitle="Chef-curated multi-course dining beneath the night sky">
+          <!-- 5. Tall Rectangle 1x2: Candlelight Dinner Under Stars -->
+          <div class="gallery-item span-tall" data-src="/assets/images/private-dining.jpg" data-title="Candlelight Private Dining" data-subtitle="Chef-curated multi-course dining beneath the night sky">
             <img src="/assets/images/private-dining.jpg" alt="Private Candlelight Dining on Yacht Deck" loading="lazy">
             <div class="gallery-overlay">
               <span class="overlay-tag">Past Event · Dining</span>
@@ -770,15 +764,44 @@
               <span class="expand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></span>
             </div>
           </div>
+
+          <!-- 7. Wide Rectangle 2x1: Master Stateroom Suites -->
+          <div class="gallery-item span-wide" data-src="/assets/images/master-suite.jpg" data-title="Master Stateroom Suite" data-subtitle="Two climate-controlled private suites with luxury teak finishes and vanity lounge">
+            <img src="/assets/images/master-suite.jpg" alt="Master Suite Bedroom on Lady Alice" loading="lazy">
+            <div class="gallery-overlay">
+              <span class="overlay-tag">Past Event · Staterooms</span>
+              <h4 class="overlay-title">Master Stateroom Suites</h4>
+              <p class="overlay-desc">Two private climate-controlled cabins with en-suite baths</p>
+              <span class="expand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></span>
+            </div>
+          </div>
+
+          <!-- 8. Square 1x1: Ring Ceremonies at Sea -->
+          <div class="gallery-item span-sq" data-src="/assets/images/engagement-ceremony.jpg" data-title="Ring Ceremony at Sea" data-subtitle="Families gathered under floral installations facing Gateway arch">
+            <img src="/assets/images/engagement-ceremony.jpg" alt="Engagement Ceremony on Lady Alice" loading="lazy">
+            <div class="gallery-overlay">
+              <span class="overlay-tag">Past Event · Ceremony</span>
+              <h4 class="overlay-title">Ring Ceremonies</h4>
+              <p class="overlay-desc">Intimate family celebration on open teak deck</p>
+              <span class="expand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></span>
+            </div>
+          </div>
+
+          <!-- 9. Square 1x1: Arabian Sea Golden Hour Sail -->
+          <div class="gallery-item span-sq" data-src="/assets/images/lady-alice-sunset-poster.jpg" data-title="Arabian Sea Golden Hour" data-subtitle="Lady Alice cruising south along the coastal channel as the sun dips below the horizon">
+            <img src="/assets/images/lady-alice-sunset-poster.jpg" alt="Lady Alice Cruising at Golden Hour" loading="lazy">
+            <div class="gallery-overlay">
+              <span class="overlay-tag">Past Event · Sunset Sail</span>
+              <h4 class="overlay-title">Arabian Golden Hour</h4>
+              <p class="overlay-desc">Cruising South Mumbai coastal waters at dusk</p>
+              <span class="expand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></span>
+            </div>
+          </div>
         </div>
 
-        <div style="text-align: center; margin-top: 44px;">
-          <p style="color: var(--smoke); font-size: 14.5px; margin-bottom: 18px;">
-            Showing 6 featured moments. Browse all 18 high-resolution photographs organized by Deck Spaces, Sunsets, Dining, and Nightlife in our dedicated gallery.
-          </p>
-          <a href="/gallery" class="btn-outline" style="padding: 14px 34px; font-size: 15px; display: inline-flex; align-items: center; gap: 8px;">
-            <span>Explore Full Photographic Archive (18 Photographs)</span>
-            <span class="arrow-glyph">↗</span>
+        <div class="gallery-cta-wrap">
+          <a href="/gallery" class="btn-outline gallery-archive-btn">
+            <span>Explore Full Photographic Archive</span>
           </a>
         </div>
       </div>
@@ -980,19 +1003,12 @@
           <p class="footer-card-desc">Lock Lady Alice exclusively with a refundable ₹5,000 token. Our charter team calls you to design your bespoke voyage.</p>
           <a href="/book" class="footer-cta-btn" id="footerBookBtn">
             <span>Check available dates</span>
-            <span>→</span>
           </a>
           <div class="footer-trust-notes">
             <span class="footer-trust-item"><span class="footer-trust-dot"></span> 100% Refundable</span>
             <span class="footer-trust-item"><span class="footer-trust-dot"></span> Gateway Jetty 5</span>
             <span class="footer-trust-item"><span class="footer-trust-dot"></span> Razorpay Secured</span>
           </div>
-        </div>
-        <div class="crew-portal-trigger-wrap">
-          <button class="crew-portal-link" id="crewPortalTrigger" type="button">
-            <span>Crew & Admin Portal</span>
-            <span class="crew-badge" id="crewBadgeCount">2 Holds</span>
-          </button>
         </div>
       </div>
     </div>
