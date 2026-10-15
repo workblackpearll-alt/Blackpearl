@@ -71,7 +71,15 @@
       "destination": "/cancellation/index.html"
     },
     {
-      "source": "/((?!assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|.*\\..*).*)",
+      "source": "/verify/:path*",
+      "destination": "/verify/index.html"
+    },
+    {
+      "source": "/verify",
+      "destination": "/verify/index.html"
+    },
+    {
+      "source": "/((?!assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|verify/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]

@@ -1172,8 +1172,240 @@
       border-color: rgba(255, 255, 255, 0.25);
     }
 
+    /* Multi-Step Wizard & Subpage Styles */
+    .booking-progress-tracker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    @media (max-width: 680px) {
+      .booking-progress-tracker {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+    }
+
+    .progress-step-pill {
+      background: #0A0B0E;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .progress-step-pill.active {
+      border-color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .progress-step-pill.completed {
+      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .progress-step-num {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #9CA3AF;
+      flex-shrink: 0;
+    }
+
+    .progress-step-pill.active .progress-step-num {
+      background: #FFFFFF;
+      color: #08090C;
+      border-color: #FFFFFF;
+    }
+
+    .progress-step-pill.completed .progress-step-num {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .progress-step-text {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .progress-step-sub {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9CA3AF;
+      font-weight: 500;
+    }
+
+    .progress-step-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #FFFFFF;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    /* Subpage / Step Panels */
+    .booking-step-panel {
+      display: none;
+      animation: stepFadeIn 0.25s ease;
+    }
+
+    .booking-step-panel.active {
+      display: block;
+    }
+
+    @keyframes stepFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Step Navigation Action Controls */
+    .step-actions-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .step-btn-prev {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .step-btn-prev:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #FFFFFF;
+    }
+
+    .step-btn-next {
+      background: #FFFFFF;
+      border: 1px solid #FFFFFF;
+      color: #08090C;
+      padding: 12px 28px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      transition: all 0.2s ease;
+    }
+
+    .step-btn-next:hover {
+      background: #E5E7EB;
+      border-color: #E5E7EB;
+      transform: translateY(-1px);
+    }
+
+    .step-review-overview {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .step-review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .step-review-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-review-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .step-review-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9CA3AF;
+    }
+
+    .step-review-val {
+      font-size: 14.5px;
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    /* QR Code Pass Box in Confirmation */
+    .boarding-qr-box {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 20px;
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .boarding-qr-img {
+      width: 140px;
+      height: 140px;
+      background: #FFFFFF;
+      padding: 8px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .boarding-qr-text {
+      font-size: 12px;
+      color: #9CA3AF;
+      letter-spacing: 0.04em;
+    }
+
+    .boarding-qr-ref {
+      font-family: monospace;
+      font-size: 13px;
+      color: #FFFFFF;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
     .booking-flow-container.confirmed .booking-layout-grid,
-    .booking-flow-container.confirmed .booking-page-hero {
+    .booking-flow-container.confirmed .booking-page-hero,
+    .booking-flow-container.confirmed .booking-progress-tracker {
       display: none;
     }
 
@@ -1210,30 +1442,52 @@
 <body class="booking-page-body">
 
   <!-- ======================================================== -->
-  <!-- HEADER & NAVIGATION                                      -->
+  <!-- HEADER & NAVIGATION (STANDARDIZED ARCHITECTURAL HEADER)   -->
   <!-- ======================================================== -->
-  <header class="booking-site-header">
-    <div class="booking-nav-container">
-      <a href="/" class="brand-group" aria-label="Black Pearl Home">
-        <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" width="190" height="36">
-        <span class="brand-sub-badge">Date Lock</span>
+  <header class="site-header scrolled" id="siteHeader">
+    <div class="header-inner">
+      <a href="/" class="header-brand" aria-label="Black Pearl Home">
+        <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" class="brand-logo" width="230" height="44">
       </a>
 
-      <div class="booking-header-actions">
-        <a href="/gallery" class="btn-back-home">
-          <span>Gallery</span>
+      <nav class="desktop-nav" aria-label="Main Navigation">
+        <a href="/#ship" class="nav-link">The Ship</a>
+        <a href="/#occasions" class="nav-link">Occasions</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/about" class="nav-link">About Us</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn-nav-back" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" aria-label="Go to previous page">
+          <span>← Back</span>
+        </button>
+        <a href="/book" class="btn-nav-reserve">
+          <span>Reserve Date</span>
         </a>
-        <a href="/about" class="btn-back-home">
-          <span>About</span>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Nav -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <nav class="mobile-nav-links">
+        <a href="javascript:void(0)" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" class="mobile-nav-link" style="color: #FFFFFF; font-weight: 500;">
+          ← Back to Previous Page
         </a>
-        <a href="/contact" class="btn-back-home">
-          <span>Contact</span>
-        </a>
-        <a href="/" class="btn-back-home">
-          <span>← Home</span>
-        </a>
-        <a href="https://wa.me/919820000000?text=Hello%20Black%20Pearl,%20I%20am%20looking%20to%20reserve%20a%20date%20on%20Lady%20Alice." target="_blank" rel="noopener" class="contact-pill highlight" style="padding: 7px 14px; font-size: 12.5px;">
-          <span>Direct WhatsApp</span>
+        <a href="/#ship" class="mobile-nav-link">The Ship</a>
+        <a href="/#occasions" class="mobile-nav-link">Occasions</a>
+        <a href="/gallery" class="mobile-nav-link">Gallery</a>
+        <a href="/about" class="mobile-nav-link">About Us</a>
+        <a href="/contact" class="mobile-nav-link">Contact</a>
+      </nav>
+      <div class="mobile-drawer-cta">
+        <a href="/book" class="btn-nav-reserve" style="width: 100%;">
+          <span>Reserve Date</span>
         </a>
       </div>
     </div>
@@ -1254,333 +1508,425 @@
         </p>
       </div>
 
+      <!-- MULTI-STEP PROGRESS TRACKER -->
+      <div class="booking-progress-tracker" id="bookingProgressTracker">
+        <div class="progress-step-pill active" data-step="1" id="progPill1">
+          <span class="progress-step-num">01</span>
+          <div class="progress-step-text">
+            <span class="progress-step-sub">Step 1</span>
+            <span class="progress-step-title">Celebration</span>
+          </div>
+        </div>
+        <div class="progress-step-pill" data-step="2" id="progPill2">
+          <span class="progress-step-num">02</span>
+          <div class="progress-step-text">
+            <span class="progress-step-sub">Step 2</span>
+            <span class="progress-step-title">Style & Duration</span>
+          </div>
+        </div>
+        <div class="progress-step-pill" data-step="3" id="progPill3">
+          <span class="progress-step-num">03</span>
+          <div class="progress-step-text">
+            <span class="progress-step-sub">Step 3</span>
+            <span class="progress-step-title">Date & Slot</span>
+          </div>
+        </div>
+        <div class="progress-step-pill" data-step="4" id="progPill4">
+          <span class="progress-step-num">04</span>
+          <div class="progress-step-text">
+            <span class="progress-step-sub">Step 4</span>
+            <span class="progress-step-title">Contact & Lock</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 2-COLUMN BOOKING WORKSPACE -->
       <div class="booking-layout-grid" id="bookingLayoutGrid">
         
-        <!-- LEFT COLUMN: STREAMLINED FORM -->
+        <!-- LEFT COLUMN: MULTI-STEP SUBPAGE FORM -->
         <div class="booking-form-col">
           
-          <!-- STEP 1: EVENT / OCCASION SELECTION -->
-          <div class="booking-card">
-            <h2 class="booking-card-title">
-              <span class="card-step-num">1</span>
-              <span>Celebration & Event Type</span>
-            </h2>
-            <p class="booking-card-desc">Select your occasion or choose an exclusive private event charter.</p>
+          <!-- SUBPAGE STEP 1: EVENT / OCCASION SELECTION -->
+          <div class="booking-step-panel active" id="stepPanel1">
+            <div class="booking-card">
+              <h2 class="booking-card-title">
+                <span class="card-step-num">1</span>
+                <span>Celebration & Event Type</span>
+              </h2>
+              <p class="booking-card-desc">Select your occasion or choose an exclusive private event charter.</p>
 
-            <!-- FEATURED: PRIVATE EVENT / BESPOKE BUYOUT -->
-            <label class="private-event-featured" id="privateEventFeaturedCard">
-              <input type="radio" name="bookingOccasion" value="Private Event">
-              <div class="private-featured-left">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" style="color: #FFFFFF; flex-shrink: 0;"><polygon points="12 2 22 12 12 22 2 12"/></svg>
-                <div>
-                  <div class="private-featured-title">Private Event / Custom Charter</div>
-                  <div class="private-featured-sub">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</div>
+              <!-- FEATURED: PRIVATE EVENT / BESPOKE BUYOUT -->
+              <label class="private-event-featured" id="privateEventFeaturedCard">
+                <input type="radio" name="bookingOccasion" value="Private Event">
+                <div class="private-featured-left">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" style="color: #FFFFFF; flex-shrink: 0;"><polygon points="12 2 22 12 12 22 2 12"/></svg>
+                  <div>
+                    <div class="private-featured-title">Private Event / Custom Charter</div>
+                    <div class="private-featured-sub">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</div>
+                  </div>
+                </div>
+                <span class="private-featured-badge">Bespoke</span>
+              </label>
+
+              <!-- Optional Custom Name for Private Event -->
+              <div class="custom-private-input-wrap" id="customPrivateInputWrap">
+                <div class="form-group">
+                  <label for="customEventNameInput" class="form-label">Private Event Name / Concept (Optional)</label>
+                  <input type="text" id="customEventNameInput" class="form-input" placeholder="e.g. Mehta Family Private Buyout, Sunset Cocktail Lounge, VIP Brand Offsite">
                 </div>
               </div>
-              <span class="private-featured-badge">Bespoke</span>
-            </label>
 
-            <!-- Optional Custom Name for Private Event -->
-            <div class="custom-private-input-wrap" id="customPrivateInputWrap">
-              <div class="form-group">
-                <label for="customEventNameInput" class="form-label">Private Event Name / Concept (Optional)</label>
-                <input type="text" id="customEventNameInput" class="form-input" placeholder="e.g. Mehta Family Private Buyout, Sunset Cocktail Lounge, VIP Brand Offsite">
-              </div>
-            </div>
-
-            <!-- CURATED OCCASION CHOICES -->
-            <div class="events-picker-grid">
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Proposals" checked>
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Sunset Proposal</span>
-                  <span class="event-choice-price">from ₹45,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Coastal sailing cruises">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Coastal Sailing Cruise</span>
-                  <span class="event-choice-price">from ₹85,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Birthday parties">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Milestone Birthday</span>
-                  <span class="event-choice-price">from ₹75,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Engagements">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Ring Ceremony / Engagement</span>
-                  <span class="event-choice-price">from ₹90,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Anniversaries & private dinners">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Anniversary & Dinner</span>
-                  <span class="event-choice-price">from ₹55,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Private parties">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Cocktail & DJ Night</span>
-                  <span class="event-choice-price">from ₹75,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Corporate events">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Corporate Offsite</span>
-                  <span class="event-choice-price">from ₹75,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Bachelor & bachelorette nights">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Bachelorette Send-Off</span>
-                  <span class="event-choice-price">from ₹75,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Pre-wedding & photo shoots">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Pre-Wedding Shoot</span>
-                  <span class="event-choice-price">from ₹55,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Sunrise yoga and wellness">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Sunrise Yoga & Wellness</span>
-                  <span class="event-choice-price">from ₹40,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Festive nights">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Festive Night</span>
-                  <span class="event-choice-price">from ₹90,000</span>
-                </div>
-              </label>
-
-              <label class="event-choice-label">
-                <input type="radio" name="bookingOccasion" value="Family celebrations">
-                <div class="event-choice-pill">
-                  <span class="event-choice-name">Family Celebration</span>
-                  <span class="event-choice-price">from ₹75,000</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- STEP 2: NAVIGATION MODE & DURATION -->
-          <div class="booking-card">
-            <h2 class="booking-card-title">
-              <span class="card-step-num">2</span>
-              <span>Navigation Style & Duration</span>
-            </h2>
-            <p class="booking-card-desc">Choose whether Lady Alice stays anchored or sails active waters.</p>
-
-            <div class="voyage-mode-wrap">
-              <div class="voyage-mode-selector">
-                <label class="voyage-mode-option">
-                  <input type="radio" name="voyageMode" value="paused" checked>
-                  <div class="voyage-mode-card active" id="modeCardPaused">
-                    <div class="mode-card-header">
-                      <span class="mode-name">At Anchor (Paused)</span>
-                      <span class="mode-badge">Standard Rate</span>
-                    </div>
-                    <p class="mode-desc">Anchored peacefully off Gateway of India. Ideal for dinners, static celebrations & skyline photo backdrops.</p>
+              <!-- CURATED OCCASION CHOICES -->
+              <div class="events-picker-grid">
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Proposals" checked>
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Sunset Proposal</span>
+                    <span class="event-choice-price">from ₹45,000</span>
                   </div>
                 </label>
 
-                <label class="voyage-mode-option">
-                  <input type="radio" name="voyageMode" value="sailing">
-                  <div class="voyage-mode-card" id="modeCardSailing">
-                    <div class="mode-card-header">
-                      <span class="mode-name">Active Sailing (Underway)</span>
-                      <span class="mode-badge highlight">+Sailing Fuel/Port</span>
-                    </div>
-                    <p class="mode-desc">Cruising across Mumbai Harbour, naval waterways, historic lighthouses & open Arabian Sea.</p>
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Coastal sailing cruises">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Coastal Sailing Cruise</span>
+                    <span class="event-choice-price">from ₹85,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Birthday parties">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Milestone Birthday</span>
+                    <span class="event-choice-price">from ₹75,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Engagements">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Ring Ceremony / Engagement</span>
+                    <span class="event-choice-price">from ₹90,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Anniversaries & private dinners">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Anniversary & Dinner</span>
+                    <span class="event-choice-price">from ₹55,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Private parties">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Cocktail & DJ Night</span>
+                    <span class="event-choice-price">from ₹75,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Corporate events">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Corporate Offsite</span>
+                    <span class="event-choice-price">from ₹75,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Bachelor & bachelorette nights">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Bachelorette Send-Off</span>
+                    <span class="event-choice-price">from ₹75,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Pre-wedding & photo shoots">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Pre-Wedding Shoot</span>
+                    <span class="event-choice-price">from ₹55,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Sunrise yoga and wellness">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Sunrise Yoga & Wellness</span>
+                    <span class="event-choice-price">from ₹40,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Festive nights">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Festive Night</span>
+                    <span class="event-choice-price">from ₹90,000</span>
+                  </div>
+                </label>
+
+                <label class="event-choice-label">
+                  <input type="radio" name="bookingOccasion" value="Family celebrations">
+                  <div class="event-choice-pill">
+                    <span class="event-choice-name">Family Celebration</span>
+                    <span class="event-choice-price">from ₹75,000</span>
                   </div>
                 </label>
               </div>
-            </div>
 
-            <div class="duration-selector-wrap" style="margin-top: 18px;">
-              <label class="duration-option">
-                <input type="radio" name="voyageDuration" value="1">
-                <div class="duration-box">
-                  <span class="duration-hours">1 hour</span>
-                  <span class="duration-price" id="durationPrice1">₹45,000</span>
-                </div>
-              </label>
-
-              <label class="duration-option">
-                <input type="radio" name="voyageDuration" value="3" checked>
-                <div class="duration-box featured">
-                  <span class="duration-tag">Popular</span>
-                  <span class="duration-hours">3 hours</span>
-                  <span class="duration-price" id="durationPrice3">₹90,000</span>
-                </div>
-              </label>
-
-              <label class="duration-option">
-                <input type="radio" name="voyageDuration" value="6">
-                <div class="duration-box">
-                  <span class="duration-hours">6 hours</span>
-                  <span class="duration-price" id="durationPrice6">₹1,50,000</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- STEP 3: DATE & TIME SLOT -->
-          <div class="booking-card">
-            <h2 class="booking-card-title">
-              <span class="card-step-num">3</span>
-              <span>Select Date & Sailing Slot</span>
-            </h2>
-            <p class="booking-card-desc">Click any open date to view and select available time slots.</p>
-
-            <div class="calendar-wrapper">
-              <div class="calendar-month-header">
-                <button class="month-nav-btn" id="prevMonthBtn" aria-label="Previous month" type="button">‹</button>
-                <h3 class="current-month-label" id="currentMonthLabel">November 2026</h3>
-                <button class="month-nav-btn" id="nextMonthBtn" aria-label="Next month" type="button">›</button>
-              </div>
-
-              <!-- Legend -->
-              <div class="calendar-legend">
-                <span class="legend-item"><span class="legend-dot dot-free"></span> Open</span>
-                <span class="legend-item"><span class="legend-dot dot-filling"></span> Few Slots Left</span>
-                <span class="legend-item"><span class="legend-dot dot-booked"></span> Reserved</span>
-              </div>
-
-              <!-- Day Headers -->
-              <div class="calendar-days-row">
-                <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
-              </div>
-
-              <!-- Dynamic Days Grid -->
-              <div class="calendar-grid" id="calendarDaysGrid"></div>
-
-              <!-- Selected Date Banner -->
-              <div class="selected-date-status-box" id="selectedDateStatusBox">
-                <div class="status-date-info">
-                  <h4 id="statusDateTitle">Saturday, 14 November 2026</h4>
-                  <p id="statusDateSlotsCount">3 of 4 slots open</p>
-                </div>
-              </div>
-
-              <!-- Time Slot Choices -->
-              <div class="inline-slots-container">
-                <span class="slots-inline-title">Select Timing on this Date:</span>
-                <div class="slots-list" id="slotsList">
-                  <label class="slot-option-card">
-                    <input type="radio" name="sailingSlot" value="Sunrise" data-time="6:00 am">
-                    <div class="slot-content">
-                      <div class="slot-time-block">
-                        <span class="slot-name">Sunrise</span>
-                        <span class="slot-timing">from 6:00 am (Morning Mist)</span>
-                      </div>
-                      <span class="slot-status-pill free">Open</span>
-                    </div>
-                  </label>
-
-                  <label class="slot-option-card">
-                    <input type="radio" name="sailingSlot" value="Afternoon" data-time="12:00 pm">
-                    <div class="slot-content">
-                      <div class="slot-time-block">
-                        <span class="slot-name">Afternoon</span>
-                        <span class="slot-timing">from 12:00 pm (Lunch & Sun)</span>
-                      </div>
-                      <span class="slot-status-pill free">Open</span>
-                    </div>
-                  </label>
-
-                  <label class="slot-option-card">
-                    <input type="radio" name="sailingSlot" value="Sunset" data-time="4:30 pm" checked>
-                    <div class="slot-content">
-                      <div class="slot-time-block">
-                        <span class="slot-name">Sunset</span>
-                        <span class="slot-timing">from 4:30 pm (Golden Hour & Twilight)</span>
-                      </div>
-                      <span class="slot-status-pill selected">Selected</span>
-                    </div>
-                  </label>
-
-                  <label class="slot-option-card disabled">
-                    <input type="radio" name="sailingSlot" value="Evening" data-time="8:00 pm" disabled>
-                    <div class="slot-content">
-                      <div class="slot-time-block">
-                        <span class="slot-name">Evening</span>
-                        <span class="slot-timing">from 8:00 pm (City Lights & Dinner)</span>
-                      </div>
-                      <span class="slot-status-pill booked">Reserved</span>
-                    </div>
-                  </label>
-                </div>
+              <div class="step-actions-footer">
+                <button type="button" class="step-btn-next" data-next-step="2">
+                  <span>Continue to Style & Duration →</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- STEP 4: GUEST DETAILS (ONLY NECESSARY FIELDS) -->
-          <div class="booking-card">
-            <h2 class="booking-card-title">
-              <span class="card-step-num">4</span>
-              <span>Guest Details</span>
-            </h2>
-            <p class="booking-card-desc">Your contact details for receipt and planning consultation.</p>
+          <!-- SUBPAGE STEP 2: NAVIGATION MODE & DURATION -->
+          <div class="booking-step-panel" id="stepPanel2">
+            <div class="booking-card">
+              <h2 class="booking-card-title">
+                <span class="card-step-num">2</span>
+                <span>Navigation Style & Duration</span>
+              </h2>
+              <p class="booking-card-desc">Choose whether Lady Alice stays anchored or sails active waters.</p>
 
-            <form id="bookPageForm" class="guest-form" onsubmit="return false;">
-              <div class="form-grid-row">
-                <div class="form-group">
-                  <label for="bookGuestName" class="form-label">Full Name *</label>
-                  <input type="text" id="bookGuestName" class="form-input" placeholder="e.g. Arjun Mehta" required>
-                </div>
+              <div class="voyage-mode-wrap">
+                <div class="voyage-mode-selector">
+                  <label class="voyage-mode-option">
+                    <input type="radio" name="voyageMode" value="paused" checked>
+                    <div class="voyage-mode-card active" id="modeCardPaused">
+                      <div class="mode-card-header">
+                        <span class="mode-name">At Anchor (Paused)</span>
+                        <span class="mode-badge">Standard Rate</span>
+                      </div>
+                      <p class="mode-desc">Anchored peacefully off Gateway of India. Ideal for dinners, static celebrations & skyline photo backdrops.</p>
+                    </div>
+                  </label>
 
-                <div class="form-group">
-                  <label for="bookGuestPhone" class="form-label">WhatsApp Mobile Number *</label>
-                  <input type="tel" id="bookGuestPhone" class="form-input" placeholder="+91 98200 00000" required>
+                  <label class="voyage-mode-option">
+                    <input type="radio" name="voyageMode" value="sailing">
+                    <div class="voyage-mode-card" id="modeCardSailing">
+                      <div class="mode-card-header">
+                        <span class="mode-name">Active Sailing (Underway)</span>
+                        <span class="mode-badge highlight">+Sailing Fuel/Port</span>
+                      </div>
+                      <p class="mode-desc">Cruising across Mumbai Harbour, naval waterways, historic lighthouses & open Arabian Sea.</p>
+                    </div>
+                  </label>
                 </div>
               </div>
 
-              <div class="form-grid-row">
-                <div class="form-group">
-                  <label for="bookGuestEmail" class="form-label">Email Address (for official receipt) *</label>
-                  <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" required>
+              <div class="duration-selector-wrap" style="margin-top: 18px;">
+                <label class="duration-option">
+                  <input type="radio" name="voyageDuration" value="1">
+                  <div class="duration-box">
+                    <span class="duration-hours">1 hour</span>
+                    <span class="duration-price" id="durationPrice1">₹45,000</span>
+                  </div>
+                </label>
+
+                <label class="duration-option">
+                  <input type="radio" name="voyageDuration" value="3" checked>
+                  <div class="duration-box featured">
+                    <span class="duration-tag">Popular</span>
+                    <span class="duration-hours">3 hours</span>
+                    <span class="duration-price" id="durationPrice3">₹90,000</span>
+                  </div>
+                </label>
+
+                <label class="duration-option">
+                  <input type="radio" name="voyageDuration" value="6">
+                  <div class="duration-box">
+                    <span class="duration-hours">6 hours</span>
+                    <span class="duration-price" id="durationPrice6">₹1,50,000</span>
+                  </div>
+                </label>
+              </div>
+
+              <div class="step-actions-footer">
+                <button type="button" class="step-btn-prev" data-prev-step="1">
+                  <span>← Back to Celebration</span>
+                </button>
+                <button type="button" class="step-btn-next" data-next-step="3">
+                  <span>Continue to Date & Slot →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPAGE STEP 3: DATE & TIME SLOT -->
+          <div class="booking-step-panel" id="stepPanel3">
+            <div class="booking-card">
+              <h2 class="booking-card-title">
+                <span class="card-step-num">3</span>
+                <span>Select Date & Sailing Slot</span>
+              </h2>
+              <p class="booking-card-desc">Click any open date on the calendar, then choose your preferred time slot.</p>
+
+              <div class="calendar-wrapper">
+                <div class="calendar-month-header">
+                  <button class="month-nav-btn" id="prevMonthBtn" aria-label="Previous month" type="button">‹</button>
+                  <h3 class="current-month-label" id="currentMonthLabel">November 2026</h3>
+                  <button class="month-nav-btn" id="nextMonthBtn" aria-label="Next month" type="button">›</button>
                 </div>
 
-                <div class="form-group">
-                  <label for="bookGuestCount" class="form-label">Expected Number of Guests (1–100) *</label>
-                  <input type="number" id="bookGuestCount" class="form-input" min="1" max="100" value="2" required>
+                <!-- Legend -->
+                <div class="calendar-legend">
+                  <span class="legend-item"><span class="legend-dot dot-free"></span> Open</span>
+                  <span class="legend-item"><span class="legend-dot dot-filling"></span> Few Slots Left</span>
+                  <span class="legend-item"><span class="legend-dot dot-booked"></span> Reserved</span>
+                </div>
+
+                <!-- Day Headers -->
+                <div class="calendar-days-row">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+
+                <!-- Dynamic Days Grid -->
+                <div class="calendar-grid" id="calendarDaysGrid"></div>
+
+                <!-- Selected Date Banner -->
+                <div class="selected-date-status-box" id="selectedDateStatusBox">
+                  <div class="status-date-info">
+                    <h4 id="statusDateTitle">Saturday, 14 November 2026</h4>
+                    <p id="statusDateSlotsCount">3 of 4 slots open</p>
+                  </div>
+                </div>
+
+                <!-- Time Slot Choices -->
+                <div class="inline-slots-container">
+                  <span class="slots-inline-title">Select Timing on this Date:</span>
+                  <div class="slots-list" id="slotsList">
+                    <label class="slot-option-card">
+                      <input type="radio" name="sailingSlot" value="Sunrise" data-time="6:00 am">
+                      <div class="slot-content">
+                        <div class="slot-time-block">
+                          <span class="slot-name">Sunrise</span>
+                          <span class="slot-timing">from 6:00 am (Morning Mist)</span>
+                        </div>
+                        <span class="slot-status-pill free">Open</span>
+                      </div>
+                    </label>
+
+                    <label class="slot-option-card">
+                      <input type="radio" name="sailingSlot" value="Afternoon" data-time="12:00 pm">
+                      <div class="slot-content">
+                        <div class="slot-time-block">
+                          <span class="slot-name">Afternoon</span>
+                          <span class="slot-timing">from 12:00 pm (Lunch & Sun)</span>
+                        </div>
+                        <span class="slot-status-pill free">Open</span>
+                      </div>
+                    </label>
+
+                    <label class="slot-option-card">
+                      <input type="radio" name="sailingSlot" value="Sunset" data-time="4:30 pm" checked>
+                      <div class="slot-content">
+                        <div class="slot-time-block">
+                          <span class="slot-name">Sunset</span>
+                          <span class="slot-timing">from 4:30 pm (Golden Hour & Twilight)</span>
+                        </div>
+                        <span class="slot-status-pill selected">Selected</span>
+                      </div>
+                    </label>
+
+                    <label class="slot-option-card disabled">
+                      <input type="radio" name="sailingSlot" value="Evening" data-time="8:00 pm" disabled>
+                      <div class="slot-content">
+                        <div class="slot-time-block">
+                          <span class="slot-name">Evening</span>
+                          <span class="slot-timing">from 8:00 pm (City Lights & Dinner)</span>
+                        </div>
+                        <span class="slot-status-pill booked">Reserved</span>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="bookGuestNotes" class="form-label">Special Requests / Surprise Notes (Optional)</label>
-                <textarea id="bookGuestNotes" class="form-textarea" rows="2" placeholder="e.g. Surprise celebration, specific music, champagne or cake requirement..."></textarea>
+              <div class="step-actions-footer">
+                <button type="button" class="step-btn-prev" data-prev-step="2">
+                  <span>← Back to Style & Duration</span>
+                </button>
+                <button type="button" class="step-btn-next" data-next-step="4">
+                  <span>Continue to Guest Details →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPAGE STEP 4: GUEST DETAILS & FINAL REVIEW -->
+          <div class="booking-step-panel" id="stepPanel4">
+            <div class="booking-card">
+              <h2 class="booking-card-title">
+                <span class="card-step-num">4</span>
+                <span>Guest Details & Reservation Lock</span>
+              </h2>
+              <p class="booking-card-desc">Your contact details for receipt and planning consultation.</p>
+
+              <!-- Quick Verification Overview of choices -->
+              <div class="step-review-overview">
+                <div class="step-review-grid">
+                  <div class="step-review-item">
+                    <span class="step-review-label">Charter Occasion</span>
+                    <span class="step-review-val" id="revStepOccasion">Sunset Proposal</span>
+                  </div>
+                  <div class="step-review-item">
+                    <span class="step-review-label">Selected Date</span>
+                    <span class="step-review-val" id="revStepDate">Sat, 14 Nov 2026</span>
+                  </div>
+                  <div class="step-review-item">
+                    <span class="step-review-label">Time & Slot</span>
+                    <span class="step-review-val" id="revStepSlot">Sunset (4:30 pm) · 3 hrs</span>
+                  </div>
+                  <div class="step-review-item">
+                    <span class="step-review-label">Style</span>
+                    <span class="step-review-val" id="revStepMode">At Anchor (Paused)</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="form-error-msg" id="formErrorMsg"></div>
-            </form>
+              <form id="bookPageForm" class="guest-form" onsubmit="return false;">
+                <div class="form-grid-row">
+                  <div class="form-group">
+                    <label for="bookGuestName" class="form-label">Full Name *</label>
+                    <input type="text" id="bookGuestName" class="form-input" placeholder="e.g. Arjun Mehta" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="bookGuestPhone" class="form-label">WhatsApp Mobile Number *</label>
+                    <input type="tel" id="bookGuestPhone" class="form-input" placeholder="+91 98200 00000" required>
+                  </div>
+                </div>
+
+                <div class="form-grid-row">
+                  <div class="form-group">
+                    <label for="bookGuestEmail" class="form-label">Email Address (for official receipt) *</label>
+                    <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" required>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="bookGuestCount" class="form-label">Expected Number of Guests (1–100) *</label>
+                    <input type="number" id="bookGuestCount" class="form-input" min="1" max="100" value="2" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="bookGuestNotes" class="form-label">Special Requests / Surprise Notes (Optional)</label>
+                  <textarea id="bookGuestNotes" class="form-textarea" rows="2" placeholder="e.g. Surprise celebration, specific music, champagne or cake requirement..."></textarea>
+                </div>
+
+                <div class="form-error-msg" id="formErrorMsg"></div>
+              </form>
+
+              <div class="step-actions-footer">
+                <button type="button" class="step-btn-prev" data-prev-step="3">
+                  <span>← Back to Date & Slot</span>
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -1673,6 +2019,13 @@
         <div class="step-title-group text-center">
           <h2 class="step-main-title" style="font-size: 32px;">Your Date is Locked.</h2>
           <p class="confirmation-ref-code" id="confirmedRefCode">Booking BP-1411-027</p>
+        </div>
+
+        <!-- Official QR Boarding Pass -->
+        <div class="boarding-qr-box">
+          <img id="boardingQrImg" class="boarding-qr-img" alt="Booking Verification QR" src="">
+          <span class="boarding-qr-text">Scan for Verified Charter Pass & Details</span>
+          <span class="boarding-qr-ref" id="boardingQrRefText">BP-1411-027</span>
         </div>
 
         <!-- Receipt Card -->

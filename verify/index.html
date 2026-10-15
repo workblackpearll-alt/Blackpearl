@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charter Verification Pass | Black Pearl · Lady Alice</title>
+  <meta name="description" content="Verified Charter Pass & Booking Details for Lady Alice at Gateway of India, Mumbai.">
+  <link rel="canonical" href="https://blackpearlmumbai.com/verify">
+  <meta name="theme-color" content="#050506">
+  <link rel="icon" type="image/svg+xml" href="/assets/black-pearl-mark.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/index.css">
+
+  <style>
+    body.verify-page-body {
+      background-color: #07080A;
+      color: #FFFFFF;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-body, -apple-system, sans-serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .verify-site-header {
+      background: rgba(7, 8, 10, 0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px 0;
+    }
+
+    .verify-nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .verify-container {
+      max-width: 620px;
+      margin: 40px auto 60px;
+      padding: 0 20px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .pass-card {
+      background: #0A0B0E;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 36px 30px;
+      text-align: center;
+    }
+
+    .pass-badge-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      padding: 6px 14px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .pass-title {
+      font-family: var(--font-heading, "Cormorant Garamond", serif);
+      font-size: 32px;
+      color: #FFFFFF;
+      margin: 0 0 6px 0;
+      font-weight: 500;
+    }
+
+    .pass-ref {
+      font-family: monospace;
+      font-size: 16px;
+      letter-spacing: 0.08em;
+      color: #9CA3AF;
+      margin-bottom: 24px;
+    }
+
+    .pass-details-table {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .pass-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pass-row:last-child {
+      border-bottom: none;
+    }
+
+    .pass-row .p-label {
+      color: #9CA3AF;
+    }
+
+    .pass-row .p-val {
+      color: #FFFFFF;
+      font-weight: 500;
+    }
+
+    .pass-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-verify-action {
+      background: #FFFFFF;
+      color: #08090C;
+      text-decoration: none;
+      padding: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-verify-action:hover {
+      background: #E5E7EB;
+    }
+
+    .btn-verify-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      text-decoration: none;
+      padding: 12px;
+      font-size: 12.5px;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+
+    .btn-verify-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #FFFFFF;
+    }
+  </style>
+</head>
+<body class="verify-page-body">
+
+  <header class="site-header scrolled" id="siteHeader">
+    <div class="header-inner">
+      <a href="/" class="header-brand" aria-label="Black Pearl Home">
+        <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" class="brand-logo" width="230" height="44">
+      </a>
+
+      <nav class="desktop-nav" aria-label="Main Navigation">
+        <a href="/#ship" class="nav-link">The Ship</a>
+        <a href="/#occasions" class="nav-link">Occasions</a>
+        <a href="/gallery" class="nav-link">Gallery</a>
+        <a href="/about" class="nav-link">About Us</a>
+        <a href="/contact" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" class="btn-nav-back" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" aria-label="Go to previous page">
+          <span>← Back</span>
+        </button>
+        <a href="/book" class="btn-nav-reserve">
+          <span>Reserve Date</span>
+        </a>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Nav -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <nav class="mobile-nav-links">
+        <a href="javascript:void(0)" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" class="mobile-nav-link" style="color: #FFFFFF; font-weight: 500;">
+          ← Back to Previous Page
+        </a>
+        <a href="/#ship" class="mobile-nav-link">The Ship</a>
+        <a href="/#occasions" class="mobile-nav-link">Occasions</a>
+        <a href="/gallery" class="mobile-nav-link">Gallery</a>
+        <a href="/about" class="mobile-nav-link">About Us</a>
+        <a href="/contact" class="mobile-nav-link">Contact</a>
+      </nav>
+      <div class="mobile-drawer-cta">
+        <a href="/book" class="btn-nav-reserve" style="width: 100%;">
+          <span>Reserve Date</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main style="flex: 1;">
+    <div class="verify-container">
+      <div class="pass-card">
+        
+        <div class="pass-badge-verified">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Official Verified Charter Pass</span>
+        </div>
+
+        <h1 class="pass-title">Lady Alice · Boarding Voucher</h1>
+        <div class="pass-ref" id="passRefCode">REF: BP-1411-027</div>
+
+        <div class="pass-details-table">
+          <div class="pass-row">
+            <span class="p-label">Charter Status</span>
+            <span class="p-val" style="color: #4ADE80;">Deposit Paid · Verified Hold</span>
+          </div>
+          <div class="pass-row">
+            <span class="p-label">Primary Guest</span>
+            <span class="p-val" id="passGuestName">Arjun Mehta</span>
+          </div>
+          <div class="pass-row">
+            <span class="p-label">Charter Date</span>
+            <span class="p-val" id="passDate">Sat, 14 Nov 2026</span>
+          </div>
+          <div class="pass-row">
+            <span class="p-label">Sailing Slot</span>
+            <span class="p-val" id="passSlot">Sunset (4:30 pm)</span>
+          </div>
+          <div class="pass-row">
+            <span class="p-label">Boarding Berth</span>
+            <span class="p-val">Jetty No. 5, Gateway of India</span>
+          </div>
+          <div class="pass-row">
+            <span class="p-label">Vessel</span>
+            <span class="p-val">Lady Alice (100 Capacity)</span>
+          </div>
+        </div>
+
+        <div class="pass-actions">
+          <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-verify-action" id="btnPassWhatsApp">
+            Chat with Charter Team on WhatsApp
+          </a>
+          <a href="/" class="btn-verify-outline">
+            Return to Black Pearl Website
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || 'BP-OFFICIAL';
+      const name = params.get('name') || 'Guest';
+      const date = params.get('date') || 'Confirmed Date';
+      const slot = params.get('slot') || 'Sunset (4:30 pm)';
+
+      const refEl = document.getElementById('passRefCode');
+      const nameEl = document.getElementById('passGuestName');
+      const dateEl = document.getElementById('passDate');
+      const slotEl = document.getElementById('passSlot');
+      const waBtn = document.getElementById('btnPassWhatsApp');
+
+      if (refEl) refEl.textContent = `REF: ${ref}`;
+      if (nameEl) nameEl.textContent = name;
+      if (dateEl) dateEl.textContent = date;
+      if (slotEl) slotEl.textContent = slot;
+
+      if (waBtn) {
+        const text = encodeURIComponent(`Hello Black Pearl, verifying my charter booking ${ref} for ${name}.`);
+        waBtn.href = `https://wa.me/919820000000?text=${text}`;
+      }
+
+      // Mobile Menu Drawer Toggle
+      const mobileBtn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileDrawer');
+      const header = document.getElementById('siteHeader');
+      if (mobileBtn && drawer) {
+        mobileBtn.addEventListener('click', () => {
+          const isOpen = drawer.classList.toggle('open');
+          if (header) {
+            if (isOpen) header.classList.add('drawer-open');
+            else header.classList.remove('drawer-open');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
