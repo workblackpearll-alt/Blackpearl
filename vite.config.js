@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 // Vite plugin to route multi-page apps cleanly without .html
 function pageRoutingPlugin() {
-  const routes = ['admin', 'book', 'gallery', 'about', 'contact', 'terms', 'privacy', 'cancellation'];
+  const routes = ['admin', 'book', 'gallery', 'about', 'contact', 'terms', 'privacy', 'cancellation', 'verify'];
   return {
     name: 'page-routing-plugin',
     configureServer(server) {
@@ -46,6 +46,7 @@ export default defineConfig({
         terms: resolve(__dirname, 'terms/index.html'),
         privacy: resolve(__dirname, 'privacy/index.html'),
         cancellation: resolve(__dirname, 'cancellation/index.html'),
+        verify: resolve(__dirname, 'verify/index.html'),
         notFound: resolve(__dirname, '404.html')
       }
     }

@@ -36,6 +36,36 @@
       </nav>
 
       <div class="header-actions">
+        <button type="button" class="btn-nav-back" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" aria-label="Go to previous page">
+          <span>← Back</span>
+        </button>
+        <a href="/book" class="btn-nav-reserve">
+          <span>Reserve Date</span>
+        </a>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Nav -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <nav class="mobile-nav-links">
+        <a href="javascript:void(0)" onclick="if(window.history.length > 1){window.history.back();}else{window.location.href='/';}" class="mobile-nav-link" style="color: #FFFFFF; font-weight: 500;">
+          ← Back to Previous Page
+        </a>
+        <a href="/#ship" class="mobile-nav-link">The Ship</a>
+        <a href="/#occasions" class="mobile-nav-link">Occasions</a>
+        <a href="/gallery" class="mobile-nav-link">Gallery</a>
+        <a href="/about" class="mobile-nav-link">About Us</a>
+        <a href="/contact" class="mobile-nav-link">Contact</a>
+      </nav>
+      <div class="mobile-drawer-cta">
+        <a href="/book" class="btn-nav-reserve" style="width: 100%;">
+          <span>Reserve Date</span>
+        </a>
       </div>
     </div>
   </header>

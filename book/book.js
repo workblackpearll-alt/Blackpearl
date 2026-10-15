@@ -47,6 +47,7 @@ const monthNames = [
 
 // Booking Page State
 const bookState = {
+  currentStep: 1,
   isPrivateEvent: false,
   selectedOccasion: 'Proposals',
   customEventName: '',
@@ -72,6 +73,7 @@ const bookState = {
 
 document.addEventListener('DOMContentLoaded', () => {
   initUrlParameters();
+  initStepNavigation();
   initOccasionPicker();
   initVoyageModeAndDuration();
   initCalendar();
@@ -80,11 +82,179 @@ document.addEventListener('DOMContentLoaded', () => {
   initRazorpayCheckout();
   initConfirmationActions();
   syncBlockedDatesFromSupabase();
+  initMobileNav();
 
   try {
     trackPageView(window.location.pathname || '/book');
   } catch (e) {}
 });
+
+function initMobileNav() {
+  const header = document.getElementById('siteHeader');
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const drawer = document.getElementById('mobileDrawer');
+  const drawerLinks = document.querySelectorAll('.mobile-nav-link');
+
+  if (mobileBtn && drawer) {
+    mobileBtn.addEventListener('click', () => {
+      const isOpen = drawer.classList.toggle('open');
+      if (header) {
+        if (isOpen) {
+          header.classList.add('drawer-open');
+        } else {
+          header.classList.remove('drawer-open');
+        }
+      }
+    });
+
+    drawerLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        drawer.classList.remove('open');
+        if (header) header.classList.remove('drawer-open');
+      });
+    });
+  }
+}
+
+/* ========================================================
+   0. MULTI-STEP SUBPAGE NAVIGATION & VALIDATION
+   ======================================================== */
+function initStepNavigation() {
+  // Next step buttons
+  document.querySelectorAll('[data-next-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetStep = parseInt(btn.getAttribute('data-next-step'), 10);
+      attemptGoToStep(targetStep);
+    });
+  });
+
+  // Prev step buttons
+  document.querySelectorAll('[data-prev-step]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetStep = parseInt(btn.getAttribute('data-prev-step'), 10);
+      goToStep(targetStep);
+    });
+  });
+
+  // Progress pill navigation (can go backwards freely, or forwards if current validated)
+  document.querySelectorAll('.progress-step-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const step = parseInt(pill.getAttribute('data-step'), 10);
+      if (step < bookState.currentStep) {
+        goToStep(step);
+      } else if (step > bookState.currentStep) {
+        attemptGoToStep(step);
+      }
+    });
+  });
+}
+
+function attemptGoToStep(targetStep) {
+  // Validate steps sequentially
+  if (targetStep > bookState.currentStep) {
+    for (let s = bookState.currentStep; s < targetStep; s++) {
+      if (!validateStep(s)) {
+        return false;
+      }
+    }
+  }
+  goToStep(targetStep);
+  return true;
+}
+
+function validateStep(stepNum) {
+  if (stepNum === 1) {
+    if (!bookState.selectedOccasion) {
+      alert('Please select an occasion or private event to continue.');
+      return false;
+    }
+    return true;
+  }
+
+  if (stepNum === 2) {
+    if (!bookState.voyageMode || !bookState.selectedDuration) {
+      alert('Please select a navigation style and duration.');
+      return false;
+    }
+    return true;
+  }
+
+  if (stepNum === 3) {
+    if (!bookState.selectedDate) {
+      alert('Please click and select an open date on the calendar.');
+      return false;
+    }
+    if (!bookState.selectedSlot) {
+      alert('Please choose a time slot on your selected date.');
+      return false;
+    }
+    return true;
+  }
+
+  return true;
+}
+
+function goToStep(stepNum) {
+  if (stepNum < 1 || stepNum > 4) return;
+  bookState.currentStep = stepNum;
+
+  // Toggle step panels
+  document.querySelectorAll('.booking-step-panel').forEach(panel => {
+    panel.classList.remove('active');
+  });
+  const targetPanel = document.getElementById(`stepPanel${stepNum}`);
+  if (targetPanel) targetPanel.classList.add('active');
+
+  // Update progress tracker pills
+  document.querySelectorAll('.progress-step-pill').forEach(pill => {
+    const pStep = parseInt(pill.getAttribute('data-step'), 10);
+    pill.classList.remove('active', 'completed');
+    if (pStep === stepNum) {
+      pill.classList.add('active');
+    } else if (pStep < stepNum) {
+      pill.classList.add('completed');
+    }
+  });
+
+  // If entering step 4, refresh review overview block
+  if (stepNum === 4) {
+    updateStepReviewSummary();
+  }
+
+  // Smooth scroll container to top of form
+  const container = document.getElementById('bookingProgressTracker');
+  if (container) {
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function updateStepReviewSummary() {
+  const occEl = document.getElementById('revStepOccasion');
+  const dateEl = document.getElementById('revStepDate');
+  const slotEl = document.getElementById('revStepSlot');
+  const modeEl = document.getElementById('revStepMode');
+
+  let displayOccasion = bookState.selectedOccasion;
+  if (bookState.isPrivateEvent && bookState.customEventName) {
+    displayOccasion = `Private Event (${bookState.customEventName})`;
+  } else if (bookState.isPrivateEvent) {
+    displayOccasion = 'Private Event / Custom Charter';
+  }
+
+  if (occEl) occEl.textContent = displayOccasion;
+
+  const dateObj = new Date(bookState.selectedDate);
+  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  const mName = monthNames[dateObj.getMonth()].substring(0, 3);
+  if (dateEl) dateEl.textContent = `${dayName}, ${dateObj.getDate()} ${mName} ${dateObj.getFullYear()}`;
+
+  if (slotEl) slotEl.textContent = `${bookState.selectedSlot} (${bookState.selectedSlotTime}) · ${bookState.selectedDuration} hrs`;
+  if (modeEl) {
+    modeEl.textContent = bookState.voyageMode === 'sailing'
+      ? 'Active Sailing (Underway)'
+      : 'At Anchor (Paused)';
+  }
+}
 
 /* ========================================================
    1. URL PARAMETER HANDLING & PRE-SELECTION
@@ -753,6 +923,17 @@ function renderConfirmationReceipt(hold) {
       `Please contact me on ${hold.phone} to coordinate details.`
     );
     waBtn.href = `https://wa.me/919820000000?text=${waText}`;
+  }
+
+  // Generate Boarding Pass QR Code pointing to verification endpoint
+  const qrImg = document.getElementById('boardingQrImg');
+  const qrRefText = document.getElementById('boardingQrRefText');
+  if (qrRefText) qrRefText.textContent = hold.id;
+
+  if (qrImg) {
+    const verifyUrl = `${window.location.origin}/verify?ref=${encodeURIComponent(hold.id)}&name=${encodeURIComponent(hold.name)}&date=${encodeURIComponent(hold.dateIso)}&slot=${encodeURIComponent(hold.slot)}`;
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=050506&margin=4`;
+    qrImg.alt = `QR Code for ${hold.id}`;
   }
 }
 

@@ -598,6 +598,60 @@ a:hover {
   color: #FAF7F2;
 }
 
+/* Unified Navbar Date Lock / Reserve Button */
+.btn-nav-reserve {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #FFFFFF;
+  color: #08090C !important;
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  text-decoration: none;
+  border: 1px solid #FFFFFF;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-nav-reserve:hover {
+  background: #E5E7EB;
+  border-color: #E5E7EB;
+  color: #08090C !important;
+  transform: translateY(-1px);
+}
+
+/* Universal Back Button for Subpages */
+.btn-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #D1D5DB !important;
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-nav-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #FFFFFF;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
 .mobile-menu-btn {
   display: none;
   background: transparent;
@@ -618,8 +672,8 @@ a:hover {
 
 .mobile-drawer {
   display: none;
-  background: var(--deck);
-  border-top: 1px solid var(--rail);
+  background: #07080A;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 24px;
   flex-direction: column;
   gap: 20px;
@@ -632,10 +686,19 @@ a:hover {
 }
 
 .mobile-nav-link {
-  font-size: 16px;
-  color: var(--pearl);
+  font-size: 15px;
+  color: #ded9cd;
+  text-decoration: none;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(46, 42, 32, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.minimal-nav-active {
+  color: #FFFFFF;
 }
 
 /* ========================================================
