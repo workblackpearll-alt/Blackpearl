@@ -3,7 +3,11 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/admin/:path*",
+      "source": "/admin/:match*",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin/:match",
       "destination": "/admin/index.html"
     },
     {
