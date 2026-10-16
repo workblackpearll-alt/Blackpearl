@@ -5552,3 +5552,86 @@ input[type="submit"],
   border-radius: 0 !important;
 }
 
+
+/* ========================================================
+   SECTION 8: COMMUNITY SIGN-UP (WHATSAPP BROADCAST)
+   ======================================================== */
+.section-community {
+  padding: 0 0 90px;
+}
+
+.community-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(14, 15, 20, 0.78);
+  padding: 44px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 44px;
+  align-items: center;
+}
+
+.community-title {
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 500;
+  color: var(--pearl);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.community-desc {
+  font-size: 15.5px;
+  color: var(--mist);
+  line-height: 1.65;
+}
+
+.community-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.5;
+  margin: 4px 0 14px;
+  cursor: pointer;
+}
+
+.community-consent input {
+  margin-top: 3px;
+  accent-color: var(--gold);
+  flex-shrink: 0;
+}
+
+.community-feedback {
+  font-size: 13.5px;
+  margin-top: 12px;
+  min-height: 1em;
+  color: var(--gold-light);
+}
+
+.community-feedback.is-error {
+  color: var(--coral);
+}
+
+@media (max-width: 900px) {
+  .community-card {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 20px;
+  }
+
+  .community-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 600px) {
+  .section-community {
+    padding-bottom: 60px;
+  }
+
+  .community-card .brief-form-row {
+    grid-template-columns: 1fr;
+  }
+}

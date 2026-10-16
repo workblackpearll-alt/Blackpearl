@@ -13,6 +13,10 @@ import {
   saveGalleryImage,
   fetchBlockedDates,
   saveBlockedDate,
+  fetchContactInquiries,
+  updateContactInquiryStatus,
+  fetchCommunitySignups,
+  updateCommunityStatus,
   isSupabaseConfigured
 } from '../supabaseClient.js';
 
@@ -41,7 +45,11 @@ const state = {
   analytics: null,
   activeBookingFilter: 'all',
   bookingSearchQuery: '',
-  briefSearchQuery: ''
+  briefSearchQuery: '',
+  contactInquiries: [],
+  contactSearchQuery: '',
+  communityMembers: [],
+  communitySearchQuery: ''
 };
 
 // --- DOM Element References ---
@@ -90,6 +98,20 @@ const elements = {
   inquiriesTableBody: document.getElementById('inquiriesTableBody'),
   briefsEmptyState: document.getElementById('briefsEmptyState'),
 
+  // Contact inquiries elements
+  sidebarContactCount: document.getElementById('sidebarContactCount'),
+  contactSearchInput: document.getElementById('contactSearchInput'),
+  contactTableBody: document.getElementById('contactTableBody'),
+  contactEmptyState: document.getElementById('contactEmptyState'),
+
+  // Community elements
+  sidebarCommunityCount: document.getElementById('sidebarCommunityCount'),
+  communitySearchInput: document.getElementById('communitySearchInput'),
+  communityTableBody: document.getElementById('communityTableBody'),
+  communityEmptyState: document.getElementById('communityEmptyState'),
+  btnCopyCommunityNumbers: document.getElementById('btnCopyCommunityNumbers'),
+  btnExportCommunityCsv: document.getElementById('btnExportCommunityCsv'),
+
   // Media elements
   mediaUploadForm: document.getElementById('adminMediaUploadForm'),
   mediaTitle: document.getElementById('adminMediaTitle'),
@@ -132,6 +154,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initDashboardHandlers();
   initBookingsHandlers();
   initInquiriesHandlers();
+  initContactHandlers();
+  initCommunityHandlers();
   initMediaHandlers();
   initCalendarHandlers();
   initModalHandlers();
@@ -206,6 +230,10 @@ function handleRouteFromUrl() {
     navigateTo('bookings', false);
   } else if (path.includes('/admin/inquiries') || path.includes('/admin/briefs')) {
     navigateTo('inquiries', false);
+  } else if (path.includes('/admin/contact')) {
+    navigateTo('contact', false);
+  } else if (path.includes('/admin/community')) {
+    navigateTo('community', false);
   } else if (path.includes('/admin/media')) {
     navigateTo('media', false);
   } else if (path.includes('/admin/calendar')) {
@@ -365,14 +393,108 @@ function hideAuthFeedback() {
 /* ========================================================
    3. SIDEBAR NAVIGATION & ROUTING
    ======================================================== */
+const SIDEBAR_COLLAPSED_KEY = 'bp_admin_sidebar_collapsed';
+const mobileLayoutQuery = window.matchMedia('(max-width: 1024px)');
+
 function initSidebarNavigation() {
   elements.navItems.forEach(item => {
+    // Tooltip so icons stay identifiable when the sidebar is collapsed
+    const label = item.querySelector('.nav-label');
+    if (label) item.title = label.textContent.trim();
+
     item.addEventListener('click', () => {
       const page = item.getAttribute('data-page');
       if (page) {
         navigateTo(page);
       }
+      if (mobileLayoutQuery.matches) closeMobileSidebar();
     });
+  });
+
+  initSidebarToggles();
+  initResponsiveTables();
+}
+
+function initSidebarToggles() {
+  const layout = elements.portalView;
+  const collapseBtn = document.getElementById('btnSidebarCollapse');
+  const menuBtn = document.getElementById('btnMobileMenu');
+  const closeBtn = document.getElementById('btnSidebarClose');
+  const backdrop = document.getElementById('sidebarBackdrop');
+
+  // Desktop: collapse to icon rail, remembered per browser
+  const setCollapsed = (collapsed) => {
+    layout.classList.toggle('sidebar-collapsed', collapsed);
+    if (collapseBtn) {
+      collapseBtn.setAttribute('aria-expanded', String(!collapsed));
+      const text = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      collapseBtn.setAttribute('aria-label', text);
+      collapseBtn.title = text;
+    }
+  };
+
+  try {
+    setCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1');
+  } catch {
+    setCollapsed(false);
+  }
+
+  collapseBtn?.addEventListener('click', () => {
+    const collapsed = !layout.classList.contains('sidebar-collapsed');
+    setCollapsed(collapsed);
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0');
+    } catch { /* storage unavailable */ }
+  });
+
+  // Mobile / tablet: off-canvas drawer
+  menuBtn?.addEventListener('click', openMobileSidebar);
+  closeBtn?.addEventListener('click', closeMobileSidebar);
+  backdrop?.addEventListener('click', closeMobileSidebar);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && layout.classList.contains('sidebar-open')) closeMobileSidebar();
+  });
+  mobileLayoutQuery.addEventListener('change', (e) => {
+    if (!e.matches) closeMobileSidebar();
+  });
+}
+
+function openMobileSidebar() {
+  elements.portalView.classList.add('sidebar-open');
+  document.body.classList.add('admin-drawer-open');
+  document.getElementById('btnMobileMenu')?.setAttribute('aria-expanded', 'true');
+  document.getElementById('btnSidebarClose')?.focus();
+}
+
+function closeMobileSidebar() {
+  if (!elements.portalView.classList.contains('sidebar-open')) return;
+  elements.portalView.classList.remove('sidebar-open');
+  document.body.classList.remove('admin-drawer-open');
+  const menuBtn = document.getElementById('btnMobileMenu');
+  menuBtn?.setAttribute('aria-expanded', 'false');
+  menuBtn?.focus();
+}
+
+/**
+ * Copies each column header onto its cells as data-label, so the
+ * mobile card layout can show "LABEL  value" for every field.
+ */
+function initResponsiveTables() {
+  document.querySelectorAll('.admin-data-table').forEach(table => {
+    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    const applyLabels = () => {
+      tbody.querySelectorAll('tr').forEach(tr => {
+        Array.from(tr.children).forEach((td, i) => {
+          td.setAttribute('data-label', headers[i] || '');
+        });
+      });
+    };
+
+    applyLabels();
+    new MutationObserver(applyLabels).observe(tbody, { childList: true });
   });
 }
 
@@ -389,6 +511,11 @@ function navigateTo(pageName, pushState = true) {
   elements.navItems.forEach(item => {
     const target = item.getAttribute('data-page');
     item.classList.toggle('active', target === pageName);
+    if (target === pageName) {
+      const title = document.getElementById('mobilePageTitle');
+      const label = item.querySelector('.nav-label');
+      if (title && label) title.textContent = label.textContent.trim();
+    }
   });
 
   // Update panels visibility
@@ -396,6 +523,8 @@ function navigateTo(pageName, pushState = true) {
     dashboard: 'pageDashboard',
     bookings: 'pageBookings',
     inquiries: 'pageInquiries',
+    contact: 'pageContact',
+    community: 'pageCommunity',
     media: 'pageMedia',
     calendar: 'pageCalendar'
   };
@@ -413,6 +542,10 @@ function navigateTo(pageName, pushState = true) {
     renderBookingsTable();
   } else if (pageName === 'inquiries') {
     renderInquiriesTable();
+  } else if (pageName === 'contact') {
+    renderContactTable();
+  } else if (pageName === 'community') {
+    renderCommunityTable();
   } else if (pageName === 'media') {
     renderMediaGrid();
   } else if (pageName === 'calendar') {
@@ -432,6 +565,8 @@ async function loadAllPortalData() {
     loadAnalyticsData(),
     loadBookingsData(),
     loadInquiriesData(),
+    loadContactData(),
+    loadCommunityData(),
     loadMediaData(),
     loadBlockedDatesData()
   ]);
@@ -840,6 +975,189 @@ function renderInquiriesTable() {
 }
 
 /* ========================================================
+   7b. CONTACT PAGE INQUIRIES
+   ======================================================== */
+async function loadContactData() {
+  const res = await fetchContactInquiries();
+  state.contactInquiries = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+  if (elements.sidebarContactCount) {
+    elements.sidebarContactCount.textContent = state.contactInquiries.length;
+  }
+  renderContactTable();
+}
+
+function initContactHandlers() {
+  if (elements.contactSearchInput) {
+    elements.contactSearchInput.addEventListener('input', (e) => {
+      state.contactSearchQuery = e.target.value.toLowerCase().trim();
+      renderContactTable();
+    });
+  }
+}
+
+function renderContactTable() {
+  if (!elements.contactTableBody) return;
+  elements.contactTableBody.innerHTML = '';
+
+  const q = state.contactSearchQuery;
+  const list = q
+    ? state.contactInquiries.filter(i =>
+        [i.name, i.phone, i.email, i.occasion, i.notes].some(v => v && v.toLowerCase().includes(q)))
+    : state.contactInquiries;
+
+  if (elements.contactEmptyState) elements.contactEmptyState.style.display = list.length ? 'none' : 'block';
+
+  const statuses = ['New', 'Contacted', 'Confirmed', 'Archived'];
+
+  list.forEach(inq => {
+    const tr = document.createElement('tr');
+    const cleanPhone = (inq.phone || '').replace(/\D/g, '');
+    const waLink = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${inq.name || ''}, this is Black Pearl regarding your charter inquiry.`)}`
+      : '#';
+    const notes = inq.notes || '';
+
+    tr.innerHTML = `
+      <td class="font-mono text-muted">${formatDisplayDate(inq.created_at)}</td>
+      <td class="font-medium"><strong>${escapeHtml(inq.name || '—')}</strong></td>
+      <td><a href="${waLink}" target="_blank" rel="noopener" class="contact-link whatsapp">${escapeHtml(inq.phone || 'N/A')}</a></td>
+      <td>${inq.email ? `<a href="mailto:${escapeHtml(inq.email)}" class="contact-link">${escapeHtml(inq.email)}</a>` : '—'}</td>
+      <td><span class="occasion-tag">${escapeHtml(inq.occasion || '—')}</span></td>
+      <td>${inq.target_date ? formatDisplayDate(inq.target_date) : '—'}</td>
+      <td>${escapeHtml(inq.guests || '—')}</td>
+      <td class="notes-cell" title="${escapeHtml(notes)}">${notes ? escapeHtml(notes.length > 50 ? notes.substring(0, 50) + '...' : notes) : '—'}</td>
+      <td>
+        <select class="status-select-pill status-shipped">
+          ${statuses.map(st => `<option value="${st}" ${inq.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+        </select>
+      </td>
+    `;
+
+    tr.querySelector('select').addEventListener('change', async (e) => {
+      const newStatus = e.target.value;
+      const res = await updateContactInquiryStatus(inq.id, newStatus);
+      if (res.success) {
+        inq.status = newStatus;
+        showToastNotification(`Inquiry from ${inq.name} updated to ${newStatus}`);
+      } else {
+        e.target.value = inq.status;
+        showToastNotification('Could not update status. Please try again.');
+      }
+    });
+
+    elements.contactTableBody.appendChild(tr);
+  });
+}
+
+/* ========================================================
+   7c. COMMUNITY SIGN-UPS (WHATSAPP BROADCAST)
+   ======================================================== */
+const COMMUNITY_STATUSES = ['New', 'Added to Broadcast', 'Opted Out'];
+
+async function loadCommunityData() {
+  const res = await fetchCommunitySignups();
+  state.communityMembers = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+  if (elements.sidebarCommunityCount) {
+    elements.sidebarCommunityCount.textContent = state.communityMembers.length;
+  }
+  renderCommunityTable();
+}
+
+function initCommunityHandlers() {
+  if (elements.communitySearchInput) {
+    elements.communitySearchInput.addEventListener('input', (e) => {
+      state.communitySearchQuery = e.target.value.toLowerCase().trim();
+      renderCommunityTable();
+    });
+  }
+
+  // Copies "New" members' numbers, one per line, for adding to the WhatsApp broadcast
+  if (elements.btnCopyCommunityNumbers) {
+    elements.btnCopyCommunityNumbers.addEventListener('click', async () => {
+      const numbers = state.communityMembers
+        .filter(m => m.status === 'New')
+        .map(m => '+' + m.phone);
+      if (!numbers.length) {
+        showToastNotification('No new members to add right now.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(numbers.join('\n'));
+        showToastNotification(`Copied ${numbers.length} new number${numbers.length === 1 ? '' : 's'}.`);
+      } catch {
+        showToastNotification('Clipboard blocked by browser. Use Export CSV instead.');
+      }
+    });
+  }
+
+  if (elements.btnExportCommunityCsv) {
+    elements.btnExportCommunityCsv.addEventListener('click', () => {
+      if (!state.communityMembers.length) {
+        showToastNotification('No community members to export yet.');
+        return;
+      }
+      const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = [
+        ['Name', 'Phone', 'Email', 'Status', 'Joined'],
+        ...state.communityMembers.map(m => [m.name, '+' + m.phone, m.email || '', m.status, m.created_at])
+      ];
+      const csv = rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `black-pearl-community-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+}
+
+function renderCommunityTable() {
+  if (!elements.communityTableBody) return;
+  elements.communityTableBody.innerHTML = '';
+
+  const q = state.communitySearchQuery;
+  const list = q
+    ? state.communityMembers.filter(m =>
+        [m.name, m.phone, m.email, m.status].some(v => v && v.toLowerCase().includes(q)))
+    : state.communityMembers;
+
+  if (elements.communityEmptyState) elements.communityEmptyState.style.display = list.length ? 'none' : 'block';
+
+  list.forEach(member => {
+    const tr = document.createElement('tr');
+    const phone = member.phone ? '+' + member.phone : 'N/A';
+
+    tr.innerHTML = `
+      <td class="font-mono text-muted">${formatDisplayDate(member.created_at)}</td>
+      <td class="font-medium"><strong>${escapeHtml(member.name || '—')}</strong></td>
+      <td><a href="https://wa.me/${escapeHtml(member.phone || '')}" target="_blank" rel="noopener" class="contact-link whatsapp">${escapeHtml(phone)}</a></td>
+      <td>${member.email ? `<a href="mailto:${escapeHtml(member.email)}" class="contact-link">${escapeHtml(member.email)}</a>` : '—'}</td>
+      <td>
+        <select class="status-select-pill status-shipped">
+          ${COMMUNITY_STATUSES.map(st => `<option value="${st}" ${member.status === st ? 'selected' : ''}>${st}</option>`).join('')}
+        </select>
+      </td>
+    `;
+
+    tr.querySelector('select').addEventListener('change', async (e) => {
+      const newStatus = e.target.value;
+      const res = await updateCommunityStatus(member.id, newStatus);
+      if (res.success) {
+        member.status = newStatus;
+        showToastNotification(`${member.name} marked as ${newStatus}`);
+      } else {
+        e.target.value = member.status;
+        showToastNotification('Could not update status. Please try again.');
+      }
+    });
+
+    elements.communityTableBody.appendChild(tr);
+  });
+}
+
+
+/* ========================================================
    8. IMAGEKIT MEDIA ASSETS & CDN CONTROLLER
    ======================================================== */
 /**
@@ -1243,4 +1561,10 @@ function showToastNotification(message) {
   setTimeout(() => {
     toast.classList.remove('show');
   }, 3200);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
 }

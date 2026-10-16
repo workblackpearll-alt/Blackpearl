@@ -4,6 +4,8 @@
    (Navigation, Gallery Filter & Lightbox, Contact Form, FAQ)
    ======================================================== */
 
+import { saveContactInquiry } from './supabaseClient.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   initSubpageNavigation();
   initSubpageGallery();
@@ -169,9 +171,9 @@ function initSubpageContact() {
   const alertMsg = document.getElementById('contactFeedback');
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -179,38 +181,34 @@ function initSubpageContact() {
       }
 
       const formData = {
-        name: form.querySelector('#inqName')?.value || '',
-        phone: form.querySelector('#inqPhone')?.value || '',
-        email: form.querySelector('#inqEmail')?.value || '',
+        name: form.querySelector('#inqName')?.value.trim() || '',
+        phone: form.querySelector('#inqPhone')?.value.trim() || '',
+        email: form.querySelector('#inqEmail')?.value.trim() || '',
         occasion: form.querySelector('#inqOccasion')?.value || '',
         date: form.querySelector('#inqDate')?.value || '',
         guests: form.querySelector('#inqGuests')?.value || '',
-        notes: form.querySelector('#inqNotes')?.value || '',
-        timestamp: new Date().toISOString()
+        notes: form.querySelector('#inqNotes')?.value.trim() || ''
       };
 
-      try {
-        const stored = JSON.parse(localStorage.getItem('black_pearl_inquiries') || '[]');
-        stored.push(formData);
-        localStorage.setItem('black_pearl_inquiries', JSON.stringify(stored));
-      } catch (err) {
-        console.warn('Storage unavailable', err);
+      const res = await saveContactInquiry(formData);
+
+      if (alertMsg) {
+        alertMsg.textContent = res.success
+          ? `Thank you, ${formData.name}. Your inquiry for ${formData.occasion} has been received. Our charter desk will contact you on ${formData.phone} shortly.`
+          : 'Sorry, we could not send your inquiry. Please try again or reach us on WhatsApp.';
+        alertMsg.style.display = 'block';
       }
 
-      setTimeout(() => {
-        if (alertMsg) {
-          alertMsg.innerHTML = `Thank you, ${formData.name}. Your inquiry for ${formData.occasion} has been received. Our charter desk will contact you on ${formData.phone} shortly.`;
-          alertMsg.style.display = 'block';
-        }
-        form.reset();
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Inquiry Sent';
+      if (res.success) form.reset();
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = res.success ? 'Inquiry Sent' : 'Request Consultation';
+        if (res.success) {
           setTimeout(() => {
             submitBtn.textContent = 'Request Consultation';
           }, 3500);
         }
-      }, 500);
+      }
     });
   }
 }

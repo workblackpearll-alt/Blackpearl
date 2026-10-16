@@ -106,9 +106,6 @@
       </nav>
 
       <div class="header-actions">
-        <a href="/book" class="btn-nav-reserve">
-          <span>Reserve Date</span>
-        </a>
         <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
           <span></span>
           <span></span>
@@ -957,6 +954,50 @@
               </iframe>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: COMMUNITY SIGN-UP (WHATSAPP BROADCAST) -->
+    <section class="section-community" id="community">
+      <div class="container">
+        <div class="community-card">
+          <div class="community-intro">
+            <span class="section-eyebrow">THE BLACK PEARL CIRCLE</span>
+            <h2 class="community-title">Join the community</h2>
+            <p class="community-desc">Be the first to hear about open-deck evenings, sunset sails and member-only dates, sent straight to your WhatsApp. No spam, leave anytime.</p>
+          </div>
+
+          <form id="communitySignupForm" class="community-form" novalidate>
+            <div class="brief-form-row">
+              <div class="brief-field">
+                <label for="communityName" class="brief-field-label">NAME *</label>
+                <input type="text" id="communityName" class="brief-field-input" placeholder="Your full name" autocomplete="name" required>
+              </div>
+              <div class="brief-field">
+                <label for="communityPhone" class="brief-field-label">WHATSAPP NUMBER *</label>
+                <input type="tel" id="communityPhone" class="brief-field-input" placeholder="+91 98200 00000" autocomplete="tel" required>
+              </div>
+            </div>
+
+            <div class="brief-form-row full-width">
+              <div class="brief-field">
+                <label for="communityEmail" class="brief-field-label">EMAIL (OPTIONAL)</label>
+                <input type="email" id="communityEmail" class="brief-field-input" placeholder="name@example.com" autocomplete="email">
+              </div>
+            </div>
+
+            <label class="community-consent">
+              <input type="checkbox" id="communityConsent" required>
+              <span>I agree to receive event updates from Black Pearl on WhatsApp.</span>
+            </label>
+
+            <button type="submit" class="btn-brief-submit" id="btnCommunitySubmit">
+              <span>JOIN THE COMMUNITY</span>
+            </button>
+
+            <p id="communityFeedback" class="community-feedback" role="status" aria-live="polite"></p>
+          </form>
         </div>
       </div>
     </section>

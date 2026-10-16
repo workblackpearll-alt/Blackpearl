@@ -694,3 +694,177 @@ export async function fetchAnalyticsSummary() {
   }
 }
 
+
+/* --------------------------------------------------------
+   8. COMMUNITY SIGN-UPS (WHATSAPP BROADCAST LIST)
+   -------------------------------------------------------- */
+
+/**
+ * Normalizes a phone number to digits with country code
+ * (bare 10-digit Indian numbers get a 91 prefix) so duplicates match.
+ */
+export function normalizePhone(raw) {
+  let digits = (raw || '').replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('0')) digits = digits.substring(1);
+  if (digits.length === 10) digits = '91' + digits;
+  return digits;
+}
+
+/**
+ * Saves a community sign-up. Public visitors can insert but not read
+ * this table, so no .select() after insert. A repeat number counts as success.
+ */
+export async function saveCommunitySignup(member) {
+  const payload = {
+    name: member.name,
+    phone: normalizePhone(member.phone),
+    email: member.email || null,
+    whatsapp_consent: true,
+    status: 'New'
+  };
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('community_members').insert([payload]);
+      if (error) {
+        if (error.code === '23505') {
+          return { success: true, duplicate: true, data: payload };
+        }
+        console.error('[Supabase] Error saving community sign-up:', error);
+        return { success: false, error, data: payload };
+      }
+      return { success: true, data: payload };
+    } catch (err) {
+      console.error('[Supabase] Exception saving community sign-up:', err);
+      return { success: false, error: err, data: payload };
+    }
+  }
+
+  return { success: false, error: { message: 'Supabase not configured' }, data: payload };
+}
+
+/**
+ * Fetches all community sign-ups (admin only).
+ */
+export async function fetchCommunitySignups() {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('[Supabase] Error fetching community sign-ups:', error);
+        return { success: false, error, data: [] };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] Exception fetching community sign-ups:', err);
+      return { success: false, error: err, data: [] };
+    }
+  }
+  return { success: false, data: [] };
+}
+
+/**
+ * Update a community member status (e.g. 'New', 'Added to Broadcast', 'Opted Out')
+ */
+export async function updateCommunityStatus(memberId, status) {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('community_members')
+        .update({ status })
+        .eq('id', memberId)
+        .select();
+
+      if (error) return { success: false, error };
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err };
+    }
+  }
+  return { success: true };
+}
+
+/* --------------------------------------------------------
+   9. CONTACT PAGE INQUIRIES
+   -------------------------------------------------------- */
+
+/**
+ * Saves a contact page consultation request (insert-only for public).
+ */
+export async function saveContactInquiry(inquiry) {
+  const payload = {
+    name: inquiry.name,
+    phone: inquiry.phone,
+    email: inquiry.email,
+    occasion: inquiry.occasion,
+    target_date: inquiry.date || null,
+    guests: inquiry.guests || null,
+    notes: inquiry.notes || '',
+    status: 'New'
+  };
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { error } = await supabase.from('contact_inquiries').insert([payload]);
+      if (error) {
+        console.error('[Supabase] Error saving contact inquiry:', error);
+        return { success: false, error, data: payload };
+      }
+      return { success: true, data: payload };
+    } catch (err) {
+      console.error('[Supabase] Exception saving contact inquiry:', err);
+      return { success: false, error: err, data: payload };
+    }
+  }
+
+  return { success: false, error: { message: 'Supabase not configured' }, data: payload };
+}
+
+/**
+ * Fetches all contact page inquiries (admin only).
+ */
+export async function fetchContactInquiries() {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('contact_inquiries')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('[Supabase] Error fetching contact inquiries:', error);
+        return { success: false, error, data: [] };
+      }
+      return { success: true, data };
+    } catch (err) {
+      console.error('[Supabase] Exception fetching contact inquiries:', err);
+      return { success: false, error: err, data: [] };
+    }
+  }
+  return { success: false, data: [] };
+}
+
+/**
+ * Update a contact inquiry status (e.g. 'New', 'Contacted', 'Confirmed', 'Archived')
+ */
+export async function updateContactInquiryStatus(inquiryId, status) {
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('contact_inquiries')
+        .update({ status })
+        .eq('id', inquiryId)
+        .select();
+
+      if (error) return { success: false, error };
+      return { success: true, data };
+    } catch (err) {
+      return { success: false, error: err };
+    }
+  }
+  return { success: true };
+}
