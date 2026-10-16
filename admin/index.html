@@ -76,6 +76,12 @@
             <span class="sidebar-badge-tag">ADMIN PANEL</span>
           </div>
         </a>
+        <button class="sidebar-collapse-btn" id="btnSidebarCollapse" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button class="sidebar-close-btn" id="btnSidebarClose" aria-label="Close menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
       </div>
 
       <!-- Main Navigation Menu: 3 Core Requested Sections -->
@@ -103,12 +109,35 @@
           <span class="nav-counter" id="sidebarBriefsCount">0</span>
         </button>
 
+        <button class="nav-item" data-page="contact" id="navContact">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </span>
+          <span class="nav-label">Contact Inquiries</span>
+          <span class="nav-counter" id="sidebarContactCount">0</span>
+        </button>
+
+        <button class="nav-item" data-page="community" id="navCommunity">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="nav-label">Community</span>
+          <span class="nav-counter" id="sidebarCommunityCount">0</span>
+        </button>
+
         <button class="nav-item" data-page="media" id="navMedia">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </span>
           <span class="nav-label">Photo Gallery</span>
           <span class="nav-counter" id="sidebarMediaCount">0</span>
+        </button>
+
+        <button class="nav-item" data-page="calendar" id="navCalendar">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+          </span>
+          <span class="nav-label">Calendar Locks</span>
         </button>
       </nav>
 
@@ -136,8 +165,21 @@
       </div>
     </aside>
 
+    <!-- Tap-outside overlay for the mobile sidebar drawer -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
     <!-- MAIN DASHBOARD CONTENT AREA -->
     <main class="admin-main-viewport">
+
+      <!-- Mobile / tablet top bar (hidden on desktop) -->
+      <div class="admin-mobile-topbar">
+        <button class="mobile-menu-toggle" id="btnMobileMenu" aria-label="Open menu" aria-controls="adminSidebar" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+        </button>
+        <span class="mobile-topbar-title" id="mobilePageTitle">Dashboard</span>
+        <img src="/assets/black-pearl-mark.svg" alt="" class="mobile-topbar-mark" width="28" height="28">
+      </div>
+
       
       <!-- =================================================== -->
       <!-- TAB 1: DASHBOARD ANALYTICS (EXACT SCREENSHOT 1)     -->
@@ -342,6 +384,90 @@
           </div>
           <div id="briefsEmptyState" class="table-empty-state" style="display:none;">
             <p>No inquiries found. Client submissions from the website will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- CONTACT PAGE INQUIRIES                              -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageContact">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Contact Inquiries</h1>
+            <p class="panel-subtitle">Consultation requests from the Contact page form.</p>
+          </div>
+          <div class="panel-header-actions">
+            <div class="table-search-bar">
+              <input type="text" id="contactSearchInput" class="table-search-input" placeholder="Search inquiries...">
+            </div>
+          </div>
+        </div>
+
+        <div class="data-table-card">
+          <div class="table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>RECEIVED</th>
+                  <th>NAME</th>
+                  <th>WHATSAPP PHONE</th>
+                  <th>EMAIL</th>
+                  <th>OCCASION</th>
+                  <th>TARGET DATE</th>
+                  <th>GUESTS</th>
+                  <th>NOTES</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="contactTableBody">
+                <!-- Dynamically populated from Supabase contact_inquiries -->
+              </tbody>
+            </table>
+          </div>
+          <div id="contactEmptyState" class="table-empty-state" style="display:none;">
+            <p>No contact inquiries yet. Submissions from the Contact page will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- COMMUNITY SIGN-UPS (WHATSAPP BROADCAST)             -->
+      <!-- =================================================== -->
+      <section class="admin-page-panel" id="pageCommunity">
+        <div class="panel-header-row">
+          <div class="panel-header-titles">
+            <h1 class="panel-title">Community</h1>
+            <p class="panel-subtitle">People who joined from the website. Add them to the WhatsApp broadcast, then mark them as added.</p>
+          </div>
+          <div class="panel-header-actions">
+            <div class="table-search-bar">
+              <input type="text" id="communitySearchInput" class="table-search-input" placeholder="Search members...">
+            </div>
+            <button class="btn-panel-action" id="btnCopyCommunityNumbers" title="Copy numbers of members not yet added to the broadcast">Copy New Numbers</button>
+            <button class="btn-panel-action" id="btnExportCommunityCsv">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="data-table-card">
+          <div class="table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>JOINED</th>
+                  <th>NAME</th>
+                  <th>WHATSAPP</th>
+                  <th>EMAIL</th>
+                  <th>STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="communityTableBody">
+                <!-- Dynamically populated from Supabase community_members -->
+              </tbody>
+            </table>
+          </div>
+          <div id="communityEmptyState" class="table-empty-state" style="display:none;">
+            <p>No community members yet. Sign-ups from the home page will appear here.</p>
           </div>
         </div>
       </section>

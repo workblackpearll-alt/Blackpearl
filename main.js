@@ -9,7 +9,9 @@ import {
   fetchBlockedDates,
   saveGalleryImage,
   fetchGalleryImages,
-  trackPageView
+  trackPageView,
+  saveCommunitySignup,
+  normalizePhone
 } from './supabaseClient.js';
 import {
   isImageKitConfigured,
@@ -143,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFaqAccordion();
   initBookingEngine();
   initVoyageBriefSection();
+  initCommunitySignup();
   initAdminPortal();
   initWaterlineAnimations();
   initSmoothParallax();
@@ -1716,4 +1719,56 @@ function renderDynamicGalleryImages(images) {
   }
 }
 
+/* ========================================================
+   COMMUNITY SIGN-UP (WHATSAPP BROADCAST LIST)
+   ======================================================== */
+function initCommunitySignup() {
+  const form = document.getElementById('communitySignupForm');
+  if (!form) return;
 
+  const feedback = document.getElementById('communityFeedback');
+  const submitBtn = document.getElementById('btnCommunitySubmit');
+  const originalText = submitBtn.innerHTML;
+
+  const showFeedback = (msg, isError = false) => {
+    feedback.textContent = msg;
+    feedback.classList.toggle('is-error', isError);
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('communityName').value.trim();
+    const phone = document.getElementById('communityPhone').value.trim();
+    const email = document.getElementById('communityEmail').value.trim();
+    const consent = document.getElementById('communityConsent').checked;
+
+    if (!name) return showFeedback('Please enter your name.', true);
+    const digits = normalizePhone(phone);
+    if (digits.length < 11 || digits.length > 15) {
+      return showFeedback('Please enter a valid WhatsApp number.', true);
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return showFeedback('Please enter a valid email or leave it blank.', true);
+    }
+    if (!consent) return showFeedback('Please tick the box so we can message you on WhatsApp.', true);
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>JOINING...</span>';
+    showFeedback('');
+
+    const res = await saveCommunitySignup({ name, phone, email });
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+
+    if (!res.success) {
+      return showFeedback('Something went wrong. Please try again or message us on WhatsApp.', true);
+    }
+
+    form.reset();
+    showFeedback(res.duplicate
+      ? `You're already on the list, ${name}. We'll see you on deck.`
+      : `Welcome aboard, ${name}. We'll add you to our WhatsApp updates shortly.`);
+  });
+}
