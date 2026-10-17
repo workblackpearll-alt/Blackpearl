@@ -83,7 +83,7 @@
       "destination": "/verify/index.html"
     },
     {
-      "source": "/((?!assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|verify/|.*\\..*).*)",
+      "source": "/((?!api/|assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|verify/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]

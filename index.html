@@ -40,8 +40,8 @@
         "image": "https://blackpearlmumbai.com/assets/images/lady-alice-mumbai-night-skyline.jpg",
         "description": "Exclusive private yacht charter for up to 100 guests at the Gateway of India, Mumbai.",
         "telephone": "+91-98200-00000",
-        "email": "charter@blackpearlmumbai.com",
-        "priceRange": "₹90,000 - ₹3,50,000",
+        "email": "work.blackpearll@gmail.com",
+        "priceRange": "₹1,15,000 - ₹3,45,000",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "Jetty No. 5, Gateway of India, Apollo Bunder",
@@ -179,7 +179,7 @@
           <p class="section-lead">Every booking has the whole ship to itself. Here is what guests get on board, how we look after the event, and where they board.</p>
         </div>
 
-        <!-- 4 Key Numbers Grid -->
+        <!-- Key Numbers Grid -->
         <div class="specs-grid">
           <div class="spec-card">
             <div class="spec-number">100</div>
@@ -202,9 +202,14 @@
             <p class="spec-text">Dedicated hospitality, captain, deckhands and event coordinators.</p>
           </div>
           <div class="spec-card">
-            <div class="spec-number">1, 3 or 6</div>
+            <div class="spec-number is-compact">3, 5 or 6</div>
             <div class="spec-label">Hours</div>
-            <p class="spec-text">Your choice of duration, tailored to sunrise, afternoon or starry evenings.</p>
+            <p class="spec-text">3, 5 or 6 hours, in a day slot or an evening slot under the city lights.</p>
+          </div>
+          <div class="spec-card">
+            <div class="spec-number is-compact">6 am – 11 pm</div>
+            <div class="spec-label">Venue hours at sea</div>
+            <p class="spec-text">Day slot 6 am – 2 pm, evening slot 2 pm – 11 pm, every day.</p>
           </div>
         </div>
 
@@ -228,19 +233,120 @@
           <p class="section-lead">Host up to 100 guests exclusively on Mumbai’s premier private ship.</p>
         </div>
 
-        <!-- Category Filters -->
-        <div class="occasions-filter-bar">
-          <button class="filter-chip active" data-filter="all">All Celebrations <span class="filter-count">14</span></button>
-          <button class="filter-chip" data-filter="sailing">Sailing & Cruises</button>
-          <button class="filter-chip" data-filter="romance">Romantic & Intimate</button>
-          <button class="filter-chip" data-filter="parties">Parties & Nightlife</button>
-          <button class="filter-chip" data-filter="corporate">Corporate & Brands</button>
-          <button class="filter-chip" data-filter="wellness">Wellness & Mornings</button>
-          <button class="filter-chip" data-filter="private">Private Event</button>
+        <!-- Category Cards (default view) -->
+        <div class="occasions-grid occasions-gallery-style" id="occasionCategoriesGrid">
+          <article class="event-gallery-card category-card" data-category-target="sailing">
+            <div class="event-card-media">
+              <img src="/assets/images/sailing-cruise.jpg" alt="Coastal sailing on Lady Alice" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category">Sailing & Cruises</span>
+              <h3 class="event-card-title">Harbour & Coastal Sailing</h3>
+              <p class="event-card-oneliner">Lighthouses, coastal horizons and the open harbour.</p>
+              <div class="event-card-action">
+                <button type="button" class="btn-book-event btn-view-category" data-category-target="sailing">
+                  <span>View <span class="category-count" data-count-for="sailing"></span> Events</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-gallery-card category-card" data-category-target="romance">
+            <div class="event-card-media">
+              <img src="/assets/images/proposal-sunset.jpg" alt="Sunset proposal on the bow of Lady Alice" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category">Romantic & Intimate</span>
+              <h3 class="event-card-title">Proposals, Engagements & Dinners</h3>
+              <p class="event-card-oneliner">Sunset proposals, ring ceremonies and candlelit evenings.</p>
+              <div class="event-card-action">
+                <button type="button" class="btn-book-event btn-view-category" data-category-target="romance">
+                  <span>View <span class="category-count" data-count-for="romance"></span> Events</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-gallery-card category-card" data-category-target="parties">
+            <div class="event-card-media">
+              <img src="/assets/images/cocktail-party.jpg" alt="Cocktail party on deck" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category">Parties & Nightlife</span>
+              <h3 class="event-card-title">Birthdays, Cocktails & Festive Nights</h3>
+              <p class="event-card-oneliner">Milestone birthdays, DJ nights and family celebrations.</p>
+              <div class="event-card-action">
+                <button type="button" class="btn-book-event btn-view-category" data-category-target="parties">
+                  <span>View <span class="category-count" data-count-for="parties"></span> Events</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-gallery-card category-card" data-category-target="corporate">
+            <div class="event-card-media">
+              <img src="/assets/images/corporate-gala.jpg" alt="Corporate gala on Lady Alice" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category">Corporate & Brands</span>
+              <h3 class="event-card-title">Offsites, Galas & Launches</h3>
+              <p class="event-card-oneliner">Leadership offsites, client evenings and brand launches.</p>
+              <div class="event-card-action">
+                <button type="button" class="btn-book-event btn-view-category" data-category-target="corporate">
+                  <span>View <span class="category-count" data-count-for="corporate"></span> Events</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-gallery-card category-card" data-category-target="wellness">
+            <div class="event-card-media">
+              <img src="/assets/images/sunrise-yoga.jpg" alt="Sunrise yoga on deck" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category">Wellness & Mornings</span>
+              <h3 class="event-card-title">Sunrise Yoga & Wellness</h3>
+              <p class="event-card-oneliner">Morning breathwork and calm water at first light.</p>
+              <div class="event-card-action">
+                <button type="button" class="btn-book-event btn-view-category" data-category-target="wellness">
+                  <span>View <span class="category-count" data-count-for="wellness"></span> Events</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Featured: Private Event / Custom Charter -->
+          <article class="event-gallery-card occasion-card featured-private-event" data-category="private" data-id="private-charter" data-occasion="Private Event" style="border: 1.5px solid var(--gold); background: linear-gradient(135deg, rgba(201, 169, 104, 0.14) 0%, rgba(14, 15, 18, 0.95) 100%);">
+            <div class="event-card-media">
+              <img src="/assets/images/lady-alice-night.jpg" alt="Exclusive Private Yacht Charter on Lady Alice" loading="lazy">
+              <div class="event-card-scrim"></div>
+            </div>
+            <div class="event-card-content">
+              <span class="event-card-category" style="color: var(--gold); letter-spacing: 0.12em; font-weight: 600;">★ BESPOKE VESSEL BUYOUT</span>
+              <h3 class="event-card-title">Private Event / Custom Charter</h3>
+              <p class="event-card-oneliner">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</p>
+              <div class="event-card-action">
+                <a href="/book?occasion=Private%20Event" class="btn-book-event btn-book-card" data-occasion="Private Event" style="background: var(--gold); color: var(--black); font-weight: 600;">
+                  <span>Book Private Event</span>
+                </a>
+              </div>
+            </div>
+          </article>
         </div>
 
-        <!-- Gallery-Style Occasions Cards Grid -->
-        <div class="occasions-grid occasions-gallery-style" id="occasionsGrid">
+        <!-- Category drill-down header (shown after picking a category) -->
+        <div class="occasions-drill-header" id="occasionsDrillHeader" hidden>
+          <button type="button" class="filter-chip occasions-back-btn" id="occasionsBackBtn">← All Categories</button>
+          <h3 class="occasions-drill-title" id="occasionsDrillTitle"></h3>
+        </div>
+
+        <!-- Events in the selected category -->
+        <div class="occasions-grid occasions-gallery-style" id="occasionsGrid" hidden>
           <!-- Event 1: Coastal Sailing Cruises -->
           <article class="event-gallery-card occasion-card" data-category="sailing romance parties" data-id="sailing-cruises" data-occasion="Coastal sailing cruises">
             <div class="event-card-media">
@@ -250,7 +356,7 @@
             <div class="event-card-content">
               <span class="event-card-category">Sailing & Coastal Cruises</span>
               <h3 class="event-card-title">Harbour & Coastal Sailing</h3>
-              <p class="event-card-oneliner">Active navigation past lighthouses and coastal horizons, or pause at anchor.</p>
+              <p class="event-card-oneliner">Sail past lighthouses and coastal horizons, then drop anchor for the evening.</p>
               <div class="event-card-action">
                 <a href="/book?occasion=Coastal%20sailing%20cruises" class="btn-book-event btn-book-card" data-occasion="Coastal sailing cruises">
                   <span>Book Now</span>
@@ -474,24 +580,6 @@
               </div>
             </div>
           </article>
-
-          <!-- Featured: Private Event / Custom Charter -->
-          <article class="event-gallery-card occasion-card featured-private-event" data-category="private parties corporate romance sailing" data-id="private-charter" data-occasion="Private Event" style="border: 1.5px solid var(--gold); background: linear-gradient(135deg, rgba(201, 169, 104, 0.14) 0%, rgba(14, 15, 18, 0.95) 100%);">
-            <div class="event-card-media">
-              <img src="/assets/images/lady-alice-night.jpg" alt="Exclusive Private Yacht Charter on Lady Alice" loading="lazy">
-              <div class="event-card-scrim"></div>
-            </div>
-            <div class="event-card-content">
-              <span class="event-card-category" style="color: var(--gold); letter-spacing: 0.12em; font-weight: 600;">★ BESPOKE VESSEL BUYOUT</span>
-              <h3 class="event-card-title">Private Event / Custom Charter</h3>
-              <p class="event-card-oneliner">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</p>
-              <div class="event-card-action">
-                <a href="/book?occasion=Private%20Event" class="btn-book-event btn-book-card" data-occasion="Private Event" style="background: var(--gold); color: var(--black); font-weight: 600;">
-                  <span>Book Private Event</span>
-                </a>
-              </div>
-            </div>
-          </article>
         </div>
       </div>
     </section>
@@ -499,120 +587,76 @@
     <!-- SECTION DIVIDER WATERLINE -->
     <div class="section-waterline"></div>
 
-    <!-- SECTION 3.5: VOYAGE CHARTER BRIEF (SAIL OR AT REST IN OCEAN) -->
-    <section class="section-voyage-brief" id="voyage-brief">
+    <!-- SECTION 3.5: COMMUNITY SIGN-UP (WHATSAPP BROADCAST) -->
+    <section class="section-voyage-brief" id="community">
       <div class="container">
         <div class="voyage-brief-layout">
-          <!-- Left Column: Concise Typography & Sailing Options -->
+          <!-- Left Column: Community Pitch -->
           <div class="voyage-brief-hero">
-            <span class="brief-eyebrow">CHARTER CONFIGURATION</span>
+            <span class="brief-eyebrow">THE BLACK PEARL CIRCLE</span>
             <h2 class="brief-mega-title">
-              SAIL OR REST<br>
-              <span class="brief-title-muted">IN THE OCEAN</span>
+              JOIN THE<br>
+              <span class="brief-title-muted">COMMUNITY</span>
             </h2>
             <p class="brief-lead">
-              For all celebrations, Lady Alice can either set sail across Mumbai harbour or remain peacefully at rest at anchor.
+              Be the first to hear about open-deck evenings, sunset sails and member-only dates, sent straight to your WhatsApp.
             </p>
 
             <div class="brief-trust-list">
               <div class="brief-trust-item">
                 <span class="brief-bullet"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><circle cx="12" cy="12" r="5"/></svg></span>
                 <div class="trust-content">
-                  <strong>At Rest in Ocean</strong>
-                  <span>Standard base rate · Anchored facing the Gateway skyline for dining, photos, and quiet celebration.</span>
+                  <strong>Event invites first</strong>
+                  <span>Open-deck nights, festive sails and community evenings before they go public.</span>
                 </div>
               </div>
               <div class="brief-trust-item">
                 <span class="brief-bullet"><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><circle cx="12" cy="12" r="5"/></svg></span>
                 <div class="trust-content">
-                  <strong>Active Sailing Underway</strong>
-                  <span>Sailing rate · Powered navigation across the harbour, lighthouses, and coastal waters.</span>
+                  <strong>No spam, leave anytime</strong>
+                  <span>Only occasional updates on WhatsApp. Reply STOP and we will remove you.</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Bespoke Brief Form -->
+          <!-- Right Column: Community Sign-up Form -->
           <div class="voyage-brief-card-container">
             <div class="voyage-brief-card">
               <div class="brief-card-topbar">
-                <h3 class="brief-card-heading">REQUEST A VOYAGE BRIEF</h3>
-                <span class="brief-badge-pill">BESPOKE</span>
+                <h3 class="brief-card-heading">JOIN THE CIRCLE</h3>
+                <span class="brief-badge-pill">WHATSAPP</span>
               </div>
 
-              <!-- Mode Selector (No Emojis) -->
-              <div class="brief-mode-selector">
-                <label class="brief-mode-chip">
-                  <input type="radio" name="charterModeChoice" value="paused" checked>
-                  <span class="mode-chip-box">
-                    <span class="chip-text">At Rest (Anchor)</span>
-                  </span>
-                </label>
-                <label class="brief-mode-chip">
-                  <input type="radio" name="charterModeChoice" value="sailing">
-                  <span class="mode-chip-box">
-                    <span class="chip-text">Active Sailing</span>
-                  </span>
-                </label>
-                <label class="brief-mode-chip">
-                  <input type="radio" name="charterModeChoice" value="hybrid">
-                  <span class="mode-chip-box">
-                    <span class="chip-text">Sail & Anchor</span>
-                  </span>
-                </label>
-              </div>
-
-              <!-- 2-Column Form Fields -->
-              <form id="voyageBriefForm" class="brief-form-body">
+              <form id="communitySignupForm" class="brief-form-body" novalidate>
                 <div class="brief-form-row">
                   <div class="brief-field">
-                    <label for="briefClientName" class="brief-field-label">NAME *</label>
-                    <input type="text" id="briefClientName" class="brief-field-input" placeholder="e.g. Vikram Sharma" required>
+                    <label for="communityName" class="brief-field-label">NAME *</label>
+                    <input type="text" id="communityName" class="brief-field-input" placeholder="e.g. Vikram Sharma" autocomplete="name" required>
                   </div>
                   <div class="brief-field">
-                    <label for="briefClientPhone" class="brief-field-label">WHATSAPP PHONE *</label>
-                    <input type="tel" id="briefClientPhone" class="brief-field-input" placeholder="+91 98200 00000" required>
-                  </div>
-                </div>
-
-                <div class="brief-form-row">
-                  <div class="brief-field">
-                    <label for="briefOccasionSelect" class="brief-field-label">CELEBRATION / OCCASION *</label>
-                    <select id="briefOccasionSelect" class="brief-field-input brief-select-input" required>
-                      <option value="Coastal sailing cruises" selected>Coastal Sailing Cruise</option>
-                      <option value="Proposals">Sunset Proposal</option>
-                      <option value="Birthday parties">Milestone Birthday</option>
-                      <option value="Private parties">Cocktail & DJ Night</option>
-                      <option value="Engagements">Ring Ceremony</option>
-                      <option value="Bachelor & bachelorette nights">Bachelorette Send-Off</option>
-                      <option value="Corporate events">Corporate Offsite</option>
-                      <option value="Anniversaries & private dinners">Anniversary Dinner</option>
-                      <option value="Pre-wedding & photo shoots">Pre-Wedding Shoot</option>
-                      <option value="Something else">Custom Celebration</option>
-                    </select>
-                  </div>
-                  <div class="brief-field">
-                    <label for="briefDurationSelect" class="brief-field-label">HOURS ON WATER</label>
-                    <select id="briefDurationSelect" class="brief-field-input brief-select-input">
-                      <option value="3" selected>3 Hours (Recommended)</option>
-                      <option value="1">1 Hour Express</option>
-                      <option value="6">6 Hours Half-Day</option>
-                      <option value="custom">Custom Duration</option>
-                    </select>
+                    <label for="communityPhone" class="brief-field-label">WHATSAPP NUMBER *</label>
+                    <input type="tel" id="communityPhone" class="brief-field-input" placeholder="+91 98200 00000" autocomplete="tel" required>
                   </div>
                 </div>
 
                 <div class="brief-form-row full-width">
                   <div class="brief-field">
-                    <label for="briefNotesInput" class="brief-field-label">VOYAGE NOTES / ROUTE PREFERENCE</label>
-                    <textarea id="briefNotesInput" class="brief-field-input brief-textarea" rows="2" placeholder="e.g. 1 hour of active sailing during sunset, then drop anchor for dinner..."></textarea>
+                    <label for="communityEmail" class="brief-field-label">EMAIL (OPTIONAL)</label>
+                    <input type="email" id="communityEmail" class="brief-field-input" placeholder="name@example.com" autocomplete="email">
                   </div>
                 </div>
 
-                <!-- Submit Button -->
-                <button type="submit" class="btn-brief-submit" id="btnSubmitBrief">
-                  <span>SUBMIT VOYAGE BRIEF</span>
+                <label class="community-consent">
+                  <input type="checkbox" id="communityConsent" required>
+                  <span>I agree to receive event updates from Black Pearl on WhatsApp.</span>
+                </label>
+
+                <button type="submit" class="btn-brief-submit" id="btnCommunitySubmit">
+                  <span>JOIN THE COMMUNITY</span>
                 </button>
+
+                <p id="communityFeedback" class="community-feedback" role="status" aria-live="polite"></p>
               </form>
             </div>
           </div>
@@ -627,18 +671,16 @@
     <section class="section-workflow" id="how-it-works">
       <div class="container">
         <div class="section-header text-center">
-          <span class="section-eyebrow">THE BOOKING PROCESS</span>
-          <h2 class="section-heading">From first visit to a confirmed date.</h2>
-          <p class="section-lead">A simple, transparent path: three quick taps to hold your date, and our dedicated team takes over the rest.</p>
+          <span class="section-eyebrow">HOW BOOKING WORKS</span>
+          <h2 class="section-heading">Four steps to your date.</h2>
         </div>
 
         <div class="steps-voyage">
           <div class="step-card">
             <div class="step-marker">1</div>
             <div class="step-card-content">
-              <span class="step-tag">Step 1</span>
-              <h3 class="step-heading">Chooses an occasion</h3>
-              <p class="step-text">Pick what you are celebrating. Transparent prices for 1, 3 and 6 hour sailings. No hidden fees or guessing games.</p>
+              <h3 class="step-heading">Pick your occasion</h3>
+              <p class="step-text">Proposal, birthday, corporate or your own.</p>
             </div>
           </div>
 
@@ -647,9 +689,8 @@
           <div class="step-card">
             <div class="step-marker">2</div>
             <div class="step-card-content">
-              <span class="step-tag">Step 2</span>
-              <h3 class="step-heading">Opens live calendar & slot</h3>
-              <p class="step-text">Free, filling and booked dates are displayed live. Choose your duration and preferred sailing time: Sunrise, Afternoon, Sunset or Evening.</p>
+              <h3 class="step-heading">Choose slot & date</h3>
+              <p class="step-text">Day or evening, for 3, 5 or 6 hours.</p>
             </div>
           </div>
 
@@ -658,30 +699,27 @@
           <div class="step-card">
             <div class="step-marker">3</div>
             <div class="step-card-content">
-              <span class="step-tag">Step 3</span>
-              <h3 class="step-heading">Pays ₹5,000 to hold</h3>
-              <p class="step-text">Hold your date instantly via UPI, Card, or Net Banking. Protected by our <a href="/cancellation" style="color: var(--gold); text-decoration: underline;">48-Hour Money-Back Guarantee</a>.</p>
+              <h3 class="step-heading">Pay ₹5,000 to hold</h3>
+              <p class="step-text">Adjusted in your final bill. <a href="/cancellation" class="step-link">Refundable within 48 hrs</a>.</p>
             </div>
           </div>
 
           <div class="step-connector"></div>
 
-          <div class="step-card highlight-step">
+          <div class="step-card">
             <div class="step-marker">4</div>
             <div class="step-card-content">
-              <span class="step-tag">Step 4 · Our Team Takes Over</span>
-              <h3 class="step-heading">A person calls you</h3>
-              <p class="step-text">Our event director calls you within 24 hours to customize the deck, catering, music and decor. The ₹5,000 is adjusted against your final bill.</p>
+              <h3 class="step-heading">We call you</h3>
+              <p class="step-text">Within 24 hours, to plan decor, food and music.</p>
             </div>
           </div>
         </div>
 
         <div class="workflow-cta-banner">
           <div class="cta-banner-text">
-            <h4>Ready to check which dates are open?</h4>
-            <p>Our calendar shows real-time availability for the next 90 days.</p>
+            <h4>See which dates are open.</h4>
           </div>
-          <a href="/book" class="btn-gold" id="workflowCheckDatesBtn">Open Calendar</a>
+          <a href="/book" class="btn-gold" id="workflowCheckDatesBtn">Book Now</a>
         </div>
       </div>
     </section>
@@ -842,11 +880,11 @@
 
           <div class="faq-item">
             <button class="faq-question" aria-expanded="false">
-              <span>Can we sail the boat or keep it paused at anchor? What is the price difference?</span>
+              <span>How much time do we spend sailing versus at anchor?</span>
               <span class="faq-arrow">↓</span>
             </button>
             <div class="faq-answer">
-              <p>Yes, you have complete flexibility. You can choose to keep Lady Alice peacefully paused at anchor in Mumbai Harbour facing the Gateway of India—ideal for seated dining, photo shoots, and celebrations at our base rate. Alternatively, you can choose active sailing underway, where the ship cruises across Mumbai Harbour, naval waterways, and coastal horizons under power. Active sailing has a different price to cover vessel propulsion, marine navigation crew, and harbour movement clearances.</p>
+              <p>Every charter includes both. A 3-hour charter is 1 hour sailing and 2 hours at anchor, 5 hours is 1.5 hours sailing and 3.5 hours at anchor, and 6 hours is 3 hours sailing and 3 hours at anchor. Prices depend only on your slot and duration: the Day slot (6 am – 2 pm) is ₹1,15,000 / ₹2,00,000 / ₹2,25,000 and the Evening slot (2 pm – 11 pm) is ₹1,95,000 / ₹3,04,000 / ₹3,45,000 for 3 / 5 / 6 hours.</p>
             </div>
           </div>
 
@@ -919,6 +957,21 @@
               </div>
             </div>
 
+            <div class="address-box">
+              <div class="address-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                  <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                  <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                </svg>
+              </div>
+              <div class="address-details">
+                <span class="address-label">Where You'll Sail</span>
+                <span class="address-location">You board at the Gateway, then Lady Alice heads out to quieter waters on the outskirts of the harbour, a little away from the Gateway of India.</span>
+                <span class="address-coords">Venue hours at sea: 6:00 am – 11:00 pm</span>
+              </div>
+            </div>
+
             <div class="contact-methods">
               <a href="tel:+919820000000" class="contact-pill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -932,12 +985,12 @@
                 </svg>
                 <span>Chat on WhatsApp</span>
               </a>
-              <a href="mailto:inquiries@blackpearlmumbai.com" class="contact-pill">
+              <a href="mailto:work.blackpearll@gmail.com" class="contact-pill">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect width="20" height="16" x="2" y="4" rx="2"/>
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
-                <span>inquiries@blackpearlmumbai.com</span>
+                <span>work.blackpearll@gmail.com</span>
               </a>
             </div>
           </div>
@@ -954,50 +1007,6 @@
               </iframe>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 8: COMMUNITY SIGN-UP (WHATSAPP BROADCAST) -->
-    <section class="section-community" id="community">
-      <div class="container">
-        <div class="community-card">
-          <div class="community-intro">
-            <span class="section-eyebrow">THE BLACK PEARL CIRCLE</span>
-            <h2 class="community-title">Join the community</h2>
-            <p class="community-desc">Be the first to hear about open-deck evenings, sunset sails and member-only dates, sent straight to your WhatsApp. No spam, leave anytime.</p>
-          </div>
-
-          <form id="communitySignupForm" class="community-form" novalidate>
-            <div class="brief-form-row">
-              <div class="brief-field">
-                <label for="communityName" class="brief-field-label">NAME *</label>
-                <input type="text" id="communityName" class="brief-field-input" placeholder="Your full name" autocomplete="name" required>
-              </div>
-              <div class="brief-field">
-                <label for="communityPhone" class="brief-field-label">WHATSAPP NUMBER *</label>
-                <input type="tel" id="communityPhone" class="brief-field-input" placeholder="+91 98200 00000" autocomplete="tel" required>
-              </div>
-            </div>
-
-            <div class="brief-form-row full-width">
-              <div class="brief-field">
-                <label for="communityEmail" class="brief-field-label">EMAIL (OPTIONAL)</label>
-                <input type="email" id="communityEmail" class="brief-field-input" placeholder="name@example.com" autocomplete="email">
-              </div>
-            </div>
-
-            <label class="community-consent">
-              <input type="checkbox" id="communityConsent" required>
-              <span>I agree to receive event updates from Black Pearl on WhatsApp.</span>
-            </label>
-
-            <button type="submit" class="btn-brief-submit" id="btnCommunitySubmit">
-              <span>JOIN THE COMMUNITY</span>
-            </button>
-
-            <p id="communityFeedback" class="community-feedback" role="status" aria-live="polite"></p>
-          </form>
         </div>
       </div>
     </section>
@@ -1143,7 +1152,7 @@
       <!-- TAB 2: Voyage Charter Briefs -->
       <div class="admin-tab-panel" id="adminPanelBriefs">
         <div class="admin-panel-toolbar">
-          <h4>Client Voyage Charter Briefs (Sail vs At Rest)</h4>
+          <h4>Client Voyage Charter Briefs</h4>
           <button class="btn-outline btn-xs" id="btnAdminRefreshBriefs">Refresh from Supabase</button>
         </div>
         <div class="admin-briefs-list" id="adminBriefsList">

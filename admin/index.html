@@ -26,8 +26,8 @@
           <img src="/assets/black-pearl-mark.svg" alt="Black Pearl" width="46" height="46">
         </a>
         <h1 class="auth-title">BLACK PEARL</h1>
-        <span class="auth-badge">ADMIN COMMAND DECK</span>
-        <p class="auth-sub" id="authSubtitle">Sign in with your verified admin credentials to access the Lady Alice command deck.</p>
+        <span class="auth-badge">ADMIN</span>
+        <p class="auth-sub" id="authSubtitle">Sign in to manage bookings, the calendar and enquiries.</p>
       </div>
 
       <form id="adminAuthForm" class="auth-form">
@@ -43,13 +43,8 @@
 
         <div class="auth-actions">
           <button type="submit" class="btn-auth-primary" id="btnSubmitAuth">
-            <span id="btnAuthText">Sign In to Dashboard</span>
+            <span id="btnAuthText">Sign In</span>
           </button>
-        </div>
-
-        <div class="auth-switch-box">
-          <span id="authSwitchText">Don't have an admin account yet?</span>
-          <button type="button" class="btn-text-link" id="btnToggleAuthMode">Create Admin Account</button>
         </div>
 
         <div id="authFeedbackMsg" class="auth-feedback" style="display:none;"></div>
@@ -84,36 +79,43 @@
         </button>
       </div>
 
-      <!-- Main Navigation Menu: 3 Core Requested Sections -->
+      <!-- Main Navigation -->
       <nav class="sidebar-nav">
+        <button class="nav-item notif-trigger" type="button" id="navNotifications" aria-controls="notifPanel" aria-expanded="false">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </span>
+          <span class="nav-label">Notifications</span>
+          <span class="nav-counter notif-count" data-notif-count hidden>0</span>
+        </button>
+
         <button class="nav-item active" data-page="dashboard" id="navDashboard">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
           </span>
-          <span class="nav-label">Dashboard</span>
+          <span class="nav-label">Overview</span>
         </button>
 
         <button class="nav-item" data-page="bookings" id="navBookings">
           <span class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
           </span>
           <span class="nav-label">Bookings</span>
           <span class="nav-counter" id="sidebarBookingsCount">0</span>
         </button>
 
-        <button class="nav-item" data-page="inquiries" id="navInquiries">
+        <button class="nav-item" data-page="calendar" id="navCalendar">
           <span class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
           </span>
-          <span class="nav-label">Inquiries & Briefs</span>
-          <span class="nav-counter" id="sidebarBriefsCount">0</span>
+          <span class="nav-label">Calendar</span>
         </button>
 
         <button class="nav-item" data-page="contact" id="navContact">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </span>
-          <span class="nav-label">Contact Inquiries</span>
+          <span class="nav-label">Enquiries</span>
           <span class="nav-counter" id="sidebarContactCount">0</span>
         </button>
 
@@ -129,26 +131,17 @@
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           </span>
-          <span class="nav-label">Photo Gallery</span>
+          <span class="nav-label">Photos</span>
           <span class="nav-counter" id="sidebarMediaCount">0</span>
-        </button>
-
-        <button class="nav-item" data-page="calendar" id="navCalendar">
-          <span class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-          </span>
-          <span class="nav-label">Calendar Locks</span>
         </button>
       </nav>
 
       <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div class="sidebar-section-label">SETTINGS</div>
         
         <div class="user-profile-badge">
           <div class="user-avatar" id="sidebarUserAvatar">A</div>
           <div class="user-info">
-            <span class="user-role">Super Admin</span>
             <span class="user-email" id="sidebarUserEmail">admin@blackpearl.in</span>
           </div>
         </div>
@@ -168,6 +161,20 @@
     <!-- Tap-outside overlay for the mobile sidebar drawer -->
     <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 
+    <!-- To-do / notifications panel -->
+    <div class="notif-backdrop" id="notifBackdrop" hidden></div>
+    <aside class="notif-panel" id="notifPanel" aria-label="Notifications" hidden>
+      <div class="notif-panel-header">
+        <h2 class="notif-panel-title">Notifications</h2>
+        <button type="button" class="modal-close-icon" id="btnCloseNotifications" aria-label="Close">✕</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+      <div class="notif-panel-footer">
+        <span id="notifAlertsStatus">Desktop alerts are off.</span>
+        <button type="button" class="btn-text-link" id="btnEnableAlerts">Turn on</button>
+      </div>
+    </aside>
+
     <!-- MAIN DASHBOARD CONTENT AREA -->
     <main class="admin-main-viewport">
 
@@ -177,130 +184,89 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
         </button>
         <span class="mobile-topbar-title" id="mobilePageTitle">Dashboard</span>
-        <img src="/assets/black-pearl-mark.svg" alt="" class="mobile-topbar-mark" width="28" height="28">
+        <button class="mobile-menu-toggle notif-trigger notif-bell" type="button" id="btnMobileNotifications" aria-label="Notifications" aria-controls="notifPanel" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="notif-dot" data-notif-count hidden>0</span>
+        </button>
       </div>
 
       
-      <!-- =================================================== -->
-      <!-- TAB 1: DASHBOARD ANALYTICS (EXACT SCREENSHOT 1)     -->
-      <!-- =================================================== -->
       <section class="admin-page-panel active" id="pageDashboard">
         <div class="panel-header-row">
           <div class="panel-header-titles">
-            <h1 class="panel-title">Dashboard</h1>
-            <p class="panel-subtitle">Real-time overview of website visits, bookings, and customer traffic attribution.</p>
+            <h1 class="panel-title">Overview</h1>
+            <p class="panel-subtitle">What needs your attention today.</p>
           </div>
           <div class="panel-header-actions">
             <button class="btn-panel-action btn-refresh" id="btnRefreshAnalytics">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-              <span>Refresh Data</span>
+              <span>Refresh</span>
             </button>
           </div>
         </div>
 
-        <!-- 6 METRIC KPI CARDS GRID -->
-        <div class="kpi-metrics-grid">
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">WEBSITE VIEWS</span>
+        <div class="report-card overview-todo-card">
+          <div class="report-card-header">
+            <h3 class="report-title">To Do Today</h3>
+          </div>
+          <div class="notif-list" id="ovTodoList"></div>
+        </div>
+
+        <!-- Key numbers (each opens the related page) -->
+        <div class="kpi-metrics-grid overview-kpis">
+          <button type="button" class="kpi-card kpi-link" data-goto="bookings" data-filter="paid">
+            <span class="kpi-label">UPCOMING CHARTERS</span>
+            <div class="kpi-number" id="ovUpcoming">0</div>
+            <div class="kpi-subtext">Paid bookings from today on</div>
+          </button>
+          <button type="button" class="kpi-card kpi-link" data-goto="bookings" data-filter="failed">
+            <span class="kpi-label">PAYMENTS TO FOLLOW UP</span>
+            <div class="kpi-number" id="ovFollowUp">0</div>
+            <div class="kpi-subtext">Failed or abandoned in the last 7 days</div>
+          </button>
+          <button type="button" class="kpi-card kpi-link" data-goto="contact">
+            <span class="kpi-label">NEW ENQUIRIES</span>
+            <div class="kpi-number" id="ovEnquiries">0</div>
+            <div class="kpi-subtext">Contact form, not yet handled</div>
+          </button>
+          <button type="button" class="kpi-card kpi-link" data-goto="community">
+            <span class="kpi-label">NEW COMMUNITY MEMBERS</span>
+            <div class="kpi-number" id="ovCommunity">0</div>
+            <div class="kpi-subtext">Not yet added to WhatsApp</div>
+          </button>
+        </div>
+
+        <div class="analytics-split-grid">
+          <div class="report-card">
+            <div class="report-card-header">
+              <h3 class="report-title">Next Charters</h3>
+              <button type="button" class="btn-text-link" data-goto="calendar">Open calendar</button>
             </div>
-            <div class="kpi-number" id="metricViews">0</div>
-            <div class="kpi-subtext">Total page visits logged</div>
+            <div class="overview-list" id="ovNextCharters"></div>
           </div>
 
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">UNIQUE VISITORS</span>
+          <div class="report-card">
+            <div class="report-card-header">
+              <h3 class="report-title">Call Back: Payment Didn't Go Through</h3>
             </div>
-            <div class="kpi-number" id="metricVisitors">0</div>
-            <div class="kpi-subtext">Distinct visitor sessions</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">BOOKING VIEWS</span>
-            </div>
-            <div class="kpi-number" id="metricBookingViews">0</div>
-            <div class="kpi-subtext">Booking engine sessions</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">TOTAL HOLDS</span>
-            </div>
-            <div class="kpi-number" id="metricClicks">0</div>
-            <div class="kpi-subtext">Customer reservations placed</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">ACTIVE HOLDS</span>
-            </div>
-            <div class="kpi-number" id="metricCharters">0</div>
-            <div class="kpi-subtext">Currently held & confirmed</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">TOP OCCASION</span>
-            </div>
-            <div class="kpi-number highlight-text" id="metricTopOccasion">—</div>
-            <div class="kpi-subtext">Highest interest category</div>
+            <div class="overview-list" id="ovFollowUpList"></div>
           </div>
         </div>
 
-        <!-- 2-COLUMN ANALYTICS REPORTS (TRAFFIC + ENGAGEMENT) -->
-        <div class="analytics-split-grid">
-          
-          <!-- LEFT CARD: Traffic Acquisition -->
-          <div class="report-card">
-            <div class="report-card-header">
-              <div class="report-card-title-group">
-                <h3 class="report-title">Traffic Acquisition</h3>
-              </div>
-              <span class="report-meta">Live Attribution</span>
-            </div>
-            
-            <div class="traffic-acquisition-list" id="trafficAcquisitionList">
-              <!-- Dynamically populated -->
-            </div>
+        <div class="report-card overview-website-card">
+          <div class="report-card-header">
+            <h3 class="report-title">Website</h3>
+            <span class="report-meta"><strong id="metricViews">0</strong> page views · <strong id="metricVisitors">0</strong> visitors</span>
           </div>
-
-          <!-- RIGHT CARD: Engagement Report -->
-          <div class="report-card">
-            <div class="report-card-header">
-              <h3 class="report-title">Engagement Report</h3>
-              <span class="report-meta">↗</span>
-            </div>
-
-            <div class="report-table-wrapper">
-              <table class="report-table">
-                <thead>
-                  <tr>
-                    <th>EXPERIENCE</th>
-                    <th class="text-right">VIEWS</th>
-                    <th class="text-right">HOLDS</th>
-                    <th class="text-right">TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody id="engagementReportBody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+          <div class="traffic-acquisition-list" id="trafficAcquisitionList"></div>
         </div>
       </section>
 
-      <!-- =================================================== -->
-      <!-- TAB 2: BOOKINGS DATA TABLE (EXACT SCREENSHOT 2)     -->
-      <!-- =================================================== -->
       <section class="admin-page-panel" id="pageBookings">
         <div class="panel-header-row">
           <div class="panel-header-titles">
             <h1 class="panel-title">Bookings</h1>
-            <p class="panel-subtitle">Manage and track customer reservations and date holds.</p>
+            <p class="panel-subtitle">Every checkout from the website: paid, pending and failed.</p>
           </div>
           <div class="panel-header-actions">
             <div class="table-search-bar">
@@ -311,10 +277,11 @@
 
         <!-- Filter Chips -->
         <div class="table-filters-bar">
-          <button class="filter-btn active" data-filter="all">All Bookings</button>
-          <button class="filter-btn" data-filter="held">Held (Deposit Paid)</button>
-          <button class="filter-btn" data-filter="confirmed">Confirmed</button>
-          <button class="filter-btn" data-filter="completed">Completed</button>
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="paid">Paid</button>
+          <button class="filter-btn" data-filter="pending">Payment pending</button>
+          <button class="filter-btn" data-filter="failed">Failed / abandoned</button>
+          <button class="filter-btn" data-filter="cancelled">Cancelled</button>
         </div>
 
         <!-- Bookings Data Table -->
@@ -323,14 +290,13 @@
             <table class="admin-data-table">
               <thead>
                 <tr>
-                  <th>ORDER ID</th>
-                  <th>DATE</th>
+                  <th>BOOKING</th>
+                  <th>CHARTER</th>
                   <th>CUSTOMER</th>
-                  <th>OCCASION & SLOT</th>
-                  <th>AMOUNT</th>
+                  <th>PRICE</th>
                   <th>STATUS</th>
-                  <th>CONTACT</th>
-                  <th class="text-center">ACTION</th>
+                  <th>EMAIL</th>
+                  <th class="text-center">DETAILS</th>
                 </tr>
               </thead>
               <tbody id="bookingsTableBody">
@@ -344,49 +310,6 @@
         </div>
       </section>
 
-      <!-- =================================================== -->
-      <!-- TAB 3: INQUIRIES & VOYAGE BRIEFS                    -->
-      <!-- =================================================== -->
-      <section class="admin-page-panel" id="pageInquiries">
-        <div class="panel-header-row">
-          <div class="panel-header-titles">
-            <h1 class="panel-title">Inquiries & Briefs</h1>
-            <p class="panel-subtitle">Manage bespoke client requests from the Sail vs At Rest form.</p>
-          </div>
-          <div class="panel-header-actions">
-            <div class="table-search-bar">
-              <input type="text" id="briefsSearchInput" class="table-search-input" placeholder="Search inquiries...">
-            </div>
-          </div>
-        </div>
-
-        <!-- Inquiries Data Table -->
-        <div class="data-table-card">
-          <div class="table-responsive">
-            <table class="admin-data-table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>CLIENT NAME</th>
-                  <th>WHATSAPP PHONE</th>
-                  <th>OCCASION</th>
-                  <th>CHARTER STYLE</th>
-                  <th>HOURS</th>
-                  <th>NOTES</th>
-                  <th>STATUS</th>
-                  <th class="text-center">ACTION</th>
-                </tr>
-              </thead>
-              <tbody id="inquiriesTableBody">
-                <!-- Dynamically populated from Supabase voyage_briefs -->
-              </tbody>
-            </table>
-          </div>
-          <div id="briefsEmptyState" class="table-empty-state" style="display:none;">
-            <p>No inquiries found. Client submissions from the website will appear here.</p>
-          </div>
-        </div>
-      </section>
 
       <!-- =================================================== -->
       <!-- CONTACT PAGE INQUIRIES                              -->
@@ -394,8 +317,8 @@
       <section class="admin-page-panel" id="pageContact">
         <div class="panel-header-row">
           <div class="panel-header-titles">
-            <h1 class="panel-title">Contact Inquiries</h1>
-            <p class="panel-subtitle">Consultation requests from the Contact page form.</p>
+            <h1 class="panel-title">Enquiries</h1>
+            <p class="panel-subtitle">Requests from the Contact page. Call them back, then mark them contacted.</p>
           </div>
           <div class="panel-header-actions">
             <div class="table-search-bar">
@@ -428,6 +351,46 @@
           <div id="contactEmptyState" class="table-empty-state" style="display:none;">
             <p>No contact inquiries yet. Submissions from the Contact page will appear here.</p>
           </div>
+        </div>
+      
+        <!-- Older voyage briefs (the home page brief form was removed) -->
+        <div class="legacy-briefs-block" id="legacyBriefsBlock" hidden>
+          <div class="panel-header-row legacy-briefs-header">
+            <div class="panel-header-titles">
+              <h2 class="widget-heading">Older Voyage Briefs</h2>
+              <p class="panel-subtitle">From the home page brief form, which has since been replaced.</p>
+            </div>
+            <div class="panel-header-actions">
+              <div class="table-search-bar">
+                <input type="text" id="briefsSearchInput" class="table-search-input" placeholder="Search briefs...">
+              </div>
+            </div>
+          </div>
+        <div class="data-table-card">
+          <div class="table-responsive">
+            <table class="admin-data-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>CLIENT NAME</th>
+                  <th>WHATSAPP PHONE</th>
+                  <th>OCCASION</th>
+                  <th>SLOT</th>
+                  <th>HOURS</th>
+                  <th>NOTES</th>
+                  <th>STATUS</th>
+                  <th class="text-center">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="inquiriesTableBody">
+                <!-- Dynamically populated from Supabase voyage_briefs -->
+              </tbody>
+            </table>
+          </div>
+          <div id="briefsEmptyState" class="table-empty-state" style="display:none;">
+            <p>No inquiries found. Client submissions from the website will appear here.</p>
+          </div>
+        </div>
         </div>
       </section>
 
@@ -472,13 +435,10 @@
         </div>
       </section>
 
-      <!-- =================================================== -->
-      <!-- TAB 4: DIRECT DEVICE PHOTO GALLERY                  -->
-      <!-- =================================================== -->
       <section class="admin-page-panel" id="pageMedia">
         <div class="panel-header-row">
           <div class="panel-header-titles">
-            <h1 class="panel-title">Photo Gallery</h1>
+            <h1 class="panel-title">Photos</h1>
             <p class="panel-subtitle">Upload photos directly from your phone or laptop to display on the website gallery.</p>
           </div>
         </div>
@@ -541,40 +501,74 @@
         </div>
       </section>
 
-      <!-- =================================================== -->
-      <!-- TAB 5: CALENDAR LOCKS & MAINTENANCE                 -->
-      <!-- =================================================== -->
       <section class="admin-page-panel" id="pageCalendar">
         <div class="panel-header-row">
           <div class="panel-header-titles">
-            <h1 class="panel-title">Calendar Locks</h1>
-            <p class="panel-subtitle">Lock dates on the public 5-step booking calendar for private charters or maintenance.</p>
+            <h1 class="panel-title">Calendar</h1>
+            <p class="panel-subtitle">Website bookings appear here automatically. Lock a slot when you take a booking offline, so it can't be booked online.</p>
+          </div>
+          <div class="panel-header-actions">
+            <button type="button" class="btn-panel-action btn-primary" id="btnCalendarReviewed">Calendar is up to date</button>
           </div>
         </div>
+        <p class="calendar-review-status" id="calendarReviewStatus"></p>
 
-        <div class="calendar-lock-card">
-          <div class="form-grid-3">
+        <!-- Month view: Day & Evening slot status for every date -->
+        <div class="calendar-lock-card admin-month-card">
+          <div class="admin-month-header">
+            <button type="button" class="btn-table-icon" id="adminCalPrev" aria-label="Previous month">‹</button>
+            <h3 class="widget-heading admin-month-label" id="adminCalLabel">Month</h3>
+            <button type="button" class="btn-table-icon" id="adminCalNext" aria-label="Next month">›</button>
+          </div>
+          <div class="admin-cal-legend">
+            <span><i class="slot-dot open"></i> Open</span>
+            <span><i class="slot-dot booked"></i> Booked on website</span>
+            <span><i class="slot-dot locked"></i> Locked by you (offline)</span>
+          </div>
+          <div class="admin-cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="admin-cal-grid" id="adminCalGrid"></div>
+          <p class="admin-cal-hint">Tap an open slot to lock it, a locked slot to unlock it, or a booked slot to see the booking.</p>
+        </div>
+
+        <!-- Lock form -->
+        <div class="calendar-lock-card" id="adminLockFormCard">
+          <h3 class="widget-heading">Lock a Slot</h3>
+          <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label" for="adminLockDate">Date to Lock</label>
+              <label class="form-label" for="adminLockDate">Date</label>
               <input type="date" id="adminLockDate" class="admin-form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="adminLockSlot">Slot</label>
+              <select id="adminLockSlot" class="admin-form-input">
+                <option value="day">Day Slot (6 am – 2 pm)</option>
+                <option value="evening">Evening Slot (2 pm – 11 pm)</option>
+                <option value="">Full Day (both slots)</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="adminLockReason">Reason</label>
               <select id="adminLockReason" class="admin-form-input">
-                <option value="Maintenance">Scheduled Marine Maintenance</option>
-                <option value="Phone Booking">Booked via Direct Phone Line</option>
-                <option value="Weather">Adverse Weather Warning</option>
-                <option value="Private Charter">VIP Private Charter</option>
+                <option value="Offline Booking">Offline booking</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Private Use">Private / owner use</option>
+                <option value="Weather">Weather</option>
               </select>
             </div>
-            <div class="form-group flex-end">
-              <button class="btn-panel-action btn-primary" id="btnSubmitLockDate">Lock Date</button>
+            <div class="form-group">
+              <label class="form-label" for="adminLockNote">Note (only visible to admins)</label>
+              <input type="text" id="adminLockNote" class="admin-form-input" placeholder="e.g. Mehta wedding · +91 98200 00000">
             </div>
+          </div>
+          <div class="flex-end" style="margin-top: 16px;">
+            <button class="btn-panel-action btn-primary" id="btnSubmitLockDate">Lock Slot</button>
           </div>
         </div>
 
         <div class="locked-dates-table-card">
-          <h3 class="widget-heading">Currently Locked Dates</h3>
+          <h3 class="widget-heading">Upcoming Locks</h3>
           <div class="locked-dates-list" id="lockedDatesList">
             <!-- Populated from Supabase blocked_dates -->
           </div>

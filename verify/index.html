@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Charter Verification Pass | Black Pearl · Lady Alice</title>
+  <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Verified Charter Pass & Booking Details for Lady Alice at Gateway of India, Mumbai.">
   <link rel="canonical" href="https://blackpearlmumbai.com/verify">
   <meta name="theme-color" content="#050506">
@@ -68,6 +69,16 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       margin-bottom: 18px;
+    }
+
+    .pass-badge-verified.is-invalid {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #FCA5A5;
+    }
+
+    .pass-row .p-val {
+      text-align: right;
+      word-break: break-word;
     }
 
     .pass-title {
@@ -209,45 +220,24 @@
   <main style="flex: 1;">
     <div class="verify-container">
       <div class="pass-card">
-        
-        <div class="pass-badge-verified">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Official Verified Charter Pass</span>
+
+        <div class="pass-badge-verified" id="passBadge">
+          <span id="passBadgeText">Checking booking…</span>
         </div>
 
-        <h1 class="pass-title">Lady Alice · Boarding Voucher</h1>
-        <div class="pass-ref" id="passRefCode">REF: BP-1411-027</div>
+        <h1 class="pass-title">Lady Alice · Booking Pass</h1>
+        <div class="pass-ref" id="passRefCode"></div>
 
-        <div class="pass-details-table">
+        <div class="pass-details-table" id="passDetails">
           <div class="pass-row">
-            <span class="p-label">Charter Status</span>
-            <span class="p-val" style="color: #4ADE80;">Deposit Paid · Verified Hold</span>
-          </div>
-          <div class="pass-row">
-            <span class="p-label">Primary Guest</span>
-            <span class="p-val" id="passGuestName">Arjun Mehta</span>
-          </div>
-          <div class="pass-row">
-            <span class="p-label">Charter Date</span>
-            <span class="p-val" id="passDate">Sat, 14 Nov 2026</span>
-          </div>
-          <div class="pass-row">
-            <span class="p-label">Sailing Slot</span>
-            <span class="p-val" id="passSlot">Sunset (4:30 pm)</span>
-          </div>
-          <div class="pass-row">
-            <span class="p-label">Boarding Berth</span>
-            <span class="p-val">Jetty No. 5, Gateway of India</span>
-          </div>
-          <div class="pass-row">
-            <span class="p-label">Vessel</span>
-            <span class="p-val">Lady Alice (100 Capacity)</span>
+            <span class="p-label">Loading</span>
+            <span class="p-val">Please wait…</span>
           </div>
         </div>
 
         <div class="pass-actions">
           <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-verify-action" id="btnPassWhatsApp">
-            Chat with Charter Team on WhatsApp
+            Chat with Our Team on WhatsApp
           </a>
           <a href="/" class="btn-verify-outline">
             Return to Black Pearl Website
@@ -261,27 +251,81 @@
   <script>
     (function() {
       const params = new URLSearchParams(window.location.search);
-      const ref = params.get('ref') || 'BP-OFFICIAL';
-      const name = params.get('name') || 'Guest';
-      const date = params.get('date') || 'Confirmed Date';
-      const slot = params.get('slot') || 'Sunset (4:30 pm)';
+      const code = params.get('code') || params.get('ref') || '';
+      const token = params.get('t') || '';
 
+      const badge = document.getElementById('passBadge');
+      const badgeText = document.getElementById('passBadgeText');
       const refEl = document.getElementById('passRefCode');
-      const nameEl = document.getElementById('passGuestName');
-      const dateEl = document.getElementById('passDate');
-      const slotEl = document.getElementById('passSlot');
+      const details = document.getElementById('passDetails');
       const waBtn = document.getElementById('btnPassWhatsApp');
 
-      if (refEl) refEl.textContent = `REF: ${ref}`;
-      if (nameEl) nameEl.textContent = name;
-      if (dateEl) dateEl.textContent = date;
-      if (slotEl) slotEl.textContent = slot;
+      const PAID = ['Held (Deposit Paid)', 'Confirmed', 'Completed'];
 
-      if (waBtn) {
-        const text = encodeURIComponent(`Hello Black Pearl, verifying my charter booking ${ref} for ${name}.`);
-        waBtn.href = `https://wa.me/919820000000?text=${text}`;
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
       }
 
+      function renderRows(rows) {
+        details.innerHTML = rows
+          .filter(([, value]) => value !== undefined && value !== null && value !== '')
+          .map(([label, value, style]) => `
+            <div class="pass-row">
+              <span class="p-label">${escapeHtml(label)}</span>
+              <span class="p-val"${style ? ` style="${style}"` : ''}>${escapeHtml(value)}</span>
+            </div>`)
+          .join('');
+      }
+
+      function showInvalid(message) {
+        badge.classList.add('is-invalid');
+        badgeText.textContent = 'Not verified';
+        refEl.textContent = code ? `REF: ${code}` : '';
+        renderRows([['Result', message, 'color: #FCA5A5;']]);
+      }
+
+      if (!code || !token) {
+        showInvalid('This link is incomplete. Scan the QR code from your confirmation email.');
+        return;
+      }
+
+      fetch(`/api/booking?code=${encodeURIComponent(code)}&t=${encodeURIComponent(token)}`, { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : Promise.reject(res.status))
+        .then(({ booking: b }) => {
+          const valid = PAID.includes(b.status);
+          refEl.textContent = `REF: ${b.code}`;
+          if (valid) {
+            badgeText.textContent = '✓ Verified booking';
+          } else {
+            badge.classList.add('is-invalid');
+            badgeText.textContent = b.status === 'Cancelled' ? 'Booking cancelled' : 'Not a confirmed booking';
+          }
+
+          renderRows([
+            ['Status', valid ? (b.status === 'Held (Deposit Paid)' ? 'Advance paid' : b.status) : b.status, valid ? 'color: #4ADE80;' : 'color: #FCA5A5;'],
+            ['Booked by', b.name],
+            ['Phone', b.phone],
+            ['Email', b.email],
+            ['Celebration', b.occasion],
+            ['Date', b.date],
+            ['Slot & time', b.slot],
+            ['Duration', b.duration],
+            ['Itinerary', b.itinerary],
+            ['Guests', b.guests],
+            ['Charter price', b.price],
+            ['Advance paid', valid ? `${b.advancePaid} · ${b.paymentId || ''}` : ''],
+            ['Boarding', 'Jetty No. 5, Gateway of India'],
+            ['Notes', b.notes]
+          ]);
+
+          const text = encodeURIComponent(`Hello Black Pearl, this is about booking ${b.code} for ${b.name} on ${b.date}.`);
+          waBtn.href = `https://wa.me/919820000000?text=${text}`;
+        })
+        .catch(() => showInvalid('We could not find this booking. Please contact our team.'));
+    })();
+  </script>
+  <script>
+    (function() {
       // Mobile Menu Drawer Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
       const drawer = document.getElementById('mobileDrawer');

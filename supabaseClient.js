@@ -130,7 +130,16 @@ export async function fetchBookingHolds() {
         address: item.address,
         notes: item.notes,
         status: item.status,
-        createdAt: item.created_at
+        createdAt: item.created_at,
+        slotKey: item.slot_key,
+        startHour: item.start_hour,
+        durationHours: item.duration_hours,
+        razorpayOrderId: item.razorpay_order_id,
+        failureReason: item.failure_reason,
+        paidAt: item.paid_at,
+        emailSentAt: item.email_sent_at,
+        emailError: item.email_error,
+        verifyToken: item.verify_token
       }));
 
       return { success: true, data: mapped };
@@ -208,12 +217,15 @@ export async function fetchVoyageBriefs() {
    -------------------------------------------------------- */
 
 /**
- * Persists a blocked date to Supabase.
+ * Locks a date on the booking calendar. slotKey 'day' / 'evening' locks one
+ * slot; null locks the full day. Used for offline bookings & maintenance.
  */
-export async function saveBlockedDate(dateIso, reason = 'Maintenance') {
+export async function saveBlockedDate(dateIso, reason = 'Maintenance', { slotKey = null, note = '' } = {}) {
   const payload = {
     date: dateIso,
     reason,
+    slot_key: slotKey,
+    note: note || null,
     created_at: new Date().toISOString()
   };
 
@@ -231,6 +243,20 @@ export async function saveBlockedDate(dateIso, reason = 'Maintenance') {
     }
   }
   return { success: true, data: payload, source: 'local' };
+}
+
+/**
+ * Removes a calendar lock (admin only).
+ */
+export async function deleteBlockedDate(id) {
+  if (!isSupabaseConfigured() || !supabase) return { success: false };
+  try {
+    const { error } = await supabase.from('blocked_dates').delete().eq('id', id);
+    if (error) return { success: false, error };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err };
+  }
 }
 
 /**
@@ -604,7 +630,7 @@ export async function fetchAnalyticsSummary() {
 
     // ── Traffic Source Breakdown ──────────────────────────
     const SOURCE_COLORS = {
-      'Direct':              '#C9A968',
+      'Direct':              '#E4E4E7',
       'Instagram (Organic)': '#e040fb',
       'Google (SEO)':        '#4fc3f7',
       'LinkedIn':            '#0077b5',
@@ -867,4 +893,37 @@ export async function updateContactInquiryStatus(inquiryId, status) {
     }
   }
   return { success: true };
+}
+
+/* --------------------------------------------------------
+   10. ADMIN ACTIVITY (SHARED REMINDERS)
+   -------------------------------------------------------- */
+
+/**
+ * Reads a shared admin activity marker, e.g. 'calendar_reviewed'.
+ */
+export async function fetchAdminActivity(key) {
+  if (!isSupabaseConfigured() || !supabase) return { success: false, data: null };
+  try {
+    const { data, error } = await supabase.from('admin_activity').select('*').eq('key', key).maybeSingle();
+    if (error) return { success: false, error, data: null };
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, error: err, data: null };
+  }
+}
+
+/**
+ * Records that an admin did something now (visible to every admin).
+ */
+export async function recordAdminActivity(key, byEmail) {
+  if (!isSupabaseConfigured() || !supabase) return { success: false };
+  try {
+    const payload = { key, happened_at: new Date().toISOString(), by_email: byEmail || null };
+    const { data, error } = await supabase.from('admin_activity').upsert(payload).select().single();
+    if (error) return { success: false, error };
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, error: err };
+  }
 }
