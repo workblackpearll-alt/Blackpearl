@@ -3,88 +3,16 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/admin/:match*",
-      "destination": "/admin/index.html"
-    },
-    {
-      "source": "/admin/:match",
-      "destination": "/admin/index.html"
-    },
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html"
+      "source": "/admin/:path*",
+      "destination": "/admin"
     },
     {
       "source": "/book/:path*",
-      "destination": "/book/index.html"
-    },
-    {
-      "source": "/book",
-      "destination": "/book/index.html"
-    },
-    {
-      "source": "/gallery/:path*",
-      "destination": "/gallery/index.html"
-    },
-    {
-      "source": "/gallery",
-      "destination": "/gallery/index.html"
-    },
-    {
-      "source": "/about/:path*",
-      "destination": "/about/index.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/about/index.html"
-    },
-    {
-      "source": "/contact/:path*",
-      "destination": "/contact/index.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact/index.html"
-    },
-    {
-      "source": "/terms/:path*",
-      "destination": "/terms/index.html"
-    },
-    {
-      "source": "/terms",
-      "destination": "/terms/index.html"
-    },
-    {
-      "source": "/privacy/:path*",
-      "destination": "/privacy/index.html"
-    },
-    {
-      "source": "/privacy",
-      "destination": "/privacy/index.html"
-    },
-    {
-      "source": "/cancellation/:path*",
-      "destination": "/cancellation/index.html"
-    },
-    {
-      "source": "/cancellation",
-      "destination": "/cancellation/index.html"
+      "destination": "/book"
     },
     {
       "source": "/refund",
-      "destination": "/cancellation/index.html"
-    },
-    {
-      "source": "/verify/:path*",
-      "destination": "/verify/index.html"
-    },
-    {
-      "source": "/verify",
-      "destination": "/verify/index.html"
-    },
-    {
-      "source": "/((?!api/|assets/|admin/|book/|gallery/|about/|contact/|terms/|privacy/|cancellation/|verify/|.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/cancellation"
     }
   ]
 }
