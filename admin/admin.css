@@ -2736,3 +2736,58 @@ body.admin-drawer-open {
 #btnEnableAlerts {
   white-space: nowrap;
 }
+
+/* Calendar: several bookings per day + "+ Block" */
+.slot-chip.add-block {
+  background: transparent;
+  border: 1px dashed var(--bp-border);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.slot-chip.add-block:hover {
+  border-color: var(--bp-border-active);
+  color: var(--text-white);
+}
+
+.lock-form-hint {
+  margin: -6px 0 14px;
+}
+
+.lock-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.lock-presets .form-label {
+  margin: 0 4px 0 0;
+}
+
+.lock-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  .lock-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .slot-chip {
+    font-size: 9.5px;
+    padding: 3px 2px;
+  }
+
+  .slot-chip.add-block {
+    font-size: 0;
+  }
+
+  .slot-chip.add-block::after {
+    content: '+';
+    font-size: 13px;
+    line-height: 1;
+  }
+}

@@ -9,7 +9,9 @@ import {
   getItineraryLabel,
   getSlotTimingLabel as slotTimingLabelFor,
   getStartHourOptions as startHourOptionsFor,
-  getCharterPrice
+  getCharterPrice,
+  isRangeFree,
+  TURNAROUND_GAP_HOURS
 } from '../shared/pricing.js';
 
 /* ========================================================
@@ -76,8 +78,7 @@ const bookState = {
   selectedDate: null,
   currentMonth: today.getMonth(),
   currentYear: today.getFullYear(),
-  blockedDates: [],
-  bookedSlots: {}, // { 'YYYY-MM-DD': Set(['day', 'evening']) }
+  occupied: {}, // { 'YYYY-MM-DD': [{ start, end }] } booked / locked hours (24h)
   guestDetails: {
     name: '',
     phone: '',
@@ -202,8 +203,8 @@ function validateStep(stepNum) {
       alert('Please click and select an open date on the calendar.');
       return false;
     }
-    if (!getStartHourOptions().includes(bookState.startHour)) {
-      alert('Please choose a start time for your charter.');
+    if (!getStartHourOptions().includes(bookState.startHour) || !isStartFree(bookState.selectedDate, bookState.startHour)) {
+      alert('Please choose an available start time for your charter.');
       return false;
     }
     return true;
@@ -433,6 +434,10 @@ function initSlotAndDuration() {
 }
 
 function onScheduleChanged() {
+  // A longer charter may no longer fit on the chosen date
+  if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
+    bookState.selectedDate = null;
+  }
   updatePriceCalculations();
   renderStartTimeOptions();
   renderCalendar();
@@ -481,12 +486,21 @@ function getSlotTimingLabel() {
   return slotTimingLabelFor(bookState.selectedSlot, bookState.startHour, bookState.selectedDuration);
 }
 
-function isSlotTaken(dateIso, slotKey = bookState.selectedSlot) {
-  return Boolean(bookState.bookedSlots[dateIso] && bookState.bookedSlots[dateIso].has(slotKey));
+function getOccupied(dateIso) {
+  return bookState.occupied[dateIso] || [];
+}
+
+function isStartFree(dateIso, startHour, duration = bookState.selectedDuration) {
+  return isRangeFree(startHour, startHour + duration, getOccupied(dateIso));
+}
+
+// Start times in the chosen slot that keep a 1-hour gap from other bookings
+function getFreeStartOptions(dateIso) {
+  return getStartHourOptions().filter(h => isStartFree(dateIso, h));
 }
 
 function isDateAvailable(dateIso) {
-  return dateIso >= todayIso && !bookState.blockedDates.includes(dateIso) && !isSlotTaken(dateIso);
+  return dateIso >= todayIso && getFreeStartOptions(dateIso).length > 0;
 }
 
 function initCalendar() {
@@ -561,21 +575,20 @@ function renderCalendar() {
     dot.className = 'day-dot';
 
     const isPast = dateIso < todayIso;
-    const isBlocked = bookState.blockedDates.includes(dateIso);
-    const isTaken = isSlotTaken(dateIso);
-    const isOpen = !isPast && !isBlocked && !isTaken;
+    const freeCount = isPast ? 0 : getFreeStartOptions(dateIso).length;
+    const allCount = getStartHourOptions().length;
+    const isOpen = freeCount > 0;
 
     if (isPast) {
       cell.classList.add('disabled');
       cell.title = 'Date has passed';
-    } else if (isBlocked) {
+    } else if (!isOpen) {
       cell.classList.add('disabled');
       dot.classList.add('booked');
-      cell.title = 'Date is unavailable';
-    } else if (isTaken) {
-      cell.classList.add('disabled');
-      dot.classList.add('booked');
-      cell.title = `${slotName} already reserved on this date`;
+      cell.title = `No ${bookState.selectedDuration}-hour times left in the ${slotName} on this date`;
+    } else if (freeCount < allCount) {
+      dot.classList.add('filling');
+      cell.title = `Some times already booked · ${freeCount} start time${freeCount === 1 ? '' : 's'} left`;
     } else {
       dot.classList.add('free');
       cell.title = `${slotName} open`;
@@ -592,6 +605,7 @@ function renderCalendar() {
         grid.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
         cell.classList.add('selected');
         bookState.selectedDate = dateIso;
+        renderStartTimeOptions();
         updateSelectedDateBanner();
         updateSummarySidebar();
       });
@@ -618,7 +632,14 @@ function updateSelectedDateBanner() {
   const dateObj = fromIsoDate(bookState.selectedDate);
   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
   if (title) title.textContent = `${dayName}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-  if (count) count.textContent = `${getSlotWindowLabel()} is open on this date.`;
+
+  const free = getFreeStartOptions(bookState.selectedDate).length;
+  const all = getStartHourOptions().length;
+  if (count) {
+    count.textContent = free === all
+      ? `${getSlotWindowLabel()} is fully open on this date.`
+      : `Some times are already booked. ${free} start time${free === 1 ? '' : 's'} left in the ${getSlotWindowLabel()}.`;
+  }
 }
 
 function getStartHourOptions() {
@@ -640,13 +661,19 @@ function initStartTimePicker() {
 function renderStartTimeOptions() {
   const select = document.getElementById('startTimeSelect');
   const options = getStartHourOptions();
-  if (!options.includes(bookState.startHour)) {
-    bookState.startHour = options[0];
+  const date = bookState.selectedDate;
+  const isFree = h => !date || isStartFree(date, h);
+
+  if (!options.includes(bookState.startHour) || !isFree(bookState.startHour)) {
+    bookState.startHour = options.find(isFree) ?? options[0];
   }
 
   if (select) {
     select.innerHTML = options
-      .map(h => `<option value="${h}" ${h === bookState.startHour ? 'selected' : ''}>${formatClock(h)} – ${formatClock(h + bookState.selectedDuration)}</option>`)
+      .map(h => {
+        const free = isFree(h);
+        return `<option value="${h}" ${h === bookState.startHour ? 'selected' : ''} ${free ? '' : 'disabled'}>${formatClock(h)} – ${formatClock(h + bookState.selectedDuration)}${free ? '' : ' (booked)'}</option>`;
+      })
       .join('');
   }
   renderStartTimeHint();
@@ -655,7 +682,8 @@ function renderStartTimeOptions() {
 function renderStartTimeHint() {
   const hint = document.getElementById('startTimeHint');
   if (!hint) return;
-  hint.textContent = `Your ${bookState.selectedDuration}-hour charter: ${getItineraryLabel(bookState.selectedDuration)}.`;
+  hint.textContent = `Your ${bookState.selectedDuration}-hour charter: ${getItineraryLabel(bookState.selectedDuration)}. ` +
+    `Times close to another booking are unavailable, as we keep a ${TURNAROUND_GAP_HOURS}-hour gap between charters.`;
 }
 
 /* ========================================================
@@ -832,8 +860,10 @@ async function handlePageRazorpayPayment() {
     if (!ok) {
       showFormError(data.error || 'Could not start the payment. Please try again.');
       if (data.code === 'SLOT_TAKEN') {
-        markSlotBooked(bookState.selectedDate, bookState.selectedSlot);
-        bookState.selectedDate = null;
+        // Someone else just took this time: refresh availability and let them re-pick
+        await syncAvailability();
+        if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) bookState.selectedDate = null;
+        renderStartTimeOptions();
         renderCalendar();
         updateSummarySidebar();
       }
@@ -921,7 +951,7 @@ function completePageBooking({ booking, qrUrl, verifyUrl, emailSent }) {
     startHour: bookState.startHour,
     durationHours: bookState.selectedDuration
   };
-  markSlotBooked(booking.dateIso, bookState.selectedSlot);
+  markTimeBooked(booking.dateIso, bookState.startHour, bookState.startHour + bookState.selectedDuration);
 
   renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent });
 
@@ -1033,34 +1063,29 @@ function generateICalendarDownload() {
 /* ========================================================
    9. SUPABASE BLOCKED DATES SYNC
    ======================================================== */
-// Portal bookings + admin offline locks, from the server (no guest details)
+// Website bookings + admin offline locks, as booked hours per date (no guest details)
 async function syncAvailability() {
   try {
     const res = await fetch('/api/availability', { cache: 'no-store' });
     if (!res.ok) throw new Error(`availability ${res.status}`);
-    const { bookedSlots = [], blocks = [] } = await res.json();
+    const { occupied = [] } = await res.json();
 
-    bookedSlots.forEach(b => markSlotBooked(b.date, b.slot));
-    blocks.forEach(b => {
-      if (b.slot) {
-        markSlotBooked(b.date, b.slot);
-      } else if (!bookState.blockedDates.includes(b.date)) {
-        bookState.blockedDates.push(b.date); // full-day lock
-      }
-    });
+    bookState.occupied = {};
+    occupied.forEach(range => markTimeBooked(range.date, range.start, range.end));
 
     if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
       bookState.selectedDate = null;
-      updateSummarySidebar();
     }
+    renderStartTimeOptions();
     renderCalendar();
+    updateSummarySidebar();
   } catch (err) {
     console.warn('Could not load availability:', err);
   }
 }
 
-function markSlotBooked(dateIso, slotKey) {
-  if (!dateIso || !slotKey) return;
-  if (!bookState.bookedSlots[dateIso]) bookState.bookedSlots[dateIso] = new Set();
-  bookState.bookedSlots[dateIso].add(slotKey);
+function markTimeBooked(dateIso, start, end) {
+  if (!dateIso || !Number.isFinite(start) || !Number.isFinite(end)) return;
+  if (!bookState.occupied[dateIso]) bookState.occupied[dateIso] = [];
+  bookState.occupied[dateIso].push({ start, end });
 }
