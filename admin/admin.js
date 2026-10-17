@@ -13,12 +13,16 @@ import {
   saveGalleryImage,
   fetchBlockedDates,
   saveBlockedDate,
+  deleteBlockedDate,
+  fetchAdminActivity,
+  recordAdminActivity,
   fetchContactInquiries,
   updateContactInquiryStatus,
   fetchCommunitySignups,
   updateCommunityStatus,
   isSupabaseConfigured
 } from '../supabaseClient.js';
+import { slotKeyFromLabel } from '../shared/pricing.js';
 
 import {
   uploadImageToImageKit,
@@ -71,21 +75,14 @@ const elements = {
   sidebarUserEmail: document.getElementById('sidebarUserEmail'),
   btnSignOut: document.getElementById('btnSignOut'),
   sidebarBookingsCount: document.getElementById('sidebarBookingsCount'),
-  sidebarBriefsCount: document.getElementById('sidebarBriefsCount'),
   navItems: document.querySelectorAll('.sidebar-nav .nav-item'),
   pagePanels: document.querySelectorAll('.admin-page-panel'),
 
   // Dashboard elements
   btnRefreshAnalytics: document.getElementById('btnRefreshAnalytics'),
-  btnHeaderNewBooking: document.getElementById('btnHeaderNewBooking'),
   metricViews: document.getElementById('metricViews'),
   metricVisitors: document.getElementById('metricVisitors'),
-  metricBookingViews: document.getElementById('metricBookingViews'),
-  metricClicks: document.getElementById('metricClicks'),
-  metricCharters: document.getElementById('metricCharters'),
-  metricTopOccasion: document.getElementById('metricTopOccasion'),
   trafficList: document.getElementById('trafficAcquisitionList'),
-  engagementReportBody: document.getElementById('engagementReportBody'),
 
   // Bookings elements
   bookingsSearchInput: document.getElementById('bookingsSearchInput'),
@@ -127,6 +124,8 @@ const elements = {
   // Calendar Locks elements
   lockDateInput: document.getElementById('adminLockDate'),
   lockReasonSelect: document.getElementById('adminLockReason'),
+  lockSlotSelect: document.getElementById('adminLockSlot'),
+  lockNoteInput: document.getElementById('adminLockNote'),
   btnSubmitLockDate: document.getElementById('btnSubmitLockDate'),
   lockedDatesList: document.getElementById('lockedDatesList'),
 
@@ -153,12 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSidebarNavigation();
   initDashboardHandlers();
   initBookingsHandlers();
+  initOverviewLinks();
   initInquiriesHandlers();
   initContactHandlers();
   initCommunityHandlers();
   initMediaHandlers();
   initCalendarHandlers();
   initModalHandlers();
+  initNotifications();
 
   // Listen to popstate for browser back/forward navigation
   window.addEventListener('popstate', () => {
@@ -229,7 +230,7 @@ function handleRouteFromUrl() {
   if (path.includes('/admin/orders') || path.includes('/admin/bookings')) {
     navigateTo('bookings', false);
   } else if (path.includes('/admin/inquiries') || path.includes('/admin/briefs')) {
-    navigateTo('inquiries', false);
+    navigateTo('contact', false);
   } else if (path.includes('/admin/contact')) {
     navigateTo('contact', false);
   } else if (path.includes('/admin/community')) {
@@ -287,7 +288,7 @@ function initAuthHandlers() {
         elements.btnToggleAuthMode.textContent = 'Sign In Instead';
       } else {
         elements.authSubtitle.textContent = 'Sign in with your verified admin credentials to access the Lady Alice command deck.';
-        elements.btnAuthText.textContent = 'Sign In to Dashboard';
+        elements.btnAuthText.textContent = 'Sign In';
         elements.authSwitchText.textContent = "Don't have an admin account yet?";
         elements.btnToggleAuthMode.textContent = 'Create Admin Account';
       }
@@ -373,7 +374,7 @@ function setAuthLoading(loading) {
   if (loading) {
     elements.btnAuthText.innerHTML = '<span class="spinner-inline"></span> Authenticating...';
   } else {
-    elements.btnAuthText.textContent = state.authMode === 'signup' ? 'Create Admin Account' : 'Sign In to Dashboard';
+    elements.btnAuthText.textContent = state.authMode === 'signup' ? 'Create Admin Account' : 'Sign In';
   }
 }
 
@@ -522,7 +523,6 @@ function navigateTo(pageName, pushState = true) {
   const panelIdMap = {
     dashboard: 'pageDashboard',
     bookings: 'pageBookings',
-    inquiries: 'pageInquiries',
     contact: 'pageContact',
     community: 'pageCommunity',
     media: 'pageMedia',
@@ -540,10 +540,9 @@ function navigateTo(pageName, pushState = true) {
     renderDashboard();
   } else if (pageName === 'bookings') {
     renderBookingsTable();
-  } else if (pageName === 'inquiries') {
-    renderInquiriesTable();
   } else if (pageName === 'contact') {
     renderContactTable();
+    renderInquiriesTable();
   } else if (pageName === 'community') {
     renderCommunityTable();
   } else if (pageName === 'media') {
@@ -568,8 +567,11 @@ async function loadAllPortalData() {
     loadContactData(),
     loadCommunityData(),
     loadMediaData(),
-    loadBlockedDatesData()
+    loadBlockedDatesData(),
+    loadCalendarReview()
   ]);
+  notifState.ready = true;
+  renderNotifications();
 }
 
 async function loadAnalyticsData() {
@@ -586,34 +588,27 @@ async function loadBookingsData() {
   try {
     const res = await fetchBookingHolds();
     state.bookings = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-
-    if (elements.sidebarBookingsCount) {
-      elements.sidebarBookingsCount.textContent = state.bookings.length;
-    }
-    applyBookingFilters();
   } catch (err) {
     console.error('Failed to load bookings:', err);
     state.bookings = [];
-    if (elements.sidebarBookingsCount) elements.sidebarBookingsCount.textContent = '0';
-    applyBookingFilters();
   }
+  applyBookingFilters();
+  renderOverview();
+  renderAdminCalendar();
 }
 
 async function loadInquiriesData() {
   try {
     const res = await fetchVoyageBriefs();
     state.briefs = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-
-    if (elements.sidebarBriefsCount) {
-      elements.sidebarBriefsCount.textContent = state.briefs.length;
-    }
-    applyBriefFilters();
   } catch (err) {
     console.error('Failed to load voyage briefs:', err);
     state.briefs = [];
-    if (elements.sidebarBriefsCount) elements.sidebarBriefsCount.textContent = '0';
-    applyBriefFilters();
   }
+  // Older briefs only show if there are any
+  const legacyBlock = document.getElementById('legacyBriefsBlock');
+  if (legacyBlock) legacyBlock.hidden = state.briefs.length === 0;
+  applyBriefFilters();
 }
 
 async function loadMediaData() {
@@ -635,18 +630,6 @@ async function loadMediaData() {
   }
 }
 
-async function loadBlockedDatesData() {
-  try {
-    const res = await fetchBlockedDates();
-    state.blockedDates = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-    renderBlockedDatesList();
-  } catch (err) {
-    console.error('Failed to load blocked dates:', err);
-    state.blockedDates = [];
-    renderBlockedDatesList();
-  }
-}
-
 /* ========================================================
    5. DASHBOARD CONTROLLER (SCREENSHOT 1)
    ======================================================== */
@@ -655,31 +638,20 @@ function initDashboardHandlers() {
     elements.btnRefreshAnalytics.addEventListener('click', async () => {
       elements.btnRefreshAnalytics.disabled = true;
       elements.btnRefreshAnalytics.innerHTML = '<span>Refreshing...</span>';
-      await loadAnalyticsData();
-      await loadBookingsData();
+      await loadAllPortalData();
       elements.btnRefreshAnalytics.disabled = false;
-      elements.btnRefreshAnalytics.innerHTML = '<span>Refresh Data</span>';
-    });
-  }
-
-  if (elements.btnHeaderNewBooking) {
-    elements.btnHeaderNewBooking.addEventListener('click', () => {
-      navigateTo('bookings');
+      elements.btnRefreshAnalytics.innerHTML = '<span>Refresh</span>';
     });
   }
 }
 
 function renderDashboard() {
+  renderOverview();
   if (!state.analytics) return;
   const a = state.analytics;
 
-  // 1. KPI Cards (100% Live metrics)
   if (elements.metricViews) elements.metricViews.textContent = Number(a.websiteViews || 0).toLocaleString('en-IN');
   if (elements.metricVisitors) elements.metricVisitors.textContent = Number(a.uniqueVisitors || 0).toLocaleString('en-IN');
-  if (elements.metricBookingViews) elements.metricBookingViews.textContent = Number(a.bookingViews || 0).toLocaleString('en-IN');
-  if (elements.metricClicks) elements.metricClicks.textContent = Number(a.totalHolds || 0).toLocaleString('en-IN');
-  if (elements.metricCharters) elements.metricCharters.textContent = Number(a.activeHolds || 0).toLocaleString('en-IN');
-  if (elements.metricTopOccasion) elements.metricTopOccasion.textContent = a.topOccasion || '—';
 
   // 2. Traffic Acquisition List
   if (elements.trafficList) {
@@ -703,32 +675,55 @@ function renderDashboard() {
       elements.trafficList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--bp-mist-dark); font-size: 0.85rem;">No traffic records yet. Browse the site to log live visits.</div>';
     }
   }
-
-  // 3. Engagement Report Table
-  if (elements.engagementReportBody) {
-    elements.engagementReportBody.innerHTML = '';
-    if (Array.isArray(a.engagementReport) && a.engagementReport.length > 0) {
-      a.engagementReport.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="engagement-product-title">${row.occasion}</td>
-          <td class="text-right num-cell">${row.views.toLocaleString('en-IN')}</td>
-          <td class="text-right num-cell">${row.clicks.toLocaleString('en-IN')}</td>
-          <td class="text-right total-cell">${row.total}</td>
-        `;
-        elements.engagementReportBody.appendChild(tr);
-      });
-    } else {
-      elements.engagementReportBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--bp-mist-dark); font-size: 0.85rem;">No occasion engagement recorded yet</td></tr>';
-    }
-  }
 }
 
 /* ========================================================
-   6. BOOKINGS CONTROLLER (SCREENSHOT 2)
+   6. BOOKINGS (PAYMENTS FROM THE WEBSITE)
    ======================================================== */
+const PAID_STATUSES = ['Held (Deposit Paid)', 'Confirmed', 'Completed'];
+const UNPAID_STATUSES = ['Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict'];
+const BOOKING_STATUS_OPTIONS = [
+  ['Held (Deposit Paid)', 'Advance paid'],
+  ['Confirmed', 'Confirmed'],
+  ['Completed', 'Completed'],
+  ['Cancelled', 'Cancelled']
+];
+
+function bookingStatusLabel(status) {
+  if (status === 'Held (Deposit Paid)') return 'Advance paid';
+  if (status === 'Paid - Slot Conflict') return 'Paid · slot clash, refund';
+  return status || '—';
+}
+
+function bookingStatusClass(status) {
+  const s = (status || '').toLowerCase();
+  if (PAID_STATUSES.includes(status)) return 'status-confirmed';
+  if (s.includes('pending')) return 'status-held';
+  if (s.includes('cancel') || s.includes('failed') || s.includes('abandoned') || s.includes('conflict')) return 'status-failed';
+  return 'status-shipped';
+}
+
+function bookingMatchesFilter(b, filter) {
+  const s = (b.status || '').toLowerCase();
+  if (filter === 'paid') return PAID_STATUSES.includes(b.status) || s.includes('delivered') || s.includes('shipped');
+  if (filter === 'pending') return b.status === 'Payment Pending';
+  if (filter === 'failed') return ['Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Failed'].includes(b.status);
+  if (filter === 'cancelled') return s.includes('cancel');
+  return true;
+}
+
+function emailStatusHtml(b) {
+  if (b.emailSentAt) return '<span class="email-pill sent" title="Confirmation email with QR sent">Sent</span>';
+  if (b.emailError) return `<span class="email-pill error" title="${escapeHtml(b.emailError)}">Failed</span>`;
+  return '<span class="email-pill none">—</span>';
+}
+
+function bookingPassUrl(b) {
+  if (!b.verifyToken) return '';
+  return `${window.location.origin}/verify?code=${encodeURIComponent(b.id)}&t=${encodeURIComponent(b.verifyToken)}`;
+}
+
 function initBookingsHandlers() {
-  // Search input live filtering
   if (elements.bookingsSearchInput) {
     elements.bookingsSearchInput.addEventListener('input', (e) => {
       state.bookingSearchQuery = e.target.value.toLowerCase().trim();
@@ -736,43 +731,25 @@ function initBookingsHandlers() {
     });
   }
 
-  // Filter chips
   elements.bookingFilterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      elements.bookingFilterButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.activeBookingFilter = btn.getAttribute('data-filter') || 'all';
-      applyBookingFilters();
-    });
+    btn.addEventListener('click', () => setBookingFilter(btn.getAttribute('data-filter') || 'all'));
   });
 }
 
+function setBookingFilter(filter) {
+  state.activeBookingFilter = filter;
+  elements.bookingFilterButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-filter') === filter));
+  applyBookingFilters();
+}
+
 function applyBookingFilters() {
-  let list = [...state.bookings];
+  let list = state.bookings.filter(b => bookingMatchesFilter(b, state.activeBookingFilter));
 
-  // Apply status filter
-  if (state.activeBookingFilter !== 'all') {
-    list = list.filter(b => {
-      const st = (b.status || '').toLowerCase();
-      if (state.activeBookingFilter === 'held') return st.includes('held');
-      if (state.activeBookingFilter === 'confirmed') return st.includes('confirmed');
-      if (state.activeBookingFilter === 'completed') return st.includes('completed') || st.includes('delivered');
-      return true;
-    });
-  }
-
-  // Apply search query
   if (state.bookingSearchQuery) {
     const q = state.bookingSearchQuery;
-    list = list.filter(b => {
-      return (
-        (b.id && b.id.toLowerCase().includes(q)) ||
-        (b.name && b.name.toLowerCase().includes(q)) ||
-        (b.email && b.email.toLowerCase().includes(q)) ||
-        (b.phone && b.phone.toLowerCase().includes(q)) ||
-        (b.occasion && b.occasion.toLowerCase().includes(q))
-      );
-    });
+    list = list.filter(b =>
+      [b.id, b.name, b.email, b.phone, b.occasion, b.paymentId].some(v => v && String(v).toLowerCase().includes(q))
+    );
   }
 
   state.filteredBookings = list;
@@ -787,100 +764,147 @@ function renderBookingsTable() {
     if (elements.bookingsEmptyState) elements.bookingsEmptyState.style.display = 'block';
     return;
   }
-
   if (elements.bookingsEmptyState) elements.bookingsEmptyState.style.display = 'none';
 
   state.filteredBookings.forEach(booking => {
     const tr = document.createElement('tr');
-    tr.className = 'booking-table-row';
+    const isUnpaid = UNPAID_STATUSES.includes(booking.status);
 
-    // Status styling class
-    const statusLower = (booking.status || '').toLowerCase();
-    let statusPillClass = 'status-held';
-    if (statusLower.includes('confirmed') || statusLower.includes('delivered')) statusPillClass = 'status-confirmed';
-    else if (statusLower.includes('shipped') || statusLower.includes('active')) statusPillClass = 'status-shipped';
-    else if (statusLower.includes('failed') || statusLower.includes('cancelled')) statusPillClass = 'status-failed';
-
-    const orderIdDisplay = booking.id ? (booking.id.startsWith('#') ? booking.id : `#${booking.id}`) : '#BP-NEW';
+    const statusCell = isUnpaid
+      ? `<span class="status-select-pill ${bookingStatusClass(booking.status)}" title="${escapeHtml(booking.failureReason || '')}">${escapeHtml(bookingStatusLabel(booking.status))}</span>`
+      : `<select class="status-select-pill ${bookingStatusClass(booking.status)}">
+          ${BOOKING_STATUS_OPTIONS.map(([value, label]) => `<option value="${value}" ${booking.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+          ${BOOKING_STATUS_OPTIONS.some(([v]) => v === booking.status) ? '' : `<option selected>${escapeHtml(booking.status || '—')}</option>`}
+        </select>`;
 
     tr.innerHTML = `
-      <td class="order-id-cell font-mono">${orderIdDisplay}</td>
-      <td class="order-date-cell">${formatDisplayDate(booking.date || booking.createdAt)}</td>
-      <td class="order-customer-cell">
-        <div class="customer-info-line">
-          <span class="customer-email">${booking.email || 'guest@blackpearl.in'}</span>
-          <span class="customer-name">${booking.name || 'Private Guest'}</span>
-        </div>
+      <td>
+        <div class="font-mono"><strong>${escapeHtml(booking.id)}</strong></div>
+        <div class="text-muted cell-sub">${formatDisplayDate(booking.createdAt)}</div>
       </td>
-      <td class="order-occasion-cell">
-        <span class="occasion-tag">${booking.occasion}</span>
-        <span class="slot-tag">${booking.slot || ''} (${booking.duration || '3h'})</span>
+      <td>
+        <div><strong>${escapeHtml(booking.date || '—')}</strong></div>
+        <div class="cell-sub">${escapeHtml(booking.slot || '')}</div>
+        <div class="cell-sub">${escapeHtml(booking.occasion || '')}</div>
       </td>
-      <td class="order-amount-cell">
-        <strong>${booking.price || '₹90,000'}</strong>
-        <span class="deposit-subtext">Deposit: ${booking.paidToken || '₹5,000'}</span>
+      <td>
+        <div><strong>${escapeHtml(booking.name || '—')}</strong></div>
+        <div class="cell-sub"><a href="tel:${escapeHtml(booking.phone || '')}" class="contact-link">${escapeHtml(booking.phone || '')}</a></div>
+        <div class="cell-sub">${escapeHtml(booking.email || '')}</div>
       </td>
-      <td class="order-status-cell">
-        <div class="status-dropdown-wrapper">
-          <select class="status-select-pill ${statusPillClass}" data-booking-id="${booking.id}">
-            <option value="Held (Deposit Paid)" ${booking.status === 'Held (Deposit Paid)' ? 'selected' : ''}>Held</option>
-            <option value="Confirmed" ${booking.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-            <option value="Shipped" ${booking.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-            <option value="Delivered" ${booking.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-            <option value="Completed" ${booking.status === 'Completed' ? 'selected' : ''}>Completed</option>
-            <option value="Failed" ${booking.status === 'Failed' ? 'selected' : ''}>Failed</option>
-            <option value="Cancelled" ${booking.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-          </select>
-        </div>
+      <td>
+        <strong>${escapeHtml(booking.price || '—')}</strong>
+        <div class="cell-sub">Advance ${escapeHtml(booking.paidToken || '₹5,000')}</div>
       </td>
-      <td class="order-contact-cell">
-        <div class="email-indicator-dots" title="Email receipt confirmed">
-          <span class="dot active"></span>
-          <span class="dot active"></span>
-          <span class="dot"></span>
-        </div>
-      </td>
-      <td class="text-center order-action-cell">
-        <button class="btn-table-icon btn-view-booking-detail" data-id="${booking.id}" title="View Order Details">
+      <td>${statusCell}</td>
+      <td>${emailStatusHtml(booking)}</td>
+      <td class="text-center">
+        <button class="btn-table-icon" title="View details">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </td>
     `;
 
-    // Status change listener
-    const select = tr.querySelector('.status-select-pill');
+    const select = tr.querySelector('select.status-select-pill');
     if (select) {
       select.addEventListener('change', async (e) => {
         const newStatus = e.target.value;
-        const bId = booking.id;
-        
-        // Update local object
+        if (newStatus === 'Cancelled' && !confirm(`Cancel booking ${booking.id}? The slot will open for online booking again.`)) {
+          e.target.value = booking.status;
+          return;
+        }
+        const res = await updateBookingStatus(booking.id, newStatus);
+        if (res && res.success === false) {
+          e.target.value = booking.status;
+          showToastNotification('Could not update status. Please try again.');
+          return;
+        }
         booking.status = newStatus;
-
-        // Visual update
-        let updatedClass = 'status-held';
-        const low = newStatus.toLowerCase();
-        if (low.includes('confirmed') || low.includes('delivered') || low.includes('completed')) updatedClass = 'status-confirmed';
-        else if (low.includes('shipped')) updatedClass = 'status-shipped';
-        else if (low.includes('failed') || low.includes('cancelled')) updatedClass = 'status-failed';
-        
-        select.className = `status-select-pill ${updatedClass}`;
-
-        // Persist to Supabase
-        await updateBookingStatus(bId, newStatus);
-        showToastNotification(`Order ${bId} status updated to ${newStatus}`);
+        select.className = `status-select-pill ${bookingStatusClass(newStatus)}`;
+        showToastNotification(`${booking.id} marked ${bookingStatusLabel(newStatus)}`);
+        renderOverview();
+        renderAdminCalendar();
       });
     }
 
-    // Detail modal button listener
-    const viewBtn = tr.querySelector('.btn-view-booking-detail');
-    if (viewBtn) {
-      viewBtn.addEventListener('click', () => {
-        openBookingDetailModal(booking);
-      });
-    }
-
+    tr.querySelector('.btn-table-icon').addEventListener('click', () => openBookingDetailModal(booking));
     elements.bookingsTableBody.appendChild(tr);
+  });
+}
+
+/* ========================================================
+   6b. OVERVIEW (WHAT NEEDS ATTENTION)
+   ======================================================== */
+function renderOverview() {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  const upcoming = state.bookings
+    .filter(b => PAID_STATUSES.includes(b.status) && (b.dateIso || '') >= todayIso)
+    .sort((a, b) => (a.dateIso || '').localeCompare(b.dateIso || '') || (a.startHour || 0) - (b.startHour || 0));
+
+  const followUp = state.bookings
+    .filter(b => ['Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict'].includes(b.status) && new Date(b.createdAt).getTime() >= weekAgo)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const newEnquiries = state.contactInquiries.filter(i => (i.status || 'New') === 'New').length;
+  const newMembers = state.communityMembers.filter(m => (m.status || 'New') === 'New').length;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  setText('ovUpcoming', upcoming.length);
+  setText('ovFollowUp', followUp.length);
+  setText('ovEnquiries', newEnquiries);
+  setText('ovCommunity', newMembers);
+
+  // Sidebar counters show what is waiting, not raw totals
+  if (elements.sidebarBookingsCount) elements.sidebarBookingsCount.textContent = upcoming.length;
+  if (elements.sidebarContactCount) elements.sidebarContactCount.textContent = newEnquiries;
+  if (elements.sidebarCommunityCount) elements.sidebarCommunityCount.textContent = newMembers;
+
+  renderOverviewList('ovNextCharters', upcoming.slice(0, 6), b => `
+      <strong>${escapeHtml(b.date || '')}</strong>
+      <span>${escapeHtml(b.slot || '')}</span>
+      <span class="cell-sub">${escapeHtml(b.name || '')} · ${escapeHtml(b.occasion || '')}</span>`,
+    'No upcoming charters booked yet.');
+
+  renderOverviewList('ovFollowUpList', followUp.slice(0, 6), b => `
+      <strong>${escapeHtml(b.name || '')} · <a href="tel:${escapeHtml(b.phone || '')}" class="contact-link" onclick="event.stopPropagation()">${escapeHtml(b.phone || '')}</a></strong>
+      <span>${escapeHtml(b.date || '')} · ${escapeHtml(b.slot || '')}</span>
+      <span class="cell-sub">${escapeHtml(bookingStatusLabel(b.status))}${b.failureReason ? ' · ' + escapeHtml(b.failureReason) : ''}</span>`,
+    'Nobody to call back. Failed or abandoned payments from the last 7 days show here.');
+
+  renderNotifications();
+}
+
+function renderOverviewList(containerId, items, rowHtml, emptyText) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  if (!items.length) {
+    container.innerHTML = `<p class="overview-empty">${emptyText}</p>`;
+    return;
+  }
+  items.forEach(b => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'overview-row';
+    row.innerHTML = rowHtml(b);
+    row.addEventListener('click', () => openBookingDetailModal(b));
+    container.appendChild(row);
+  });
+}
+
+function initOverviewLinks() {
+  document.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => {
+      const page = el.getAttribute('data-goto');
+      navigateTo(page);
+      const filter = el.getAttribute('data-filter');
+      if (page === 'bookings' && filter) setBookingFilter(filter);
+    });
   });
 }
 
@@ -980,10 +1004,8 @@ function renderInquiriesTable() {
 async function loadContactData() {
   const res = await fetchContactInquiries();
   state.contactInquiries = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-  if (elements.sidebarContactCount) {
-    elements.sidebarContactCount.textContent = state.contactInquiries.length;
-  }
   renderContactTable();
+  renderOverview();
 }
 
 function initContactHandlers() {
@@ -1057,10 +1079,8 @@ const COMMUNITY_STATUSES = ['New', 'Added to Broadcast', 'Opted Out'];
 async function loadCommunityData() {
   const res = await fetchCommunitySignups();
   state.communityMembers = (res && res.success && Array.isArray(res.data)) ? res.data : [];
-  if (elements.sidebarCommunityCount) {
-    elements.sidebarCommunityCount.textContent = state.communityMembers.length;
-  }
   renderCommunityTable();
+  renderOverview();
 }
 
 function initCommunityHandlers() {
@@ -1356,56 +1376,227 @@ function renderMediaGrid() {
 }
 
 /* ========================================================
-   9. CALENDAR LOCKS CONTROLLER
+   9. CALENDAR: ONLINE BOOKINGS + OFFLINE SLOT LOCKS
    ======================================================== */
+const SLOT_LABELS = { day: 'Day Slot (6 am – 2 pm)', evening: 'Evening Slot (2 pm – 11 pm)' };
+const SLOT_SHORT = { day: 'Day', evening: 'Eve' };
+// Statuses that do NOT occupy a slot
+const NON_BLOCKING_STATUSES = ['Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Cancelled', 'Failed'];
+
+const adminCal = (() => {
+  const now = new Date();
+  return { month: now.getMonth(), year: now.getFullYear() };
+})();
+
+function toIsoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatLockDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Online booking occupying a given date + slot, if any
+function findOnlineBooking(dateIso, slotKey) {
+  return state.bookings.find(b =>
+    (b.dateIso === dateIso) &&
+    ((b.slotKey || slotKeyFromLabel(b.slot)) === slotKey) &&
+    !NON_BLOCKING_STATUSES.includes(b.status)
+  );
+}
+
+// Offline lock covering a given date + slot (full-day locks cover both)
+function findLock(dateIso, slotKey) {
+  return state.blockedDates.find(l => l.date === dateIso && (!l.slot_key || l.slot_key === slotKey));
+}
+
+async function loadBlockedDatesData() {
+  try {
+    const res = await fetchBlockedDates();
+    state.blockedDates = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+  } catch (err) {
+    console.error('Failed to load calendar locks:', err);
+    state.blockedDates = [];
+  }
+  renderBlockedDatesList();
+}
+
 function initCalendarHandlers() {
+  document.getElementById('adminCalPrev')?.addEventListener('click', () => {
+    adminCal.month--;
+    if (adminCal.month < 0) { adminCal.month = 11; adminCal.year--; }
+    renderAdminCalendar();
+  });
+  document.getElementById('adminCalNext')?.addEventListener('click', () => {
+    adminCal.month++;
+    if (adminCal.month > 11) { adminCal.month = 0; adminCal.year++; }
+    renderAdminCalendar();
+  });
+
   if (!elements.btnSubmitLockDate) return;
 
   elements.btnSubmitLockDate.addEventListener('click', async () => {
     const dateVal = elements.lockDateInput.value;
+    const slotKey = elements.lockSlotSelect.value || null;
     const reason = elements.lockReasonSelect.value;
+    const note = elements.lockNoteInput.value.trim();
 
     if (!dateVal) {
       alert('Please choose a date to lock.');
       return;
+    }
+    if (dateVal < toIsoDate(new Date())) {
+      alert('That date has already passed.');
+      return;
+    }
+
+    // Never lock over an online booking or an existing lock
+    const slotsToCheck = slotKey ? [slotKey] : ['day', 'evening'];
+    for (const key of slotsToCheck) {
+      const booking = findOnlineBooking(dateVal, key);
+      if (booking) {
+        alert(`${SLOT_LABELS[key]} on ${formatLockDate(dateVal)} is already booked online by ${booking.name} (${booking.id}).`);
+        return;
+      }
+      const lock = findLock(dateVal, key);
+      if (lock) {
+        alert(`${SLOT_LABELS[key]} on ${formatLockDate(dateVal)} is already locked (${lock.reason}).`);
+        return;
+      }
     }
 
     elements.btnSubmitLockDate.disabled = true;
     elements.btnSubmitLockDate.textContent = 'Locking...';
 
     try {
-      await saveBlockedDate(dateVal, reason);
-      state.blockedDates.unshift({ date: dateVal, reason });
+      const res = await saveBlockedDate(dateVal, reason, { slotKey, note });
+      if (!res.success) {
+        alert('Could not lock this slot. It may already be locked; refresh and try again.');
+        return;
+      }
+      state.blockedDates.push(res.data);
+      elements.lockNoteInput.value = '';
       renderBlockedDatesList();
-      showToastNotification(`Date ${dateVal} locked on booking calendar for: ${reason}`);
+      showToastNotification(`${slotKey ? SLOT_LABELS[slotKey] : 'Full day'} locked on ${formatLockDate(dateVal)}`);
     } catch (err) {
-      console.error('Failed to lock date:', err);
+      console.error('Failed to lock slot:', err);
     } finally {
       elements.btnSubmitLockDate.disabled = false;
-      elements.btnSubmitLockDate.textContent = 'Lock Date';
+      elements.btnSubmitLockDate.textContent = 'Lock Slot';
     }
   });
 }
 
+async function unlockSlot(lock) {
+  const what = lock.slot_key ? SLOT_LABELS[lock.slot_key] : 'Full day';
+  if (!confirm(`Unlock ${what} on ${formatLockDate(lock.date)}? It will open for online booking again.`)) return;
+
+  const res = await deleteBlockedDate(lock.id);
+  if (!res.success) {
+    showToastNotification('Could not unlock. Please try again.');
+    return;
+  }
+  state.blockedDates = state.blockedDates.filter(l => l.id !== lock.id);
+  renderBlockedDatesList();
+  showToastNotification(`${what} on ${formatLockDate(lock.date)} unlocked`);
+}
+
+function prefillLockForm(dateIso, slotKey) {
+  elements.lockDateInput.value = dateIso;
+  elements.lockSlotSelect.value = slotKey;
+  document.getElementById('adminLockFormCard')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  elements.lockNoteInput.focus({ preventScroll: true });
+}
+
+function renderAdminCalendar() {
+  const grid = document.getElementById('adminCalGrid');
+  const label = document.getElementById('adminCalLabel');
+  if (!grid || !label) return;
+
+  const first = new Date(adminCal.year, adminCal.month, 1);
+  label.textContent = first.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  grid.innerHTML = '';
+
+  const todayIso = toIsoDate(new Date());
+  const leading = (first.getDay() + 6) % 7; // Monday-first
+  const totalDays = new Date(adminCal.year, adminCal.month + 1, 0).getDate();
+
+  for (let i = 0; i < leading; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'admin-cal-day empty';
+    grid.appendChild(blank);
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dateIso = toIsoDate(new Date(adminCal.year, adminCal.month, day));
+    const isPast = dateIso < todayIso;
+
+    const cell = document.createElement('div');
+    cell.className = `admin-cal-day${isPast ? ' past' : ''}${dateIso === todayIso ? ' today' : ''}`;
+    cell.innerHTML = `<span class="admin-cal-date">${day}</span>`;
+
+    ['day', 'evening'].forEach(slotKey => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      const booking = findOnlineBooking(dateIso, slotKey);
+      const lock = !booking && findLock(dateIso, slotKey);
+
+      if (booking) {
+        chip.className = 'slot-chip booked';
+        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · ${escapeHtml(booking.name || 'Booked')}</span>`;
+        chip.title = `${SLOT_LABELS[slotKey]}: booked on the website by ${booking.name} (${booking.id})`;
+        chip.addEventListener('click', () => openBookingDetailModal(booking));
+      } else if (lock) {
+        chip.className = 'slot-chip locked';
+        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · ${escapeHtml(lock.reason || 'Locked')}</span>`;
+        chip.title = `${SLOT_LABELS[slotKey]}: locked (${lock.reason}${lock.note ? ' · ' + lock.note : ''})`;
+        if (isPast) chip.disabled = true;
+        else chip.addEventListener('click', () => unlockSlot(lock));
+      } else {
+        chip.className = 'slot-chip open';
+        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · Open</span>`;
+        chip.title = `${SLOT_LABELS[slotKey]}: open. Click to lock for an offline booking.`;
+        if (isPast) chip.disabled = true;
+        else chip.addEventListener('click', () => prefillLockForm(dateIso, slotKey));
+      }
+      cell.appendChild(chip);
+    });
+
+    grid.appendChild(cell);
+  }
+}
+
 function renderBlockedDatesList() {
+  renderAdminCalendar();
+  renderCalendarReviewStatus();
   if (!elements.lockedDatesList) return;
   elements.lockedDatesList.innerHTML = '';
 
-  if (state.blockedDates.length === 0) {
-    elements.lockedDatesList.innerHTML = '<p class="text-muted" style="padding: 12px 0;">No dates currently locked.</p>';
+  const todayIso = toIsoDate(new Date());
+  const upcoming = state.blockedDates
+    .filter(l => l.date >= todayIso)
+    .sort((a, b) => a.date.localeCompare(b.date) || String(a.slot_key).localeCompare(String(b.slot_key)));
+
+  if (upcoming.length === 0) {
+    elements.lockedDatesList.innerHTML = '<p class="text-muted" style="padding: 12px 0;">No upcoming locks. Online bookings block their slot automatically.</p>';
     return;
   }
 
-  state.blockedDates.forEach(item => {
+  upcoming.forEach(lock => {
     const row = document.createElement('div');
     row.className = 'locked-date-item';
     row.innerHTML = `
       <div class="locked-date-info">
-        <span class="date-badge">${item.date}</span>
-        <span class="reason-text">${item.reason || 'Maintenance / Reserved'}</span>
+        <span class="date-badge">${escapeHtml(formatLockDate(lock.date))}</span>
+        <span class="reason-text">
+          ${escapeHtml(lock.slot_key ? SLOT_LABELS[lock.slot_key] : 'Full day')} · ${escapeHtml(lock.reason || 'Locked')}
+          ${lock.note ? `<span class="lock-note">${escapeHtml(lock.note)}</span>` : ''}
+        </span>
       </div>
-      <span class="lock-status-pill">Locked in Calendar</span>
+      <button type="button" class="btn-unlock">Unlock</button>
     `;
+    row.querySelector('.btn-unlock').addEventListener('click', () => unlockSlot(lock));
     elements.lockedDatesList.appendChild(row);
   });
 }
@@ -1434,90 +1625,52 @@ function initModalHandlers() {
 function openBookingDetailModal(booking) {
   if (!elements.bookingModal || !elements.modalBookingBody) return;
 
-  elements.modalBookingId.textContent = `Order Details · ${booking.id || 'BP-NEW'}`;
-  
+  elements.modalBookingId.textContent = `Booking ${booking.id || ''}`;
+
+  const field = (label, value) => `
+      <div class="detail-field">
+        <label>${label}</label>
+        <div>${value}</div>
+      </div>`;
+  const passUrl = bookingPassUrl(booking);
+  const phoneDigits = (booking.phone || '').replace(/\D/g, '');
+  const emailStatus = booking.emailSentAt
+    ? `Sent ${formatDisplayDate(booking.emailSentAt)}`
+    : booking.emailError ? `Failed: ${escapeHtml(booking.emailError)}` : 'Not sent';
+
   elements.modalBookingBody.innerHTML = `
     <div class="modal-detail-grid">
-      <div class="detail-field">
-        <label>Customer Name</label>
-        <div><strong>${booking.name || 'Private Guest'}</strong></div>
-      </div>
-      <div class="detail-field">
-        <label>Contact Phone</label>
-        <div><a href="tel:${booking.phone}" class="contact-link">${booking.phone || 'N/A'}</a></div>
-      </div>
-      <div class="detail-field">
-        <label>Email Address</label>
-        <div><a href="mailto:${booking.email}" class="contact-link">${booking.email || 'N/A'}</a></div>
-      </div>
-      <div class="detail-field">
-        <label>City / Location</label>
-        <div>${booking.address || '—'}</div>
-      </div>
-
-      <div class="detail-field">
-        <label>Occasion Experience</label>
-        <div><strong>${booking.occasion || '—'}</strong></div>
-      </div>
-      <div class="detail-field">
-        <label>Charter Date</label>
-        <div>${booking.date || '—'}</div>
-      </div>
-      <div class="detail-field">
-        <label>Time Slot & Duration</label>
-        <div>${booking.slot || ''}${booking.duration ? ` · ${booking.duration}` : ''}</div>
-      </div>
-      <div class="detail-field">
-        <label>Voyage Navigation Mode</label>
-        <div>${booking.voyageMode || '—'}</div>
-      </div>
-
-      <div class="detail-field">
-        <label>Guest Capacity</label>
-        <div>${booking.guests || 0} guests on board</div>
-      </div>
-      <div class="detail-field">
-        <label>Total Charter Quote</label>
-        <div><strong>${booking.price || '—'}</strong></div>
-      </div>
-      <div class="detail-field">
-        <label>Deposit Paid</label>
-        <div>${booking.paidToken || '—'}${booking.paymentMethod ? ` (${booking.paymentMethod})` : ''}</div>
-      </div>
-      ${booking.paymentId ? `
-      <div class="detail-field">
-        <label>Razorpay Payment ID</label>
-        <div><code style="color: var(--bp-gold); font-size: 0.82rem; background: rgba(201,169,104,0.1); padding: 2px 6px; border-radius: 4px;">${booking.paymentId}</code></div>
-      </div>` : ''}
-      <div class="detail-field">
-        <label>Current Status</label>
-        <div><span class="status-select-pill status-confirmed">${booking.status || 'Held'}</span></div>
-      </div>
+      ${field('Customer', `<strong>${escapeHtml(booking.name || '—')}</strong>`)}
+      ${field('Phone', `<a href="tel:${escapeHtml(booking.phone || '')}" class="contact-link">${escapeHtml(booking.phone || '—')}</a>`)}
+      ${field('Email', `<a href="mailto:${escapeHtml(booking.email || '')}" class="contact-link">${escapeHtml(booking.email || '—')}</a>`)}
+      ${field('Guests', `${escapeHtml(booking.guests || '—')}`)}
+      ${field('Occasion', escapeHtml(booking.occasion || '—'))}
+      ${field('Date', `<strong>${escapeHtml(booking.date || '—')}</strong>`)}
+      ${field('Slot & time', escapeHtml(booking.slot || '—'))}
+      ${field('Duration', `${escapeHtml(booking.duration || '—')} · ${escapeHtml(booking.voyageMode || '')}`)}
+      ${field('Charter price', `<strong>${escapeHtml(booking.price || '—')}</strong>`)}
+      ${field('Advance', escapeHtml(booking.paidToken || '₹5,000'))}
+      ${field('Status', `<span class="status-select-pill ${bookingStatusClass(booking.status)}">${escapeHtml(bookingStatusLabel(booking.status))}</span>`)}
+      ${field('Confirmation email', emailStatus)}
+      ${booking.paymentId ? field('Razorpay payment', `<code class="mono-chip">${escapeHtml(booking.paymentId)}</code>`) : ''}
+      ${booking.razorpayOrderId ? field('Razorpay order', `<code class="mono-chip">${escapeHtml(booking.razorpayOrderId)}</code>`) : ''}
+      ${booking.failureReason ? field('Payment note', escapeHtml(booking.failureReason)) : ''}
+      ${field('Created', formatDisplayDate(booking.createdAt))}
     </div>
 
-    ${booking.notes ? `
+    ${booking.notes && booking.notes !== 'None' ? `
       <div class="detail-notes-box">
-        <label>Guest Surprise / Special Instructions</label>
-        <p>“${booking.notes}”</p>
+        <label>Guest notes</label>
+        <p>${escapeHtml(booking.notes)}</p>
       </div>
     ` : ''}
 
     <div class="modal-footer-actions">
-      <a href="https://wa.me/${(booking.phone || '').replace(/\D/g, '')}?text=Hello%20${encodeURIComponent(booking.name || 'Sir')},%20this%20is%20Black%20Pearl%20regarding%20booking%20${booking.id}." target="_blank" class="btn-panel-action btn-primary">
-        <span>WhatsApp Guest</span>
-      </a>
-      <button class="btn-panel-action btn-refresh" id="btnPrintModalReceipt">
-        <span>Print Manifest</span>
-      </button>
+      ${phoneDigits ? `<a href="tel:${escapeHtml(booking.phone)}" class="btn-panel-action btn-refresh"><span>Call</span></a>` : ''}
+      ${phoneDigits ? `<a href="https://wa.me/${phoneDigits}?text=${encodeURIComponent(`Hello ${booking.name || ''}, this is Black Pearl regarding booking ${booking.id}.`)}" target="_blank" rel="noopener" class="btn-panel-action btn-refresh"><span>WhatsApp</span></a>` : ''}
+      ${passUrl ? `<a href="${passUrl}" target="_blank" rel="noopener" class="btn-panel-action btn-primary"><span>Booking pass</span></a>` : ''}
     </div>
   `;
-
-  const printBtn = elements.modalBookingBody.querySelector('#btnPrintModalReceipt');
-  if (printBtn) {
-    printBtn.addEventListener('click', () => {
-      window.print();
-    });
-  }
 
   elements.bookingModal.style.display = 'flex';
 }
@@ -1526,6 +1679,551 @@ function closeModal() {
   if (elements.bookingModal) {
     elements.bookingModal.style.display = 'none';
   }
+}
+
+/* ========================================================
+   10. SMART NOTIFICATIONS ("TO DO")
+   Built from live data, so items disappear once handled.
+   ======================================================== */
+const NOTIF_REFRESH_MS = 2 * 60 * 1000;
+const CALENDAR_REMINDER_HOUR_IST = 10; // desktop alert for the calendar check after 10 am
+const DISMISSED_KEY = 'bp_admin_dismissed_notifications';
+
+const notifState = {
+  calendarReviewedAt: null,
+  calendarReviewedBy: null,
+  ready: false // set after the first full data load
+};
+
+function todayInIndia() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+}
+
+function hourInIndia() {
+  return Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(new Date()));
+}
+
+function addDaysIso(iso, days) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + days));
+  return date.toISOString().slice(0, 10);
+}
+
+function readStoredSet(key) {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function writeStoredSet(key, set) {
+  try {
+    // Keep the list short; old ids no longer matter
+    localStorage.setItem(key, JSON.stringify(Array.from(set).slice(-300)));
+  } catch { /* storage unavailable */ }
+}
+
+function isCalendarReviewedToday() {
+  if (!notifState.calendarReviewedAt) return false;
+  const reviewedDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(notifState.calendarReviewedAt));
+  return reviewedDay === todayInIndia();
+}
+
+/**
+ * Every item: { id, level: 'urgent' | 'action' | 'reminder' | 'info', title, detail, actionLabel, onAction, dismissible }
+ */
+function buildNotifications() {
+  const items = [];
+  const today = todayInIndia();
+  const tomorrow = addDaysIso(today, 1);
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  // Urgent: paid twice for one slot -> refund
+  state.bookings.filter(b => b.status === 'Paid - Slot Conflict').forEach(b => items.push({
+    id: `conflict:${b.id}`,
+    level: 'urgent',
+    title: `Refund needed: ${b.name}`,
+    detail: `Paid for ${b.date} (${b.slot}), but the slot was already booked. Refund the advance or offer another slot.`,
+    actionLabel: 'Open booking',
+    onAction: () => openBookingDetailModal(b)
+  }));
+
+  // Urgent: paid but confirmation email failed
+  state.bookings.filter(b => PAID_STATUSES.includes(b.status) && b.emailError && !b.emailSentAt).forEach(b => items.push({
+    id: `email:${b.id}`,
+    level: 'urgent',
+    title: `Confirmation email failed: ${b.name}`,
+    detail: `They paid but did not get their QR email. Send them the booking pass on WhatsApp.`,
+    actionLabel: 'Open booking',
+    onAction: () => openBookingDetailModal(b)
+  }));
+
+  // Action: paid, waiting for the team's call (clears when marked Confirmed)
+  const awaitingCall = state.bookings.filter(b => b.status === 'Held (Deposit Paid)' && (b.dateIso || '') >= today);
+  if (awaitingCall.length) {
+    items.push({
+      id: `awaiting:${awaitingCall.map(b => b.id).sort().join(',')}`,
+      level: 'action',
+      title: `${plural(awaitingCall.length, 'booking', 'bookings')} paid, waiting for your call`,
+      detail: `${awaitingCall.slice(0, 3).map(b => `${b.name} (${b.date})`).join(', ')}${awaitingCall.length > 3 ? '…' : ''}. Call them, then set the status to Confirmed.`,
+      actionLabel: 'View bookings',
+      onAction: () => { navigateTo('bookings'); setBookingFilter('paid'); }
+    });
+  }
+
+  // Action: payments that didn't go through (dismiss once called)
+  state.bookings
+    .filter(b => ['Payment Failed', 'Payment Abandoned'].includes(b.status) && new Date(b.createdAt).getTime() >= weekAgo)
+    .forEach(b => items.push({
+      id: `followup:${b.id}`,
+      level: 'action',
+      title: `Call back ${b.name}`,
+      detail: `${b.status === 'Payment Abandoned' ? 'Left the payment page' : 'Payment failed'} for ${b.date} (${b.slot}) · ${b.phone}`,
+      actionLabel: 'Open booking',
+      onAction: () => openBookingDetailModal(b),
+      dismissible: true
+    }));
+
+  // Action: new enquiries (clears when status changes from New)
+  const newEnquiries = state.contactInquiries.filter(i => (i.status || 'New') === 'New');
+  if (newEnquiries.length) {
+    items.push({
+      id: `enquiries:${newEnquiries.map(i => i.id).sort().join(',')}`,
+      level: 'action',
+      title: `${plural(newEnquiries.length, 'new enquiry', 'new enquiries')} to reply to`,
+      detail: newEnquiries.slice(0, 3).map(i => `${i.name} (${i.occasion || 'enquiry'})`).join(', ') + (newEnquiries.length > 3 ? '…' : ''),
+      actionLabel: 'Open enquiries',
+      onAction: () => navigateTo('contact')
+    });
+  }
+
+  // Reminder: daily calendar check for offline bookings / maintenance
+  if (!isCalendarReviewedToday()) {
+    items.push({
+      id: `calendar:${today}`,
+      level: 'reminder',
+      title: 'Check today\'s calendar',
+      detail: 'Lock any offline bookings or maintenance so they can\'t be booked online.',
+      actionLabel: 'Open calendar',
+      onAction: () => navigateTo('calendar')
+    });
+  }
+
+  // Reminder: community members to add to the WhatsApp broadcast
+  const newMembers = state.communityMembers.filter(m => (m.status || 'New') === 'New');
+  if (newMembers.length) {
+    items.push({
+      id: `community:${newMembers.map(m => m.id).sort().join(',')}`,
+      level: 'reminder',
+      title: `Add ${plural(newMembers.length, 'person', 'people')} to the WhatsApp broadcast`,
+      detail: 'Copy their numbers from Community, then mark them as added.',
+      actionLabel: 'Open community',
+      onAction: () => navigateTo('community')
+    });
+  }
+
+  // Info: charters today and tomorrow
+  state.bookings
+    .filter(b => PAID_STATUSES.includes(b.status) && (b.dateIso === today || b.dateIso === tomorrow))
+    .sort((a, b) => (a.dateIso || '').localeCompare(b.dateIso || '') || (a.startHour || 0) - (b.startHour || 0))
+    .forEach(b => items.push({
+      id: `upcoming:${b.id}`,
+      level: 'info',
+      title: `${b.dateIso === today ? 'Today' : 'Tomorrow'}: ${b.name}`,
+      detail: `${b.slot} · ${b.guests || '—'} guests · ${b.occasion}`,
+      actionLabel: 'Open booking',
+      onAction: () => openBookingDetailModal(b)
+    }));
+
+  const dismissed = readStoredSet(DISMISSED_KEY);
+  return items.filter(item => !(item.dismissible && dismissed.has(item.id)));
+}
+
+const LEVEL_LABELS = { urgent: 'Urgent', action: 'To do', reminder: 'Reminder', info: 'Coming up' };
+const LEVEL_ORDER = { urgent: 0, action: 1, reminder: 2, info: 3 };
+const HISTORY_KEY = 'bp_admin_notifications';
+const HISTORY_LIMIT = 100;
+const POPUP_LIMIT_ON_LOGIN = 3;
+const POPUP_HIDE_MS = 9000;
+
+// Live actions for current items, keyed by notification id
+let currentActions = new Map();
+
+function readHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function writeHistory(history) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)));
+  } catch { /* storage unavailable */ }
+}
+
+function timeAgo(isoTime) {
+  const mins = Math.round((Date.now() - new Date(isoTime).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+  return new Date(isoTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
+/**
+ * Merges the live items into the stored history: new items are added
+ * (and returned so they can pop up), handled items are marked resolved.
+ */
+function syncNotificationHistory(items) {
+  const history = readHistory();
+  const byId = new Map(history.map(h => [h.id, h]));
+  const liveIds = new Set(items.map(i => i.id));
+  const added = [];
+
+  items.forEach(item => {
+    const existing = byId.get(item.id);
+    if (existing) {
+      Object.assign(existing, { title: item.title, detail: item.detail, level: item.level, resolved: false });
+    } else {
+      const entry = { id: item.id, level: item.level, title: item.title, detail: item.detail, createdAt: new Date().toISOString(), read: false, resolved: false };
+      history.unshift(entry);
+      added.push(entry);
+    }
+  });
+
+  history.forEach(h => {
+    if (!liveIds.has(h.id) && !h.resolved) {
+      h.resolved = true;
+      h.resolvedAt = new Date().toISOString();
+    }
+  });
+
+  writeHistory(history);
+  return { history, added };
+}
+
+function renderNotificationList(container, items) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!items.length) {
+    container.innerHTML = '<p class="overview-empty">All caught up. Nothing needs your attention right now.</p>';
+    return;
+  }
+
+  items.forEach(item => container.appendChild(buildNotificationRow(item)));
+}
+
+function buildNotificationRow(item, { showTime = false } = {}) {
+  const row = document.createElement('div');
+  row.className = `notif-item notif-${item.level}${item.resolved ? ' is-resolved' : ''}${item.read === false ? ' is-unread' : ''}`;
+  const action = currentActions.get(item.id);
+  row.innerHTML = `
+    <div class="notif-body">
+      <span class="notif-level">${item.resolved ? 'Done' : LEVEL_LABELS[item.level]}${showTime ? ` · ${timeAgo(item.createdAt)}` : ''}</span>
+      <strong class="notif-title">${escapeHtml(item.title)}</strong>
+      <span class="notif-detail">${escapeHtml(item.detail)}</span>
+    </div>
+    ${!item.resolved && action ? `
+    <div class="notif-actions">
+      <button type="button" class="btn-panel-action btn-refresh notif-action">${escapeHtml(action.actionLabel)}</button>
+      ${action.dismissible ? '<button type="button" class="btn-text-link notif-dismiss">Done</button>' : ''}
+    </div>` : ''}
+  `;
+  row.querySelector('.notif-action')?.addEventListener('click', () => {
+    closeNotificationPanel();
+    action.onAction();
+  });
+  row.querySelector('.notif-dismiss')?.addEventListener('click', () => dismissNotification(item.id));
+  return row;
+}
+
+function dismissNotification(id) {
+  const dismissed = readStoredSet(DISMISSED_KEY);
+  dismissed.add(id);
+  writeStoredSet(DISMISSED_KEY, dismissed);
+  renderNotifications();
+}
+
+function renderNotificationPanel(history) {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const open = history.filter(h => !h.resolved)
+    .sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || b.createdAt.localeCompare(a.createdAt));
+  const earlier = history.filter(h => h.resolved)
+    .sort((a, b) => (b.resolvedAt || b.createdAt).localeCompare(a.resolvedAt || a.createdAt))
+    .slice(0, 30);
+
+  if (!open.length && !earlier.length) {
+    list.innerHTML = '<p class="overview-empty">No notifications yet.</p>';
+    return;
+  }
+
+  const section = (title, rows) => {
+    if (!rows.length) return;
+    const heading = document.createElement('h3');
+    heading.className = 'notif-section-title';
+    heading.textContent = title;
+    list.appendChild(heading);
+    rows.forEach(item => list.appendChild(buildNotificationRow(item, { showTime: true })));
+  };
+  section(open.length ? 'Needs attention' : 'All caught up', open);
+  section('Earlier', earlier);
+}
+
+function renderNotifications() {
+  const items = buildNotifications();
+  currentActions = new Map(items.map(i => [i.id, i]));
+
+  // Before the first full load, only refresh the live lists (no history, no popups)
+  if (!notifState.ready) {
+    renderNotificationList(document.getElementById('ovTodoList'), items);
+    renderCalendarReviewStatus();
+    return;
+  }
+
+  const { history, added } = syncNotificationHistory(items);
+  const unread = history.filter(h => !h.read && !h.resolved).length;
+
+  document.querySelectorAll('[data-notif-count]').forEach(el => {
+    el.textContent = unread;
+    el.hidden = unread === 0;
+  });
+
+  renderNotificationPanel(history);
+  renderNotificationList(document.getElementById('ovTodoList'), items);
+  renderCalendarReviewStatus();
+  announceNewNotifications(added);
+}
+
+function markAllNotificationsRead() {
+  const history = readHistory();
+  let changed = false;
+  history.forEach(h => {
+    if (!h.read) { h.read = true; changed = true; }
+  });
+  if (changed) writeHistory(history);
+  document.querySelectorAll('[data-notif-count]').forEach(el => { el.hidden = true; el.textContent = '0'; });
+}
+
+/* ---------- Pop-ups ---------- */
+function announceNewNotifications(added) {
+  if (!added.length) return;
+
+  // Calendar reminder pops up from mid-morning; before that it waits in the list
+  const toAnnounce = added
+    .filter(n => !(n.id.startsWith('calendar:') && hourInIndia() < CALENDAR_REMINDER_HOUR_IST))
+    .sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
+  if (!toAnnounce.length) return;
+
+  const useDesktop = document.hidden && desktopAlertsAvailable() && Notification.permission === 'granted';
+  const shown = toAnnounce.slice(0, POPUP_LIMIT_ON_LOGIN);
+
+  shown.forEach((n, i) => {
+    if (useDesktop) showDesktopNotification(n);
+    else setTimeout(() => showPopup(n), i * 350);
+  });
+
+  const remaining = toAnnounce.length - shown.length;
+  if (remaining > 0 && !useDesktop) {
+    setTimeout(() => showPopup({
+      id: 'more',
+      level: 'info',
+      title: `${remaining} more notification${remaining === 1 ? '' : 's'}`,
+      detail: 'Open Notifications to see everything.'
+    }, { openPanel: true }), shown.length * 350);
+  }
+}
+
+function showPopup(n, { openPanel = false } = {}) {
+  let stack = document.getElementById('notifPopupStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'notifPopupStack';
+    stack.className = 'notif-popup-stack';
+    stack.setAttribute('role', 'status');
+    stack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(stack);
+  }
+
+  const action = currentActions.get(n.id);
+  const popup = document.createElement('div');
+  popup.className = `notif-popup notif-${n.level}`;
+  popup.innerHTML = `
+    <div class="notif-body">
+      <span class="notif-level">${LEVEL_LABELS[n.level]}</span>
+      <strong class="notif-title">${escapeHtml(n.title)}</strong>
+      <span class="notif-detail">${escapeHtml(n.detail)}</span>
+    </div>
+    <button type="button" class="notif-popup-close" aria-label="Dismiss">✕</button>
+  `;
+
+  const remove = () => {
+    popup.classList.add('is-leaving');
+    setTimeout(() => popup.remove(), 250);
+  };
+  popup.querySelector('.notif-popup-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    remove();
+  });
+  popup.addEventListener('click', () => {
+    remove();
+    if (openPanel || !action) openNotificationPanel();
+    else action.onAction();
+  });
+
+  stack.appendChild(popup);
+  let timer = setTimeout(remove, POPUP_HIDE_MS);
+  popup.addEventListener('mouseenter', () => clearTimeout(timer));
+  popup.addEventListener('mouseleave', () => { timer = setTimeout(remove, POPUP_HIDE_MS / 2); });
+}
+
+function showDesktopNotification(n) {
+  try {
+    const notification = new Notification(n.title, { body: n.detail, icon: '/assets/black-pearl-mark.svg', tag: n.id });
+    notification.onclick = () => {
+      window.focus();
+      currentActions.get(n.id)?.onAction();
+      notification.close();
+    };
+  } catch {
+    showPopup(n);
+  }
+}
+
+
+/* ---------- Daily calendar review ---------- */
+async function loadCalendarReview() {
+  const res = await fetchAdminActivity('calendar_reviewed');
+  if (res.success && res.data) {
+    notifState.calendarReviewedAt = res.data.happened_at;
+    notifState.calendarReviewedBy = res.data.by_email;
+  }
+  renderNotifications();
+}
+
+function renderCalendarReviewStatus() {
+  const status = document.getElementById('calendarReviewStatus');
+  const btn = document.getElementById('btnCalendarReviewed');
+  if (!status) return;
+
+  if (isCalendarReviewedToday()) {
+    const time = new Date(notifState.calendarReviewedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+    status.textContent = `Checked today at ${time}${notifState.calendarReviewedBy ? ` by ${notifState.calendarReviewedBy}` : ''}.`;
+    status.classList.remove('is-due');
+    if (btn) btn.textContent = 'Checked today ✓';
+  } else {
+    status.textContent = 'Not checked today. Add any offline bookings or maintenance, then press "Calendar is up to date".';
+    status.classList.add('is-due');
+    if (btn) btn.textContent = 'Calendar is up to date';
+  }
+}
+
+async function markCalendarReviewed() {
+  const btn = document.getElementById('btnCalendarReviewed');
+  if (btn) btn.disabled = true;
+  const res = await recordAdminActivity('calendar_reviewed', state.currentUser?.email);
+  if (btn) btn.disabled = false;
+
+  if (!res.success) {
+    showToastNotification('Could not save. Please try again.');
+    return;
+  }
+  notifState.calendarReviewedAt = res.data.happened_at;
+  notifState.calendarReviewedBy = res.data.by_email;
+  renderNotifications();
+  showToastNotification('Thanks. Calendar marked as checked for today.');
+}
+
+/* ---------- Panel ---------- */
+function openNotificationPanel() {
+  const panel = document.getElementById('notifPanel');
+  const backdrop = document.getElementById('notifBackdrop');
+  if (!panel) return;
+  if (mobileLayoutQuery.matches) closeMobileSidebar();
+  renderNotifications();
+  markAllNotificationsRead();
+  panel.hidden = false;
+  if (backdrop) backdrop.hidden = false;
+  document.querySelectorAll('.notif-trigger').forEach(t => t.setAttribute('aria-expanded', 'true'));
+  document.getElementById('btnCloseNotifications')?.focus();
+}
+
+function closeNotificationPanel() {
+  const panel = document.getElementById('notifPanel');
+  const backdrop = document.getElementById('notifBackdrop');
+  if (!panel || panel.hidden) return;
+  panel.hidden = true;
+  if (backdrop) backdrop.hidden = true;
+  document.querySelectorAll('.notif-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+}
+
+/* ---------- Desktop alerts (while the admin tab is open) ---------- */
+function desktopAlertsAvailable() {
+  return typeof window.Notification !== 'undefined';
+}
+
+function renderAlertsStatus() {
+  const statusEl = document.getElementById('notifAlertsStatus');
+  const btn = document.getElementById('btnEnableAlerts');
+  if (!statusEl || !btn) return;
+
+  if (!desktopAlertsAvailable()) {
+    statusEl.textContent = 'Desktop alerts are not supported in this browser.';
+    btn.hidden = true;
+  } else if (Notification.permission === 'granted') {
+    statusEl.textContent = 'Desktop alerts are on: you will also be notified when this tab is in the background.';
+    btn.hidden = true;
+  } else if (Notification.permission === 'denied') {
+    statusEl.textContent = 'Desktop alerts are blocked in your browser settings.';
+    btn.hidden = true;
+  } else {
+    statusEl.textContent = 'Also get desktop alerts when this tab is in the background.';
+    btn.hidden = false;
+  }
+}
+
+async function refreshForNotifications() {
+  if (!state.currentUser || document.hidden && !(desktopAlertsAvailable() && Notification.permission === 'granted')) return;
+  await Promise.all([loadBookingsData(), loadContactData(), loadCommunityData(), loadBlockedDatesData()]);
+  await loadCalendarReview();
+}
+
+function initNotifications() {
+  document.querySelectorAll('.notif-trigger').forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = document.getElementById('notifPanel');
+      if (panel && !panel.hidden) closeNotificationPanel();
+      else openNotificationPanel();
+    });
+  });
+  document.getElementById('btnCloseNotifications')?.addEventListener('click', closeNotificationPanel);
+  document.getElementById('notifBackdrop')?.addEventListener('click', closeNotificationPanel);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeNotificationPanel();
+  });
+
+  document.getElementById('btnCalendarReviewed')?.addEventListener('click', markCalendarReviewed);
+
+  document.getElementById('btnEnableAlerts')?.addEventListener('click', async () => {
+    if (!desktopAlertsAvailable()) return;
+    await Notification.requestPermission();
+    renderAlertsStatus();
+    renderNotifications();
+  });
+  renderAlertsStatus();
+
+  setInterval(refreshForNotifications, NOTIF_REFRESH_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshForNotifications();
+  });
 }
 
 /* ========================================================
@@ -1543,6 +2241,9 @@ function formatDisplayDate(dateInput) {
 }
 
 function formatCharterMode(mode) {
+  if (mode === 'day') return 'Day Slot (6 am – 2 pm)';
+  if (mode === 'evening') return 'Evening Slot (2 pm – 11 pm)';
+  // Legacy briefs from before standard slots
   if (mode === 'sailing') return 'Active Sailing';
   if (mode === 'hybrid') return 'Hybrid Cruise';
   return 'At Rest / Ocean Anchor';

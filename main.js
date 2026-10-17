@@ -3,7 +3,6 @@ import {
   isSupabaseConfigured,
   saveBookingHold,
   fetchBookingHolds,
-  saveVoyageBrief,
   fetchVoyageBriefs,
   saveBlockedDate,
   fetchBlockedDates,
@@ -144,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initGalleryLightbox();
   initFaqAccordion();
   initBookingEngine();
-  initVoyageBriefSection();
   initCommunitySignup();
   initAdminPortal();
   initWaterlineAnimations();
@@ -304,27 +302,51 @@ function initSpacesExplorer() {
    OCCASIONS FILTER & CARD TRIGGERS
    ======================================================== */
 function initOccasionsFilter() {
-  const filterChips = document.querySelectorAll('.filter-chip');
   const cards = document.querySelectorAll('.occasion-card');
+  const categoriesGrid = document.getElementById('occasionCategoriesGrid');
+  const eventsGrid = document.getElementById('occasionsGrid');
+  const drillHeader = document.getElementById('occasionsDrillHeader');
+  const drillTitle = document.getElementById('occasionsDrillTitle');
+  const section = document.getElementById('occasions');
+  const eventCards = eventsGrid ? eventsGrid.querySelectorAll('.occasion-card') : [];
 
-  filterChips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      const filter = chip.getAttribute('data-filter');
+  const inCategory = (card, key) => (card.getAttribute('data-category') || '').split(/\s+/).includes(key);
 
-      filterChips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-
-      cards.forEach(card => {
-        const cat = card.getAttribute('data-category') || '';
-        const categories = cat.split(/\s+/);
-        if (filter === 'all' || categories.includes(filter)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    });
+  // Fill "View N Events" counts from the actual event cards
+  document.querySelectorAll('[data-count-for]').forEach(el => {
+    const key = el.getAttribute('data-count-for');
+    el.textContent = Array.from(eventCards).filter(card => inCategory(card, key)).length;
   });
+
+  const scrollToSection = () => {
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const showCategory = (key, title) => {
+    eventCards.forEach(card => {
+      card.style.display = inCategory(card, key) ? 'flex' : 'none';
+    });
+    if (drillTitle) drillTitle.textContent = title;
+    if (categoriesGrid) categoriesGrid.hidden = true;
+    if (drillHeader) drillHeader.hidden = false;
+    if (eventsGrid) eventsGrid.hidden = false;
+    scrollToSection();
+  };
+
+  const showCategories = () => {
+    if (eventsGrid) eventsGrid.hidden = true;
+    if (drillHeader) drillHeader.hidden = true;
+    if (categoriesGrid) categoriesGrid.hidden = false;
+    scrollToSection();
+  };
+
+  document.querySelectorAll('.category-card').forEach(card => {
+    const key = card.getAttribute('data-category-target');
+    const title = card.querySelector('.event-card-category')?.textContent.trim() || '';
+    card.addEventListener('click', () => showCategory(key, title));
+  });
+
+  document.getElementById('occasionsBackBtn')?.addEventListener('click', showCategories);
 
   // Card check dates buttons
   document.querySelectorAll('.btn-book-card').forEach(btn => {
@@ -1284,7 +1306,7 @@ function updateAdminBriefsView() {
         <h5>${brief.name} · <span style="color: var(--gold);">${brief.occasion}</span></h5>
         <p><strong>${brief.phone}</strong> · ${brief.duration === 'custom' ? 'Custom Hours' : brief.duration + ' Hours'}</p>
         <p>Notes: ${brief.notes || 'None'}</p>
-        <span class="admin-brief-mode-tag">Style: ${brief.charterMode || brief.charter_mode || 'At Rest'}</span>
+        <span class="admin-brief-mode-tag">Slot: ${brief.charterMode || brief.charter_mode || '—'}</span>
       </div>
       <div style="text-align: right;">
         <span class="admin-booking-status">${brief.status || 'New Brief'}</span>
@@ -1342,129 +1364,6 @@ function updateAdminBlockedDatesView() {
       <span style="font-size: 11px; color: var(--gold); border: 1px solid var(--gold-deep); padding: 2px 6px; border-radius: 4px;">Locked</span>
     `;
     list.appendChild(row);
-  });
-}
-
-/* ========================================================
-   VOYAGE CHARTER BRIEF FORM (SAIL OR AT REST IN OCEAN)
-   ======================================================== */
-function initVoyageBriefSection() {
-  const form = document.getElementById('voyageBriefForm');
-  if (!form) return;
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById('briefClientName').value.trim();
-    const phone = document.getElementById('briefClientPhone').value.trim();
-    const occasion = document.getElementById('briefOccasionSelect').value;
-    const duration = document.getElementById('briefDurationSelect').value;
-    const notes = document.getElementById('briefNotesInput').value.trim();
-    const mode = document.querySelector('input[name="charterModeChoice"]:checked')?.value || 'paused';
-
-    if (!name || !phone) {
-      alert('Please provide your name and WhatsApp number.');
-      return;
-    }
-
-    const modeLabels = {
-      paused: 'At Rest in Ocean (At Anchor - Standard Rate)',
-      sailing: 'Active Sailing Underway (Full Propulsion + Surcharge)',
-      hybrid: 'Custom Hybrid (1-2h Sail + Anchor for Dinner)'
-    };
-
-    const submitBtn = document.getElementById('btnSubmitBrief');
-    const originalText = submitBtn.innerHTML;
-
-    // Persist Voyage Brief to Supabase
-    const briefRecord = {
-      name,
-      phone,
-      occasion,
-      duration,
-      charterMode: mode,
-      notes: notes || 'Open harbour cruise & anchor'
-    };
-    state.voyageBriefs.unshift(briefRecord);
-    updateAdminBriefsView();
-
-    saveVoyageBrief(briefRecord)
-      .then(res => {
-        if (res.success) {
-          console.log('[Supabase] Voyage brief saved to Supabase:', res.data);
-        }
-      })
-      .catch(err => console.error('Error saving brief to Supabase:', err));
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>PROCESSING BRIEF...</span>';
-
-    setTimeout(() => {
-      submitBtn.innerHTML = '<span>VOYAGE BRIEF READY</span>';
-
-      // Confetti celebration (Strict palette: Gold, White, Champagne)
-      confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { y: 0.65 },
-        colors: ['#EBD7A6', '#C9A968', '#FFFFFF', '#D4AF37']
-      });
-
-      // Prepare WhatsApp message
-      const waMessage = encodeURIComponent(
-        `Hello Black Pearl Team, I would like to request a bespoke voyage brief for Lady Alice:\n\n` +
-        `• Name: ${name}\n` +
-        `• WhatsApp: ${phone}\n` +
-        `• Voyage Style: ${modeLabels[mode]}\n` +
-        `• Occasion: ${occasion}\n` +
-        `• Preferred Hours: ${duration === 'custom' ? 'Custom Schedule' : duration + ' Hours'}\n` +
-        `• Route Notes: ${notes || 'Open harbour cruise & anchor'}\n\n` +
-        `Please share available dates and custom pricing estimate.`
-      );
-
-      // Open booking modal pre-populated
-      setTimeout(() => {
-        openBookingModal(occasion);
-
-        // Pre-fill guest details in booking state & inputs
-        state.guestDetails.fullName = name;
-        state.guestDetails.phone = phone;
-        if (notes) state.guestDetails.notes = notes;
-
-        const nameInput = document.getElementById('guestFullName');
-        const phoneInput = document.getElementById('guestPhone');
-        const notesInput = document.getElementById('guestNotes');
-        if (nameInput) nameInput.value = name;
-        if (phoneInput) phoneInput.value = phone;
-        if (notesInput && notes) notesInput.value = notes;
-
-        // Set voyageMode
-        state.voyageMode = mode === 'sailing' ? 'sailing' : 'paused';
-        const vRadio = document.querySelector(`input[name="voyageMode"][value="${state.voyageMode}"]`);
-        if (vRadio) {
-          vRadio.checked = true;
-          document.querySelectorAll('.voyage-mode-card').forEach(c => c.classList.remove('active'));
-          vRadio.closest('.voyage-mode-option')?.querySelector('.voyage-mode-card')?.classList.add('active');
-        }
-
-        // Set duration if numeric
-        const durNum = parseInt(duration, 10);
-        if (durNum && [1, 3, 6].includes(durNum)) {
-          state.selectedDuration = durNum;
-          const durRadio = document.querySelector(`input[name="voyageDuration"][value="${durNum}"]`);
-          if (durRadio) durRadio.checked = true;
-        }
-
-        updatePriceCalculations();
-
-        // Also open WhatsApp in new tab for direct team contact
-        window.open(`https://wa.me/919820000000?text=${waMessage}`, '_blank');
-
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-      }, 700);
-
-    }, 750);
   });
 }
 

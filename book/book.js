@@ -1,49 +1,68 @@
 import confetti from 'canvas-confetti';
+import { trackPageView } from '../supabaseClient.js';
 import {
-  isSupabaseConfigured,
-  saveBookingHold,
-  fetchBlockedDates,
-  trackPageView
-} from '../supabaseClient.js';
+  DEPOSIT_AMOUNT,
+  charterSlots,
+  durationItinerary,
+  formatCurrency,
+  formatClock,
+  getItineraryLabel,
+  getSlotTimingLabel as slotTimingLabelFor,
+  getStartHourOptions as startHourOptionsFor,
+  getCharterPrice
+} from '../shared/pricing.js';
 
 /* ========================================================
    BLACK PEARL · LADY ALICE
    Dedicated Booking Page Controller (/book)
    ======================================================== */
 
-const baseOccasionPrices = {
-  'Private Event': 75000,
-  'Proposals': 45000,
-  'Coastal sailing cruises': 85000,
-  'Engagements': 90000,
-  'Birthday parties': 75000,
-  'Private parties': 75000,
-  'Corporate events': 75000,
-  'Anniversaries & private dinners': 55000,
-  'Sunrise yoga and wellness': 40000,
-  'Pre-wedding & photo shoots': 55000,
-  'Festive nights': 90000,
-  'Bachelor & bachelorette nights': 75000,
-  'Family celebrations': 75000,
-  'Something else': 75000
-};
+// Curated occasions (price no longer depends on occasion)
+const curatedOccasions = [
+  'Proposals',
+  'Coastal sailing cruises',
+  'Engagements',
+  'Birthday parties',
+  'Private parties',
+  'Corporate events',
+  'Anniversaries & private dinners',
+  'Sunrise yoga and wellness',
+  'Pre-wedding & photo shoots',
+  'Festive nights',
+  'Bachelor & bachelorette nights',
+  'Family celebrations',
+  'Something else'
+];
 
-const priceMultipliers = {
-  1: 1,
-  3: 2,
-  6: 3.333
+// Background photo shown behind the booking page for each occasion
+const occasionBackgrounds = {
+  'Proposals': 'proposal-sunset.jpg',
+  'Coastal sailing cruises': 'sailing-cruise.jpg',
+  'Engagements': 'engagement-ceremony.jpg',
+  'Birthday parties': 'birthday-party.jpg',
+  'Private parties': 'cocktail-party.jpg',
+  'Corporate events': 'corporate-gala.jpg',
+  'Anniversaries & private dinners': 'private-dining.jpg',
+  'Sunrise yoga and wellness': 'sunrise-yoga.jpg',
+  'Pre-wedding & photo shoots': 'master-suite.jpg',
+  'Festive nights': 'festive-fireworks.jpg',
+  'Bachelor & bachelorette nights': 'bachelorette-party.jpg',
+  'Family celebrations': 'family-reunion.jpg'
 };
+const defaultBackground = 'lady-alice-mumbai-night-skyline.jpg';
+const privateEventBackground = 'lady-alice-night.jpg';
 
-const sailingSurcharges = {
-  1: 25000,
-  3: 45000,
-  6: 75000
-};
+function setPageBackground(file) {
+  document.body.style.setProperty('--booking-bg-image', `url('/assets/images/${file || defaultBackground}')`);
+}
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
+
+const today = new Date();
+const todayIso = toIsoDate(today);
 
 // Booking Page State
 const bookState = {
@@ -51,16 +70,14 @@ const bookState = {
   isPrivateEvent: false,
   selectedOccasion: 'Proposals',
   customEventName: '',
-  occasionBasePrice: 45000,
-  voyageMode: 'paused', // 'paused' or 'sailing'
+  selectedSlot: 'evening', // 'day' or 'evening'
   selectedDuration: 3,
-  selectedDate: '2026-11-14',
-  selectedSlot: 'Sunset',
-  selectedSlotTime: '4:30 pm',
-  currentMonth: 10, // 0-indexed: 10 is November
-  currentYear: 2026,
-  blockedDates: ['2026-11-01', '2026-11-08', '2026-11-20', '2026-11-27', '2026-11-28'],
-  fillingDates: ['2026-11-14', '2026-11-15', '2026-11-21', '2026-11-22'],
+  startHour: 14,
+  selectedDate: null,
+  currentMonth: today.getMonth(),
+  currentYear: today.getFullYear(),
+  blockedDates: [],
+  bookedSlots: {}, // { 'YYYY-MM-DD': Set(['day', 'evening']) }
   guestDetails: {
     name: '',
     phone: '',
@@ -75,13 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initUrlParameters();
   initStepNavigation();
   initOccasionPicker();
-  initVoyageModeAndDuration();
+  initSlotAndDuration();
   initCalendar();
-  initSlotPicker();
+  initStartTimePicker();
   initGuestForm();
   initRazorpayCheckout();
   initConfirmationActions();
-  syncBlockedDatesFromSupabase();
+  updateSummarySidebar();
+  syncAvailability();
   initMobileNav();
 
   try {
@@ -172,20 +190,20 @@ function validateStep(stepNum) {
   }
 
   if (stepNum === 2) {
-    if (!bookState.voyageMode || !bookState.selectedDuration) {
-      alert('Please select a navigation style and duration.');
+    if (!charterSlots[bookState.selectedSlot] || !durationItinerary[bookState.selectedDuration]) {
+      alert('Please select a charter slot and duration.');
       return false;
     }
     return true;
   }
 
   if (stepNum === 3) {
-    if (!bookState.selectedDate) {
+    if (!bookState.selectedDate || !isDateAvailable(bookState.selectedDate)) {
       alert('Please click and select an open date on the calendar.');
       return false;
     }
-    if (!bookState.selectedSlot) {
-      alert('Please choose a time slot on your selected date.');
+    if (!getStartHourOptions().includes(bookState.startHour)) {
+      alert('Please choose a start time for your charter.');
       return false;
     }
     return true;
@@ -242,18 +260,9 @@ function updateStepReviewSummary() {
   }
 
   if (occEl) occEl.textContent = displayOccasion;
-
-  const dateObj = new Date(bookState.selectedDate);
-  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-  const mName = monthNames[dateObj.getMonth()].substring(0, 3);
-  if (dateEl) dateEl.textContent = `${dayName}, ${dateObj.getDate()} ${mName} ${dateObj.getFullYear()}`;
-
-  if (slotEl) slotEl.textContent = `${bookState.selectedSlot} (${bookState.selectedSlotTime}) · ${bookState.selectedDuration} hrs`;
-  if (modeEl) {
-    modeEl.textContent = bookState.voyageMode === 'sailing'
-      ? 'Active Sailing (Underway)'
-      : 'At Anchor (Paused)';
-  }
+  if (dateEl) dateEl.textContent = formatShortDate(bookState.selectedDate) || '—';
+  if (slotEl) slotEl.textContent = `${getSlotTimingLabel()} · ${bookState.selectedDuration} hrs`;
+  if (modeEl) modeEl.textContent = getItineraryLabel(bookState.selectedDuration);
 }
 
 /* ========================================================
@@ -262,6 +271,13 @@ function updateStepReviewSummary() {
 function initUrlParameters() {
   const params = new URLSearchParams(window.location.search);
   const occasionParam = params.get('occasion');
+
+  // Optional pre-selection from links, e.g. /book?slot=day&hours=5
+  const slotParam = (params.get('slot') || '').toLowerCase();
+  if (charterSlots[slotParam]) bookState.selectedSlot = slotParam;
+  const hoursParam = parseInt(params.get('hours'), 10);
+  if (durationItinerary[hoursParam]) bookState.selectedDuration = hoursParam;
+  bookState.startHour = charterSlots[bookState.selectedSlot].startHour;
 
   if (occasionParam) {
     const decoded = decodeURIComponent(occasionParam).trim();
@@ -273,9 +289,7 @@ function initUrlParameters() {
     }
 
     // Check if matches curated occasion
-    const match = Object.keys(baseOccasionPrices).find(
-      key => key.toLowerCase() === lower
-    );
+    const match = curatedOccasions.find(key => key.toLowerCase() === lower);
 
     if (match) {
       selectCuratedOccasion(match);
@@ -297,7 +311,7 @@ function initUrlParameters() {
 function selectPrivateEvent() {
   bookState.isPrivateEvent = true;
   bookState.selectedOccasion = 'Private Event / Custom Charter';
-  bookState.occasionBasePrice = baseOccasionPrices['Private Event'] || 75000;
+  setPageBackground(privateEventBackground);
 
   // Uncheck curated event radios
   document.querySelectorAll('input[name="bookingOccasion"]').forEach(radio => {
@@ -321,14 +335,13 @@ function selectPrivateEvent() {
     pageHeroTitle.textContent = 'Reserve Private Vessel Buyout';
   }
 
-  updatePriceCalculations();
   updateSummarySidebar();
 }
 
 function selectCuratedOccasion(occasionName) {
   bookState.isPrivateEvent = false;
   bookState.selectedOccasion = occasionName;
-  bookState.occasionBasePrice = baseOccasionPrices[occasionName] || 75000;
+  setPageBackground(occasionBackgrounds[occasionName]);
 
   const featuredCard = document.getElementById('privateEventFeaturedCard');
   if (featuredCard) {
@@ -347,20 +360,11 @@ function selectCuratedOccasion(occasionName) {
     radio.checked = true;
   }
 
-  // Pre-configure mode for coastal cruises
-  if (occasionName === 'Coastal sailing cruises') {
-    bookState.voyageMode = 'sailing';
-  } else {
-    bookState.voyageMode = 'paused';
-  }
-  syncVoyageModeUI();
-
   const pageHeroTitle = document.getElementById('pageHeroTitle');
   if (pageHeroTitle) {
     pageHeroTitle.textContent = 'Reserve Your Private Charter';
   }
 
-  updatePriceCalculations();
   updateSummarySidebar();
 }
 
@@ -372,7 +376,7 @@ function initOccasionPicker() {
   const customInput = document.getElementById('customEventNameInput');
 
   if (featuredCard) {
-    featuredCard.addEventListener('click', (e) => {
+    featuredCard.addEventListener('click', () => {
       selectPrivateEvent();
       if (customInput) customInput.focus();
     });
@@ -398,74 +402,101 @@ function initOccasionPicker() {
 }
 
 /* ========================================================
-   3. NAVIGATION STYLE & DURATION
+   3. CHARTER SLOT, DURATION & PRICING
    ======================================================== */
-function initVoyageModeAndDuration() {
-  document.querySelectorAll('input[name="voyageMode"]').forEach(radio => {
+function initSlotAndDuration() {
+  const slotRadio = document.querySelector(`input[name="charterSlot"][value="${bookState.selectedSlot}"]`);
+  if (slotRadio) slotRadio.checked = true;
+  const durationRadio = document.querySelector(`input[name="voyageDuration"][value="${bookState.selectedDuration}"]`);
+  if (durationRadio) durationRadio.checked = true;
+
+  document.querySelectorAll('input[name="charterSlot"]').forEach(radio => {
     radio.addEventListener('change', () => {
-      bookState.voyageMode = radio.value;
-      syncVoyageModeUI();
-      updatePriceCalculations();
-      updateSummarySidebar();
+      bookState.selectedSlot = radio.value;
+      bookState.startHour = charterSlots[radio.value].startHour;
+      // A date open for the old slot may be taken for the new one
+      if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
+        bookState.selectedDate = null;
+      }
+      onScheduleChanged();
     });
   });
 
   document.querySelectorAll('input[name="voyageDuration"]').forEach(radio => {
     radio.addEventListener('change', () => {
       bookState.selectedDuration = parseInt(radio.value, 10) || 3;
-      updatePriceCalculations();
-      updateSummarySidebar();
+      onScheduleChanged();
     });
   });
+
+  updatePriceCalculations();
 }
 
-function syncVoyageModeUI() {
-  document.querySelectorAll('.voyage-mode-card').forEach(c => c.classList.remove('active'));
-  const activeRadio = document.querySelector(`input[name="voyageMode"][value="${bookState.voyageMode}"]`);
-  if (activeRadio) {
-    activeRadio.checked = true;
-    const parentCard = activeRadio.closest('.voyage-mode-option')?.querySelector('.voyage-mode-card');
-    if (parentCard) parentCard.classList.add('active');
-  }
-}
-
-function formatCurrency(amount) {
-  return '₹' + amount.toLocaleString('en-IN');
+function onScheduleChanged() {
+  updatePriceCalculations();
+  renderStartTimeOptions();
+  renderCalendar();
+  updateSummarySidebar();
 }
 
 function calculateCurrentTotal() {
-  const base = bookState.occasionBasePrice;
-  const isSailing = bookState.voyageMode === 'sailing';
-  const addon = isSailing ? (sailingSurcharges[bookState.selectedDuration] || 45000) : 0;
-  return Math.round(base * priceMultipliers[bookState.selectedDuration] + addon);
+  return getCharterPrice(bookState.selectedSlot, bookState.selectedDuration);
 }
 
 function updatePriceCalculations() {
-  const base = bookState.occasionBasePrice;
-  const isSailing = bookState.voyageMode === 'sailing';
-
-  const p1 = Math.round(base * priceMultipliers[1] + (isSailing ? sailingSurcharges[1] : 0));
-  const p3 = Math.round(base * priceMultipliers[3] + (isSailing ? sailingSurcharges[3] : 0));
-  const p6 = Math.round(base * priceMultipliers[6] + (isSailing ? sailingSurcharges[6] : 0));
-
-  const el1 = document.getElementById('durationPrice1');
-  const el3 = document.getElementById('durationPrice3');
-  const el6 = document.getElementById('durationPrice6');
-
-  if (el1) el1.textContent = formatCurrency(p1);
-  if (el3) el3.textContent = formatCurrency(p3);
-  if (el6) el6.textContent = formatCurrency(p6);
+  const prices = charterSlots[bookState.selectedSlot].prices;
+  Object.keys(durationItinerary).forEach(d => {
+    const priceEl = document.getElementById(`durationPrice${d}`);
+    const planEl = document.getElementById(`durationPlan${d}`);
+    if (priceEl) priceEl.textContent = formatCurrency(prices[d]);
+    if (planEl) planEl.textContent = getItineraryLabel(Number(d));
+  });
 }
 
 /* ========================================================
-   4. CALENDAR GENERATOR & SLOTS
+   4. CALENDAR, AVAILABILITY & START TIME
    ======================================================== */
+function toIsoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fromIsoDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function formatShortDate(iso) {
+  if (!iso) return '';
+  const d = fromIsoDate(iso);
+  const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+  return `${dayName}, ${d.getDate()} ${monthNames[d.getMonth()].substring(0, 3)} ${d.getFullYear()}`;
+}
+
+function getSlotWindowLabel(slotKey = bookState.selectedSlot) {
+  const slot = charterSlots[slotKey];
+  return `${slot.label} (${formatClock(slot.startHour)} – ${formatClock(slot.endHour)})`;
+}
+
+function getSlotTimingLabel() {
+  return slotTimingLabelFor(bookState.selectedSlot, bookState.startHour, bookState.selectedDuration);
+}
+
+function isSlotTaken(dateIso, slotKey = bookState.selectedSlot) {
+  return Boolean(bookState.bookedSlots[dateIso] && bookState.bookedSlots[dateIso].has(slotKey));
+}
+
+function isDateAvailable(dateIso) {
+  return dateIso >= todayIso && !bookState.blockedDates.includes(dateIso) && !isSlotTaken(dateIso);
+}
+
 function initCalendar() {
   const prevBtn = document.getElementById('prevMonthBtn');
   const nextBtn = document.getElementById('nextMonthBtn');
 
   if (prevBtn) {
     prevBtn.addEventListener('click', () => {
+      // No browsing before the current month
+      if (bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth()) return;
       bookState.currentMonth--;
       if (bookState.currentMonth < 0) {
         bookState.currentMonth = 11;
@@ -497,6 +528,11 @@ function renderCalendar() {
   monthLabel.textContent = `${monthNames[bookState.currentMonth]} ${bookState.currentYear}`;
   grid.innerHTML = '';
 
+  const prevBtn = document.getElementById('prevMonthBtn');
+  if (prevBtn) {
+    prevBtn.disabled = bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth();
+  }
+
   const firstDay = new Date(bookState.currentYear, bookState.currentMonth, 1);
   let startingDay = firstDay.getDay() - 1;
   if (startingDay === -1) startingDay = 6;
@@ -510,11 +546,11 @@ function renderCalendar() {
     grid.appendChild(blank);
   }
 
+  const slotName = charterSlots[bookState.selectedSlot].label;
+
   // Days of current month
   for (let day = 1; day <= totalDays; day++) {
-    const dayStr = day < 10 ? `0${day}` : `${day}`;
-    const mStr = (bookState.currentMonth + 1) < 10 ? `0${bookState.currentMonth + 1}` : `${bookState.currentMonth + 1}`;
-    const dateIso = `${bookState.currentYear}-${mStr}-${dayStr}`;
+    const dateIso = toIsoDate(new Date(bookState.currentYear, bookState.currentMonth, day));
 
     const cell = document.createElement('button');
     cell.className = 'cal-day-cell';
@@ -524,71 +560,102 @@ function renderCalendar() {
     const dot = document.createElement('span');
     dot.className = 'day-dot';
 
+    const isPast = dateIso < todayIso;
     const isBlocked = bookState.blockedDates.includes(dateIso);
-    const isFilling = bookState.fillingDates.includes(dateIso);
-    const isSelected = bookState.selectedDate === dateIso;
+    const isTaken = isSlotTaken(dateIso);
+    const isOpen = !isPast && !isBlocked && !isTaken;
 
-    if (isBlocked) {
+    if (isPast) {
+      cell.classList.add('disabled');
+      cell.title = 'Date has passed';
+    } else if (isBlocked) {
       cell.classList.add('disabled');
       dot.classList.add('booked');
-      cell.title = 'Date is fully booked or undergoing maintenance';
-    } else if (isFilling) {
-      dot.classList.add('filling');
-      cell.title = 'Few slots remaining on this date';
+      cell.title = 'Date is unavailable';
+    } else if (isTaken) {
+      cell.classList.add('disabled');
+      dot.classList.add('booked');
+      cell.title = `${slotName} already reserved on this date`;
     } else {
       dot.classList.add('free');
-      cell.title = 'All sailing slots open';
+      cell.title = `${slotName} open`;
     }
 
-    if (isSelected) {
+    if (bookState.selectedDate === dateIso) {
       cell.classList.add('selected');
     }
 
     cell.appendChild(dot);
 
-    if (!isBlocked) {
+    if (isOpen) {
       cell.addEventListener('click', () => {
-        document.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
+        grid.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
         cell.classList.add('selected');
         bookState.selectedDate = dateIso;
-        updateSelectedDateBanner(day, bookState.currentMonth, bookState.currentYear, isFilling);
+        updateSelectedDateBanner();
         updateSummarySidebar();
       });
+    } else {
+      cell.disabled = true;
     }
 
     grid.appendChild(cell);
   }
 
-  // Initial banner update
-  const selectedParts = bookState.selectedDate.split('-');
-  const d = parseInt(selectedParts[2], 10);
-  const isFill = bookState.fillingDates.includes(bookState.selectedDate);
-  updateSelectedDateBanner(d, bookState.currentMonth, bookState.currentYear, isFill);
+  updateSelectedDateBanner();
 }
 
-function updateSelectedDateBanner(day, monthIdx, year, isFilling) {
+function updateSelectedDateBanner() {
   const title = document.getElementById('statusDateTitle');
   const count = document.getElementById('statusDateSlotsCount');
 
-  const dateObj = new Date(year, monthIdx, day);
-  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-  const mName = monthNames[monthIdx];
-  const formattedStr = `${dayName}, ${day} ${mName} ${year}`;
-
-  if (title) title.textContent = formattedStr;
-  if (count) {
-    count.textContent = isFilling ? '3 of 4 slots open' : 'Every slot on this date is open';
+  if (!bookState.selectedDate) {
+    if (title) title.textContent = 'Choose a date';
+    if (count) count.textContent = `Showing open dates for the ${getSlotWindowLabel()}.`;
+    return;
   }
+
+  const dateObj = fromIsoDate(bookState.selectedDate);
+  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+  if (title) title.textContent = `${dayName}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+  if (count) count.textContent = `${getSlotWindowLabel()} is open on this date.`;
 }
 
-function initSlotPicker() {
-  document.querySelectorAll('input[name="sailingSlot"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      bookState.selectedSlot = radio.value;
-      bookState.selectedSlotTime = radio.getAttribute('data-time') || '4:30 pm';
+function getStartHourOptions() {
+  return startHourOptionsFor(bookState.selectedSlot, bookState.selectedDuration);
+}
+
+function initStartTimePicker() {
+  const select = document.getElementById('startTimeSelect');
+  if (select) {
+    select.addEventListener('change', () => {
+      bookState.startHour = parseInt(select.value, 10);
+      renderStartTimeHint();
       updateSummarySidebar();
     });
-  });
+  }
+  renderStartTimeOptions();
+}
+
+function renderStartTimeOptions() {
+  const select = document.getElementById('startTimeSelect');
+  const options = getStartHourOptions();
+  if (!options.includes(bookState.startHour)) {
+    bookState.startHour = options[0];
+  }
+
+  if (select) {
+    select.innerHTML = options
+      .map(h => `<option value="${h}" ${h === bookState.startHour ? 'selected' : ''}>${formatClock(h)} – ${formatClock(h + bookState.selectedDuration)}</option>`)
+      .join('');
+  }
+  renderStartTimeHint();
+}
+
+function renderStartTimeHint() {
+  const hint = document.getElementById('startTimeHint');
+  if (!hint) return;
+  hint.textContent = `Your ${bookState.selectedDuration}-hour charter: ${getItineraryLabel(bookState.selectedDuration)}.`;
 }
 
 /* ========================================================
@@ -687,19 +754,10 @@ function updateSummarySidebar() {
   }
 
   if (occasionEl) occasionEl.textContent = displayOccasion;
-
-  const dateObj = new Date(bookState.selectedDate);
-  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-  const mName = monthNames[dateObj.getMonth()].substring(0, 3);
-  if (dateEl) dateEl.textContent = `${dayName}, ${dateObj.getDate()} ${mName} ${dateObj.getFullYear()}`;
-
-  if (slotEl) slotEl.textContent = `${bookState.selectedSlot} (${bookState.selectedSlotTime})`;
-  if (durationEl) durationEl.textContent = `${bookState.selectedDuration} hour${bookState.selectedDuration > 1 ? 's' : ''}`;
-  if (modeEl) {
-    modeEl.textContent = bookState.voyageMode === 'sailing'
-      ? 'Active Sailing (Underway)'
-      : 'At Anchor (Paused)';
-  }
+  if (dateEl) dateEl.textContent = formatShortDate(bookState.selectedDate) || 'Select a date';
+  if (slotEl) slotEl.textContent = getSlotTimingLabel();
+  if (durationEl) durationEl.textContent = `${bookState.selectedDuration} hours`;
+  if (modeEl) modeEl.textContent = getItineraryLabel(bookState.selectedDuration);
 
   const countInput = document.getElementById('bookGuestCount');
   const countVal = countInput ? countInput.value : (bookState.guestDetails.guests || 2);
@@ -719,175 +777,162 @@ function initRazorpayCheckout() {
   }
 }
 
-function handlePageRazorpayPayment() {
+const PAY_BUTTON_LABEL = `Pay ${formatCurrency(DEPOSIT_AMOUNT)} via Razorpay to Lock Date`;
+
+function setPayButton(busy, label) {
   const payBtn = document.getElementById('btnPagePay5000');
   const payText = document.getElementById('btnPagePayText');
-  const errBox = document.getElementById('formErrorMsg');
+  if (payBtn) payBtn.disabled = busy;
+  if (payText) payText.textContent = label || PAY_BUTTON_LABEL;
+}
 
-  if (!validateGuestForm()) {
+async function postJson(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function handlePageRazorpayPayment() {
+  if (!validateGuestForm()) return;
+  if (!bookState.selectedDate || !isDateAvailable(bookState.selectedDate)) {
+    showFormError('Please go back and choose an open date for your charter.');
+    return;
+  }
+  if (typeof window.Razorpay !== 'function') {
+    showFormError('Payment window could not load. Please check your connection and refresh the page.');
     return;
   }
 
-  if (payBtn) payBtn.disabled = true;
-  if (payText) payText.textContent = 'Connecting to Razorpay...';
-
-  const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-
-  // Booking Code BP-{DDMM}-{RAND}
-  const dateObj = new Date(bookState.selectedDate);
-  const dd = String(dateObj.getDate()).padStart(2, '0');
-  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const randNum = String(Math.floor(10 + Math.random() * 90));
-  const bookingCode = `BP-${dd}${mm}-${randNum}`;
+  setPayButton(true, 'Connecting to Razorpay...');
 
   let displayOccasion = bookState.selectedOccasion;
   if (bookState.isPrivateEvent && bookState.customEventName) {
     displayOccasion = `Private Event: ${bookState.customEventName}`;
   }
 
-  const hasRealKey = rzpKey && rzpKey.trim().length > 0 && !rzpKey.includes('your_razorpay_key');
-
-  if (typeof window.Razorpay === 'function' && hasRealKey) {
-    try {
-      const options = {
-        key: rzpKey.trim(),
-        amount: 5000 * 100, // ₹5,000 in paise
-        currency: 'INR',
-        name: 'Black Pearl · Lady Alice',
-        description: `${displayOccasion} - Date Lock Deposit (Ref: ${bookingCode})`,
-        image: '/assets/black-pearl-mark.svg',
-        prefill: {
-          name: bookState.guestDetails.name,
-          email: bookState.guestDetails.email,
-          contact: bookState.guestDetails.phone.replace(/[^0-9]/g, '').slice(-10)
-        },
-        notes: {
-          booking_code: bookingCode,
-          occasion: displayOccasion,
-          charter_date: bookState.selectedDate,
-          slot: `${bookState.selectedSlot} (${bookState.selectedSlotTime})`,
-          duration: `${bookState.selectedDuration} hours`,
-          voyage_mode: bookState.voyageMode === 'sailing' ? 'Active Sailing' : 'Paused (At Anchor)',
-          guest_count: bookState.guestDetails.guests,
-          notes: bookState.guestDetails.notes
-        },
-        theme: {
-          color: '#C9A968'
-        },
-        modal: {
-          ondismiss: function () {
-            console.log('[Razorpay] Checkout dismissed by guest.');
-            if (payBtn) payBtn.disabled = false;
-            if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay to Lock Date';
-          }
-        },
-        handler: function (response) {
-          console.log('[Razorpay] Payment successful! Payment ID:', response.razorpay_payment_id);
-          const paymentId = response.razorpay_payment_id || `pay_${Date.now()}`;
-          completePageBooking(bookingCode, paymentId);
-          if (payBtn) payBtn.disabled = false;
-          if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay to Lock Date';
-        }
-      };
-
-      const rzpInstance = new window.Razorpay(options);
-      rzpInstance.on('payment.failed', function (resp) {
-        console.error('[Razorpay] Payment failed:', resp.error);
-        if (errBox) {
-          errBox.textContent = `Payment failed: ${resp.error.description || 'Transaction was declined.'} Please try again.`;
-          errBox.style.display = 'block';
-        }
-        if (payBtn) payBtn.disabled = false;
-        if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay to Lock Date';
-      });
-
-      rzpInstance.open();
+  // 1. Server validates the booking, records it as "Payment Pending" and creates the order
+  let order;
+  try {
+    const { ok, data } = await postJson('/api/create-order', {
+      occasion: displayOccasion,
+      slot: bookState.selectedSlot,
+      durationHours: bookState.selectedDuration,
+      startHour: bookState.startHour,
+      dateIso: bookState.selectedDate,
+      name: bookState.guestDetails.name,
+      phone: bookState.guestDetails.phone,
+      email: bookState.guestDetails.email,
+      guests: bookState.guestDetails.guests,
+      notes: bookState.guestDetails.notes === 'None' ? '' : bookState.guestDetails.notes
+    });
+    if (!ok) {
+      showFormError(data.error || 'Could not start the payment. Please try again.');
+      if (data.code === 'SLOT_TAKEN') {
+        markSlotBooked(bookState.selectedDate, bookState.selectedSlot);
+        bookState.selectedDate = null;
+        renderCalendar();
+        updateSummarySidebar();
+      }
+      setPayButton(false);
       return;
-    } catch (err) {
-      console.warn('[Razorpay] Exception opening checkout, switching to verified fallback:', err);
     }
+    order = data;
+  } catch (err) {
+    console.error('[Booking] create-order failed', err);
+    showFormError('Could not reach our booking server. Please check your connection and try again.');
+    setPayButton(false);
+    return;
   }
 
-  // Test simulation fallback when Razorpay test credentials not yet added
-  console.info('[Razorpay] Test/Demo mode active. Simulating ₹5,000 hold deposit...');
-  setTimeout(() => {
-    if (payText) payText.textContent = 'Verifying ₹5,000 deposit...';
-  }, 600);
+  let lastFailure = null;
+  let settled = false;
 
-  setTimeout(() => {
-    const mockPaymentId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-    completePageBooking(bookingCode, mockPaymentId);
-    if (payBtn) payBtn.disabled = false;
-    if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay to Lock Date';
-  }, 1300);
+  // 2. Razorpay Checkout for the fixed advance
+  const rzp = new window.Razorpay({
+    key: order.keyId,
+    order_id: order.orderId,
+    amount: order.amount,
+    currency: order.currency,
+    name: 'Black Pearl · Lady Alice',
+    description: `${displayOccasion} · Advance (Ref: ${order.bookingCode})`,
+    image: '/assets/black-pearl-mark.svg',
+    prefill: {
+      name: bookState.guestDetails.name,
+      email: bookState.guestDetails.email,
+      contact: bookState.guestDetails.phone.replace(/[^0-9]/g, '').slice(-10)
+    },
+    notes: { booking_code: order.bookingCode },
+    theme: { color: '#C9A968' },
+    modal: {
+      ondismiss: () => {
+        if (settled) return;
+        // Closed without paying: free the slot and record it for the admin panel
+        if (!lastFailure) {
+          postJson('/api/payment-failed', { orderId: order.orderId, abandoned: true }).catch(() => {});
+        }
+        setPayButton(false);
+      }
+    },
+    // 3. Server verifies the signature, marks the booking paid and emails the QR
+    handler: async (response) => {
+      settled = true;
+      setPayButton(true, 'Confirming your booking...');
+      try {
+        const { ok, data } = await postJson('/api/verify-payment', {
+          orderId: response.razorpay_order_id,
+          paymentId: response.razorpay_payment_id,
+          signature: response.razorpay_signature
+        });
+        if (!ok) {
+          showFormError(data.error || 'Payment received, but we could not confirm the booking. Our team will contact you.');
+          setPayButton(false);
+          return;
+        }
+        completePageBooking(data);
+      } catch (err) {
+        console.error('[Booking] verify-payment failed', err);
+        showFormError(`Payment received (ID ${response.razorpay_payment_id}), but we could not confirm it on screen. Your booking is safe; our team will contact you.`);
+        setPayButton(false);
+      }
+    }
+  });
+
+  rzp.on('payment.failed', (resp) => {
+    lastFailure = resp.error;
+    const reason = resp.error?.description || 'Transaction was declined.';
+    showFormError(`Payment failed: ${reason} You can try again.`);
+    postJson('/api/payment-failed', {
+      orderId: order.orderId,
+      paymentId: resp.error?.metadata?.payment_id,
+      reason
+    }).catch(() => {});
+  });
+
+  rzp.open();
 }
 
-function completePageBooking(bookingCode, paymentId) {
-  const dateObj = new Date(bookState.selectedDate);
-  const total = calculateCurrentTotal();
-
-  let finalOccasion = bookState.selectedOccasion;
-  if (bookState.isPrivateEvent && bookState.customEventName) {
-    finalOccasion = `Private Event: ${bookState.customEventName}`;
-  } else if (bookState.isPrivateEvent) {
-    finalOccasion = 'Private Event / Custom Charter';
-  }
-
-  const newHold = {
-    id: bookingCode,
-    occasion: finalOccasion,
-    date: `${dateObj.toLocaleDateString('en-US', { weekday: 'short' })}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`,
-    dateIso: bookState.selectedDate,
-    slot: `${bookState.selectedSlot} (${bookState.selectedSlotTime})`,
-    duration: `${bookState.selectedDuration} hours`,
-    voyageMode: bookState.voyageMode === 'sailing' ? 'Active Sailing (Underway)' : 'Paused (At Anchor)',
-    guests: bookState.guestDetails.guests,
-    price: formatCurrency(total),
-    paidToken: '₹5,000',
-    paymentMethod: 'razorpay',
-    paymentId: paymentId,
-    name: bookState.guestDetails.name,
-    phone: bookState.guestDetails.phone,
-    email: bookState.guestDetails.email,
-    address: '',
-    notes: bookState.guestDetails.notes || 'None',
-    status: 'Held (Deposit Paid)'
+function completePageBooking({ booking, qrUrl, verifyUrl, emailSent }) {
+  bookState.lastCompletedHold = {
+    ...booking,
+    startHour: bookState.startHour,
+    durationHours: bookState.selectedDuration
   };
+  markSlotBooked(booking.dateIso, bookState.selectedSlot);
 
-  bookState.lastCompletedHold = newHold;
+  renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent });
 
-  // Save to local storage for instant sync across tabs
-  try {
-    const existing = JSON.parse(localStorage.getItem('black_pearl_holds') || '[]');
-    existing.unshift(newHold);
-    localStorage.setItem('black_pearl_holds', JSON.stringify(existing));
-  } catch (e) {}
-
-  // Asynchronously save to Supabase
-  saveBookingHold(newHold)
-    .then(res => {
-      if (res.success && res.source === 'supabase') {
-        console.log('[Black Pearl] Booking hold persisted to Supabase with ID:', res.data.id);
-      } else {
-        console.info('[Black Pearl] Booking hold saved locally:', res);
-      }
-    })
-    .catch(err => console.error('Error storing booking in Supabase:', err));
-
-  // Render Confirmation Receipt
-  renderConfirmationReceipt(newHold);
-
-  // Transition UI to Confirmed State
   const container = document.getElementById('bookingFlowContainer');
   const confirmView = document.getElementById('bookingConfirmationView');
-
   if (container) container.classList.add('confirmed');
   if (confirmView) {
     confirmView.classList.add('active');
     confirmView.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Confetti burst (Champagne gold & pearl)
   confetti({
     particleCount: 90,
     spread: 70,
@@ -896,44 +941,40 @@ function completePageBooking(bookingCode, paymentId) {
   });
 }
 
-function renderConfirmationReceipt(hold) {
-  const refCodeEl = document.getElementById('confirmedRefCode');
-  const occEl = document.getElementById('recOccasion');
-  const dateEl = document.getElementById('recDate');
-  const slotEl = document.getElementById('recSlot');
-  const modeEl = document.getElementById('recMode');
-  const guestEl = document.getElementById('recGuest');
-  const phoneEl = document.getElementById('recPhone');
-  const payIdEl = document.getElementById('recPaymentId');
+function renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent }) {
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  setText('confirmedRefCode', `Booking Reference: ${booking.code}`);
+  setText('recOccasion', booking.occasion);
+  setText('recDate', booking.date);
+  setText('recSlot', `${booking.slot} · ${booking.duration}`);
+  setText('recMode', booking.itinerary);
+  setText('recGuest', `${booking.name} (${booking.email})`);
+  setText('recPhone', booking.phone);
+  setText('recPaymentId', booking.paymentId || '—');
+  setText('boardingQrRefText', booking.code);
+  setText('recEmailNote', emailSent
+    ? `A confirmation with this QR code has been emailed to ${booking.email}.`
+    : `We could not email your confirmation just now. Please save this page or screenshot the QR code.`);
+
+  const qrImg = document.getElementById('boardingQrImg');
+  if (qrImg) {
+    qrImg.src = qrUrl;
+    qrImg.alt = `QR code for booking ${booking.code}`;
+  }
+  const passLink = document.getElementById('recPassLink');
+  if (passLink) passLink.href = verifyUrl;
+
   const waBtn = document.getElementById('btnRecChatWa');
-
-  if (refCodeEl) refCodeEl.textContent = `Booking Reference: ${hold.id}`;
-  if (occEl) occEl.textContent = hold.occasion;
-  if (dateEl) dateEl.textContent = hold.date;
-  if (slotEl) slotEl.textContent = `${hold.slot} · ${hold.duration}`;
-  if (modeEl) modeEl.textContent = hold.voyageMode;
-  if (guestEl) guestEl.textContent = `${hold.name} (${hold.email})`;
-  if (phoneEl) phoneEl.textContent = hold.phone;
-  if (payIdEl) payIdEl.textContent = hold.paymentId;
-
   if (waBtn) {
     const waText = encodeURIComponent(
-      `Hello Black Pearl Team, I have locked date ${hold.date} for our ${hold.occasion} on Lady Alice. ` +
-      `Booking Ref: ${hold.id} (Deposit ₹5,000 paid via Razorpay, ID: ${hold.paymentId}). ` +
-      `Please contact me on ${hold.phone} to coordinate details.`
+      `Hello Black Pearl Team, I have booked ${booking.date} (${booking.slot}) for our ${booking.occasion} on Lady Alice. ` +
+      `Booking Ref: ${booking.code} (Advance ${booking.advancePaid} paid, Razorpay ID: ${booking.paymentId}).`
     );
     waBtn.href = `https://wa.me/919820000000?text=${waText}`;
-  }
-
-  // Generate Boarding Pass QR Code pointing to verification endpoint
-  const qrImg = document.getElementById('boardingQrImg');
-  const qrRefText = document.getElementById('boardingQrRefText');
-  if (qrRefText) qrRefText.textContent = hold.id;
-
-  if (qrImg) {
-    const verifyUrl = `${window.location.origin}/verify?ref=${encodeURIComponent(hold.id)}&name=${encodeURIComponent(hold.name)}&date=${encodeURIComponent(hold.dateIso)}&slot=${encodeURIComponent(hold.slot)}`;
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=050506&margin=4`;
-    qrImg.alt = `QR Code for ${hold.id}`;
   }
 }
 
@@ -956,16 +997,10 @@ function generateICalendarDownload() {
   const m = dateParts[1];
   const d = dateParts[2];
 
-  let hour = '16';
-  let min = '30';
-  if (hold.slot.includes('Sunrise')) { hour = '06'; min = '00'; }
-  if (hold.slot.includes('Afternoon')) { hour = '12'; min = '00'; }
-  if (hold.slot.includes('Evening')) { hour = '20'; min = '00'; }
-
-  const startTime = `${y}${m}${d}T${hour}${min}00`;
+  const startHour = hold.startHour;
   const durHours = parseInt(hold.duration, 10) || 3;
-  const endHour = String(parseInt(hour, 10) + durHours).padStart(2, '0');
-  const endTime = `${y}${m}${d}T${endHour}${min}00`;
+  const startTime = `${y}${m}${d}T${String(startHour).padStart(2, '0')}0000`;
+  const endTime = `${y}${m}${d}T${String(startHour + durHours).padStart(2, '0')}0000`;
 
   const icsContent = [
     'BEGIN:VCALENDAR',
@@ -974,8 +1009,8 @@ function generateICalendarDownload() {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `SUMMARY:Lady Alice · ${hold.occasion} (${hold.id})`,
-    `DESCRIPTION:Private charter on Lady Alice luxury ship at Gateway of India. Held with Black Pearl.\\nBooking: ${hold.id}\\nGuest: ${hold.name}\\nPayment ID: ${hold.paymentId}`,
+    `SUMMARY:Lady Alice · ${hold.occasion} (${hold.code})`,
+    `DESCRIPTION:Private charter on Lady Alice luxury ship at Gateway of India. Held with Black Pearl.\\nBooking: ${hold.code}\\nGuest: ${hold.name}\\nPayment ID: ${hold.paymentId}`,
     'LOCATION:Gateway of India Jetty, Apollo Bandar, Colaba, Mumbai 400001',
     `DTSTART:${startTime}`,
     `DTEND:${endTime}`,
@@ -988,7 +1023,7 @@ function generateICalendarDownload() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Lady_Alice_${hold.id}.ics`;
+  a.download = `Lady_Alice_${hold.code}.ics`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -998,19 +1033,34 @@ function generateICalendarDownload() {
 /* ========================================================
    9. SUPABASE BLOCKED DATES SYNC
    ======================================================== */
-async function syncBlockedDatesFromSupabase() {
+// Portal bookings + admin offline locks, from the server (no guest details)
+async function syncAvailability() {
   try {
-    const res = await fetchBlockedDates();
-    if (res.success && res.data && res.data.length > 0) {
-      res.data.forEach(item => {
-        const d = item.date || item.blocked_date;
-        if (d && !bookState.blockedDates.includes(d)) {
-          bookState.blockedDates.push(d);
-        }
-      });
-      renderCalendar();
+    const res = await fetch('/api/availability', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`availability ${res.status}`);
+    const { bookedSlots = [], blocks = [] } = await res.json();
+
+    bookedSlots.forEach(b => markSlotBooked(b.date, b.slot));
+    blocks.forEach(b => {
+      if (b.slot) {
+        markSlotBooked(b.date, b.slot);
+      } else if (!bookState.blockedDates.includes(b.date)) {
+        bookState.blockedDates.push(b.date); // full-day lock
+      }
+    });
+
+    if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
+      bookState.selectedDate = null;
+      updateSummarySidebar();
     }
+    renderCalendar();
   } catch (err) {
-    console.warn('Could not sync blocked dates:', err);
+    console.warn('Could not load availability:', err);
   }
+}
+
+function markSlotBooked(dateIso, slotKey) {
+  if (!dateIso || !slotKey) return;
+  if (!bookState.bookedSlots[dateIso]) bookState.bookedSlots[dateIso] = new Set();
+  bookState.bookedSlots[dateIso].add(slotKey);
 }
