@@ -74,3 +74,47 @@ export function slotKeyFromLabel(label) {
   if (/evening|sunset|night/.test(l)) return 'evening';
   return null;
 }
+
+/* --------------------------------------------------------
+   MULTIPLE BOOKINGS PER DAY
+   Bookings are time ranges. Any two (online bookings or admin
+   locks) need at least this many hours between them.
+   -------------------------------------------------------- */
+export const TURNAROUND_GAP_HOURS = 1;
+
+// Whole operating day, used for full-day locks
+export const DAY_START_HOUR = charterSlots.day.startHour;
+export const DAY_END_HOUR = charterSlots.evening.endHour;
+
+/**
+ * True if [start, end) would clash with an occupied range,
+ * including the turnaround gap on both sides.
+ */
+export function rangesConflict(start, end, other) {
+  return start < other.end + TURNAROUND_GAP_HOURS && other.start < end + TURNAROUND_GAP_HOURS;
+}
+
+export function isRangeFree(start, end, occupied = []) {
+  return occupied.every(range => !rangesConflict(start, end, range));
+}
+
+/**
+ * Converts a stored booking or lock into an occupied time range.
+ * Older records without times fall back to their whole slot (or the whole day).
+ */
+export function rangeFromRecord({ startHour, durationHours, endHour, slotKey }) {
+  if (Number.isFinite(startHour) && Number.isFinite(durationHours)) {
+    return { start: startHour, end: startHour + durationHours };
+  }
+  if (Number.isFinite(startHour) && Number.isFinite(endHour)) {
+    return { start: startHour, end: endHour };
+  }
+  if (slotKey && charterSlots[slotKey]) {
+    return { start: charterSlots[slotKey].startHour, end: charterSlots[slotKey].endHour };
+  }
+  return { start: DAY_START_HOUR, end: DAY_END_HOUR };
+}
+
+export function formatRange(start, end) {
+  return `${formatClock(start)} – ${formatClock(end)}`;
+}

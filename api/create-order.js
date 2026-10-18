@@ -7,11 +7,13 @@ import {
   getCharterPrice,
   getItineraryLabel,
   getSlotTimingLabel,
-  getStartHourOptions
+  getStartHourOptions,
+  isRangeFree
 } from '../shared/pricing.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 import { createRazorpayOrder, getRazorpayKeyId } from './_lib/razorpay.js';
-import { PAID_STATUSES, PENDING_HOLD_MINUTES, STATUS, todayInIndia } from './_lib/booking.js';
+import { STATUS, todayInIndia } from './_lib/booking.js';
+import { getOccupiedRanges } from './_lib/occupancy.js';
 import { readJson, send, methodNotAllowed } from './_lib/http.js';
 
 /**
@@ -81,28 +83,13 @@ export default async function handler(req, res) {
   try {
     const db = getSupabaseAdmin();
 
-    // ---- Availability: blocked date, a paid booking, or a fresh pending checkout ----
-    // Admin locks: full day (slot_key null) or this specific slot
-    const { data: locks, error: locksError } = await db.from('blocked_dates')
-      .select('id')
-      .eq('date', dateIso)
-      .or(`slot_key.is.null,slot_key.eq.${slotKey}`);
-    if (locksError) throw locksError;
-    if (locks && locks.length) {
-      return send(res, 409, { error: 'This slot is unavailable on that date. Please pick another date or slot.', code: 'SLOT_TAKEN' });
-    }
-
-    const pendingCutoff = new Date(Date.now() - PENDING_HOLD_MINUTES * 60 * 1000).toISOString();
-    const { data: existing, error: existingError } = await db.from('holds')
-      .select('id, status, created_at')
-      .eq('date_iso', dateIso)
-      .eq('slot_key', slotKey)
-      .in('status', [...PAID_STATUSES, STATUS.pending]);
-    if (existingError) throw existingError;
-
-    const taken = (existing || []).some(h => PAID_STATUSES.includes(h.status) || h.created_at > pendingCutoff);
-    if (taken) {
-      return send(res, 409, { error: 'Sorry, this slot was just booked. Please choose another date or slot.', code: 'SLOT_TAKEN' });
+    // ---- Availability: this time (plus the 1-hour turnaround) must be free ----
+    const occupied = await getOccupiedRanges({ date: dateIso });
+    if (!isRangeFree(startHour, startHour + duration, occupied)) {
+      return send(res, 409, {
+        error: 'Sorry, that time is no longer available (bookings need a 1-hour gap). Please choose another start time or date.',
+        code: 'SLOT_TAKEN'
+      });
     }
 
     // ---- Create the pending hold and Razorpay order ----

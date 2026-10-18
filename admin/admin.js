@@ -22,7 +22,16 @@ import {
   updateCommunityStatus,
   isSupabaseConfigured
 } from '../supabaseClient.js';
-import { slotKeyFromLabel } from '../shared/pricing.js';
+import {
+  slotKeyFromLabel,
+  rangeFromRecord,
+  rangesConflict,
+  formatRange,
+  charterSlots,
+  DAY_START_HOUR,
+  DAY_END_HOUR,
+  TURNAROUND_GAP_HOURS
+} from '../shared/pricing.js';
 
 import {
   uploadImageToImageKit,
@@ -124,7 +133,8 @@ const elements = {
   // Calendar Locks elements
   lockDateInput: document.getElementById('adminLockDate'),
   lockReasonSelect: document.getElementById('adminLockReason'),
-  lockSlotSelect: document.getElementById('adminLockSlot'),
+  lockStartSelect: document.getElementById('adminLockStart'),
+  lockEndSelect: document.getElementById('adminLockEnd'),
   lockNoteInput: document.getElementById('adminLockNote'),
   btnSubmitLockDate: document.getElementById('btnSubmitLockDate'),
   lockedDatesList: document.getElementById('lockedDatesList'),
@@ -1376,11 +1386,10 @@ function renderMediaGrid() {
 }
 
 /* ========================================================
-   9. CALENDAR: ONLINE BOOKINGS + OFFLINE SLOT LOCKS
+   9. CALENDAR: ONLINE BOOKINGS + OFFLINE BLOCKED TIMES
+   A day can hold several bookings; any two need a 1-hour gap.
    ======================================================== */
-const SLOT_LABELS = { day: 'Day Slot (6 am – 2 pm)', evening: 'Evening Slot (2 pm – 11 pm)' };
-const SLOT_SHORT = { day: 'Day', evening: 'Eve' };
-// Statuses that do NOT occupy a slot
+// Statuses that do NOT occupy time on the calendar
 const NON_BLOCKING_STATUSES = ['Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Cancelled', 'Failed'];
 
 const adminCal = (() => {
@@ -1397,18 +1406,29 @@ function formatLockDate(iso) {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// Online booking occupying a given date + slot, if any
-function findOnlineBooking(dateIso, slotKey) {
-  return state.bookings.find(b =>
-    (b.dateIso === dateIso) &&
-    ((b.slotKey || slotKeyFromLabel(b.slot)) === slotKey) &&
-    !NON_BLOCKING_STATUSES.includes(b.status)
-  );
+// Short clock label for calendar cells, e.g. 2pm, 6am
+function shortClock(hour) {
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}${hour < 12 || hour === 24 ? 'am' : 'pm'}`;
 }
 
-// Offline lock covering a given date + slot (full-day locks cover both)
-function findLock(dateIso, slotKey) {
-  return state.blockedDates.find(l => l.date === dateIso && (!l.slot_key || l.slot_key === slotKey));
+function bookingRange(b) {
+  return rangeFromRecord({ startHour: b.startHour, durationHours: b.durationHours, slotKey: b.slotKey || slotKeyFromLabel(b.slot) });
+}
+
+function lockRange(l) {
+  return rangeFromRecord({ startHour: l.start_hour, endHour: l.end_hour, slotKey: l.slot_key });
+}
+
+// Everything occupying time on a date, sorted by start: [{ kind, start, end, record }]
+function getDayEntries(dateIso) {
+  const bookings = state.bookings
+    .filter(b => b.dateIso === dateIso && !NON_BLOCKING_STATUSES.includes(b.status))
+    .map(b => ({ kind: 'booking', ...bookingRange(b), record: b }));
+  const locks = state.blockedDates
+    .filter(l => l.date === dateIso)
+    .map(l => ({ kind: 'lock', ...lockRange(l), record: l }));
+  return [...bookings, ...locks].sort((a, b) => a.start - b.start);
 }
 
 async function loadBlockedDatesData() {
@@ -1416,10 +1436,15 @@ async function loadBlockedDatesData() {
     const res = await fetchBlockedDates();
     state.blockedDates = (res && res.success && Array.isArray(res.data)) ? res.data : [];
   } catch (err) {
-    console.error('Failed to load calendar locks:', err);
+    console.error('Failed to load blocked times:', err);
     state.blockedDates = [];
   }
   renderBlockedDatesList();
+}
+
+function setLockTimes(start, end) {
+  elements.lockStartSelect.value = String(start);
+  elements.lockEndSelect.value = String(end);
 }
 
 function initCalendarHandlers() {
@@ -1434,79 +1459,90 @@ function initCalendarHandlers() {
     renderAdminCalendar();
   });
 
+  document.querySelectorAll('[data-lock-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [start, end] = btn.getAttribute('data-lock-preset').split('-').map(Number);
+      setLockTimes(start, end);
+    });
+  });
+
   if (!elements.btnSubmitLockDate) return;
 
   elements.btnSubmitLockDate.addEventListener('click', async () => {
     const dateVal = elements.lockDateInput.value;
-    const slotKey = elements.lockSlotSelect.value || null;
+    const start = Number(elements.lockStartSelect.value);
+    const end = Number(elements.lockEndSelect.value);
     const reason = elements.lockReasonSelect.value;
     const note = elements.lockNoteInput.value.trim();
 
     if (!dateVal) {
-      alert('Please choose a date to lock.');
+      alert('Please choose a date.');
       return;
     }
     if (dateVal < toIsoDate(new Date())) {
       alert('That date has already passed.');
       return;
     }
+    if (!(end > start)) {
+      alert('"To" must be later than "From".');
+      return;
+    }
 
-    // Never lock over an online booking or an existing lock
-    const slotsToCheck = slotKey ? [slotKey] : ['day', 'evening'];
-    for (const key of slotsToCheck) {
-      const booking = findOnlineBooking(dateVal, key);
-      if (booking) {
-        alert(`${SLOT_LABELS[key]} on ${formatLockDate(dateVal)} is already booked online by ${booking.name} (${booking.id}).`);
-        return;
-      }
-      const lock = findLock(dateVal, key);
-      if (lock) {
-        alert(`${SLOT_LABELS[key]} on ${formatLockDate(dateVal)} is already locked (${lock.reason}).`);
-        return;
-      }
+    // Same rule as the website: no overlap, and a 1-hour gap from every other booking / block
+    const clash = getDayEntries(dateVal).find(entry => rangesConflict(start, end, entry));
+    if (clash) {
+      const who = clash.kind === 'booking'
+        ? `a website booking by ${clash.record.name} (${clash.record.id})`
+        : `blocked time (${clash.record.reason || 'Blocked'})`;
+      alert(`${formatRange(start, end)} on ${formatLockDate(dateVal)} clashes with ${who} at ${formatRange(clash.start, clash.end)}. ` +
+        `Bookings need a ${TURNAROUND_GAP_HOURS}-hour gap between them.`);
+      return;
     }
 
     elements.btnSubmitLockDate.disabled = true;
-    elements.btnSubmitLockDate.textContent = 'Locking...';
+    elements.btnSubmitLockDate.textContent = 'Saving...';
 
     try {
-      const res = await saveBlockedDate(dateVal, reason, { slotKey, note });
+      const slotKey = start === DAY_START_HOUR && end === DAY_END_HOUR ? null
+        : (end <= charterSlots.day.endHour ? 'day' : (start >= charterSlots.evening.startHour ? 'evening' : null));
+      const res = await saveBlockedDate(dateVal, reason, { slotKey, note, startHour: start, endHour: end });
       if (!res.success) {
-        alert('Could not lock this slot. It may already be locked; refresh and try again.');
+        alert('Could not block this time. Please refresh and try again.');
         return;
       }
       state.blockedDates.push(res.data);
       elements.lockNoteInput.value = '';
       renderBlockedDatesList();
-      showToastNotification(`${slotKey ? SLOT_LABELS[slotKey] : 'Full day'} locked on ${formatLockDate(dateVal)}`);
+      renderNotifications();
+      showToastNotification(`${formatRange(start, end)} blocked on ${formatLockDate(dateVal)}`);
     } catch (err) {
-      console.error('Failed to lock slot:', err);
+      console.error('Failed to block time:', err);
     } finally {
       elements.btnSubmitLockDate.disabled = false;
-      elements.btnSubmitLockDate.textContent = 'Lock Slot';
+      elements.btnSubmitLockDate.textContent = 'Block Time';
     }
   });
 }
 
 async function unlockSlot(lock) {
-  const what = lock.slot_key ? SLOT_LABELS[lock.slot_key] : 'Full day';
-  if (!confirm(`Unlock ${what} on ${formatLockDate(lock.date)}? It will open for online booking again.`)) return;
+  const range = lockRange(lock);
+  const what = `${formatRange(range.start, range.end)} on ${formatLockDate(lock.date)}`;
+  if (!confirm(`Unblock ${what}? It will open for online booking again.`)) return;
 
   const res = await deleteBlockedDate(lock.id);
   if (!res.success) {
-    showToastNotification('Could not unlock. Please try again.');
+    showToastNotification('Could not unblock. Please try again.');
     return;
   }
   state.blockedDates = state.blockedDates.filter(l => l.id !== lock.id);
   renderBlockedDatesList();
-  showToastNotification(`${what} on ${formatLockDate(lock.date)} unlocked`);
+  showToastNotification(`${what} unblocked`);
 }
 
-function prefillLockForm(dateIso, slotKey) {
+function prefillLockForm(dateIso) {
   elements.lockDateInput.value = dateIso;
-  elements.lockSlotSelect.value = slotKey;
   document.getElementById('adminLockFormCard')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  elements.lockNoteInput.focus({ preventScroll: true });
+  elements.lockStartSelect.focus({ preventScroll: true });
 }
 
 function renderAdminCalendar() {
@@ -1531,37 +1567,41 @@ function renderAdminCalendar() {
   for (let day = 1; day <= totalDays; day++) {
     const dateIso = toIsoDate(new Date(adminCal.year, adminCal.month, day));
     const isPast = dateIso < todayIso;
+    const entries = getDayEntries(dateIso);
 
     const cell = document.createElement('div');
     cell.className = `admin-cal-day${isPast ? ' past' : ''}${dateIso === todayIso ? ' today' : ''}`;
     cell.innerHTML = `<span class="admin-cal-date">${day}</span>`;
 
-    ['day', 'evening'].forEach(slotKey => {
+    entries.forEach(entry => {
       const chip = document.createElement('button');
       chip.type = 'button';
-      const booking = findOnlineBooking(dateIso, slotKey);
-      const lock = !booking && findLock(dateIso, slotKey);
+      const time = `${shortClock(entry.start)}–${shortClock(entry.end)}`;
 
-      if (booking) {
+      if (entry.kind === 'booking') {
         chip.className = 'slot-chip booked';
-        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · ${escapeHtml(booking.name || 'Booked')}</span>`;
-        chip.title = `${SLOT_LABELS[slotKey]}: booked on the website by ${booking.name} (${booking.id})`;
-        chip.addEventListener('click', () => openBookingDetailModal(booking));
-      } else if (lock) {
-        chip.className = 'slot-chip locked';
-        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · ${escapeHtml(lock.reason || 'Locked')}</span>`;
-        chip.title = `${SLOT_LABELS[slotKey]}: locked (${lock.reason}${lock.note ? ' · ' + lock.note : ''})`;
-        if (isPast) chip.disabled = true;
-        else chip.addEventListener('click', () => unlockSlot(lock));
+        chip.innerHTML = `${time}<span class="chip-detail"> · ${escapeHtml(entry.record.name || 'Booked')}</span>`;
+        chip.title = `${formatRange(entry.start, entry.end)}: booked on the website by ${entry.record.name} (${entry.record.id})`;
+        chip.addEventListener('click', (e) => { e.stopPropagation(); openBookingDetailModal(entry.record); });
       } else {
-        chip.className = 'slot-chip open';
-        chip.innerHTML = `${SLOT_SHORT[slotKey]}<span class="chip-detail"> · Open</span>`;
-        chip.title = `${SLOT_LABELS[slotKey]}: open. Click to lock for an offline booking.`;
+        chip.className = 'slot-chip locked';
+        chip.innerHTML = `${time}<span class="chip-detail"> · ${escapeHtml(entry.record.reason || 'Blocked')}</span>`;
+        chip.title = `${formatRange(entry.start, entry.end)}: ${entry.record.reason || 'Blocked'}${entry.record.note ? ' · ' + entry.record.note : ''}`;
         if (isPast) chip.disabled = true;
-        else chip.addEventListener('click', () => prefillLockForm(dateIso, slotKey));
+        else chip.addEventListener('click', (e) => { e.stopPropagation(); unlockSlot(entry.record); });
       }
       cell.appendChild(chip);
     });
+
+    if (!isPast) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'slot-chip add-block';
+      add.textContent = entries.length ? '+ Block' : 'Open · + Block';
+      add.title = 'Block time on this day for an offline booking';
+      add.addEventListener('click', () => prefillLockForm(dateIso));
+      cell.appendChild(add);
+    }
 
     grid.appendChild(cell);
   }
@@ -1576,25 +1616,26 @@ function renderBlockedDatesList() {
   const todayIso = toIsoDate(new Date());
   const upcoming = state.blockedDates
     .filter(l => l.date >= todayIso)
-    .sort((a, b) => a.date.localeCompare(b.date) || String(a.slot_key).localeCompare(String(b.slot_key)));
+    .sort((a, b) => a.date.localeCompare(b.date) || lockRange(a).start - lockRange(b).start);
 
   if (upcoming.length === 0) {
-    elements.lockedDatesList.innerHTML = '<p class="text-muted" style="padding: 12px 0;">No upcoming locks. Online bookings block their slot automatically.</p>';
+    elements.lockedDatesList.innerHTML = '<p class="text-muted" style="padding: 12px 0;">Nothing blocked. Website bookings block their own time automatically.</p>';
     return;
   }
 
   upcoming.forEach(lock => {
+    const range = lockRange(lock);
     const row = document.createElement('div');
     row.className = 'locked-date-item';
     row.innerHTML = `
       <div class="locked-date-info">
         <span class="date-badge">${escapeHtml(formatLockDate(lock.date))}</span>
         <span class="reason-text">
-          ${escapeHtml(lock.slot_key ? SLOT_LABELS[lock.slot_key] : 'Full day')} · ${escapeHtml(lock.reason || 'Locked')}
+          ${escapeHtml(formatRange(range.start, range.end))} · ${escapeHtml(lock.reason || 'Blocked')}
           ${lock.note ? `<span class="lock-note">${escapeHtml(lock.note)}</span>` : ''}
         </span>
       </div>
-      <button type="button" class="btn-unlock">Unlock</button>
+      <button type="button" class="btn-unlock">Unblock</button>
     `;
     row.querySelector('.btn-unlock').addEventListener('click', () => unlockSlot(lock));
     elements.lockedDatesList.appendChild(row);

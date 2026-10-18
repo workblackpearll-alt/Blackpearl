@@ -414,3 +414,38 @@ ON public.admin_activity FOR UPDATE
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
+
+-- ========================================================
+-- MULTIPLE BOOKINGS PER SLOT (same as supabase_migration_multibooking.sql)
+-- ========================================================
+-- 14. Drop the old "one paid booking per slot" rule
+DROP INDEX IF EXISTS public.idx_holds_one_paid_booking_per_slot;
+
+-- 15. Database guard: two paid bookings on the same date can never overlap
+--    or sit closer than 1 hour. Each booking occupies [start, end + 1 hour).
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA extensions;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'holds_paid_no_overlap') THEN
+    ALTER TABLE public.holds
+      ADD CONSTRAINT holds_paid_no_overlap
+      EXCLUDE USING gist (
+        date_iso WITH =,
+        int4range(start_hour, start_hour + duration_hours + 1) WITH &&
+      )
+      WHERE (
+        status IN ('Held (Deposit Paid)', 'Confirmed', 'Completed')
+        AND start_hour IS NOT NULL
+        AND duration_hours IS NOT NULL
+      );
+  END IF;
+END $$;
+
+-- 16. Offline locks can cover specific hours (NULL = whole slot / whole day as before)
+ALTER TABLE public.blocked_dates ADD COLUMN IF NOT EXISTS start_hour INTEGER;
+ALTER TABLE public.blocked_dates ADD COLUMN IF NOT EXISTS end_hour INTEGER;
+
+-- Several offline bookings can now share a slot, so drop one-lock-per-slot
+DROP INDEX IF EXISTS public.idx_blocked_dates_date_slot;
+CREATE INDEX IF NOT EXISTS idx_blocked_dates_date ON public.blocked_dates(date);

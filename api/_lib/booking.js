@@ -55,13 +55,14 @@ export async function markHoldPaid(orderId, paymentId) {
     const { data: updated, error: updateError } = await db
       .from('holds').update(update).eq('id', hold.id).select().single();
 
-    if (updateError && updateError.code === '23505') {
-      // Someone else already paid for this slot: keep the money trail, flag for refund
+    // 23P01: overlaps another paid booking (database guard); 23505: legacy unique index
+    if (updateError && (updateError.code === '23P01' || updateError.code === '23505')) {
+      // Someone else already paid for this time: keep the money trail, flag for refund
       const { data: conflicted } = await db.from('holds').update({
         status: STATUS.conflict,
         payment_id: paymentId,
         paid_at: new Date().toISOString(),
-        failure_reason: 'Slot was already booked by another guest. Refund the advance.',
+        failure_reason: 'This time was already booked by another guest (bookings need a 1-hour gap). Refund the advance.',
         updated_at: new Date().toISOString()
       }).eq('id', hold.id).select().single();
       return conflicted;

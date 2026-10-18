@@ -217,14 +217,17 @@ export async function fetchVoyageBriefs() {
    -------------------------------------------------------- */
 
 /**
- * Locks a date on the booking calendar. slotKey 'day' / 'evening' locks one
- * slot; null locks the full day. Used for offline bookings & maintenance.
+ * Blocks time on the booking calendar for offline bookings & maintenance.
+ * startHour/endHour (24h) block specific hours; without them, slotKey
+ * 'day' / 'evening' blocks that whole slot and null blocks the full day.
  */
-export async function saveBlockedDate(dateIso, reason = 'Maintenance', { slotKey = null, note = '' } = {}) {
+export async function saveBlockedDate(dateIso, reason = 'Maintenance', { slotKey = null, note = '', startHour = null, endHour = null } = {}) {
   const payload = {
     date: dateIso,
     reason,
     slot_key: slotKey,
+    start_hour: startHour,
+    end_hour: endHour,
     note: note || null,
     created_at: new Date().toISOString()
   };

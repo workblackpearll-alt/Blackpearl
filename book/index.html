@@ -560,11 +560,7 @@
       color: #E5E7EB;
     }
 
-    @media (max-width: 600px) {
-      .duration-selector-wrap {
-        grid-template-columns: 1fr;
-      }
-    }
+
 
     .start-time-hint {
       margin: 8px 0 0;
@@ -1485,6 +1481,281 @@
     .call-promise-box {
       border-radius: 0 !important;
     }
+
+    /* ========================================================
+       SIMPLE 3-STEP FLOW: larger type, exact time buttons
+       ======================================================== */
+    .booking-page-hero {
+      margin-bottom: 28px;
+    }
+
+    .booking-page-sub {
+      font-size: 16px;
+      color: #D1D5DB;
+    }
+
+    .booking-progress-tracker {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .progress-step-pill {
+      justify-content: center;
+      padding: 12px 10px;
+    }
+
+    .progress-step-pill .progress-step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .booking-question {
+      font-family: var(--font-heading, "Cormorant Garamond", serif);
+      font-size: 30px;
+      font-weight: 500;
+      color: #FFFFFF;
+      margin: 0 0 20px;
+      line-height: 1.2;
+    }
+
+    .booking-subquestion {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #D1D5DB;
+      margin: 28px 0 12px;
+    }
+
+    .booking-question + .booking-subquestion {
+      margin-top: 0;
+    }
+
+    .event-choice-name {
+      font-size: 15px;
+    }
+
+    .duration-box {
+      padding: 16px 12px;
+    }
+
+    .duration-hours {
+      font-size: 17px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .duration-plan {
+      font-size: 12.5px;
+      color: #B8BCC6;
+    }
+
+    .calendar-wrapper {
+      margin-bottom: 0;
+    }
+
+    /* Exact available times */
+    .time-options {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .time-group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .time-group-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .time-group-window {
+      font-size: 13px;
+      font-weight: 400;
+      color: #9CA3AF;
+      margin-left: 6px;
+    }
+
+    .time-group-price {
+      font-size: 16px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .time-chip-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px;
+    }
+
+    .time-chip {
+      background: #060709;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 14.5px;
+      padding: 12px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .time-chip:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .time-chip.selected {
+      background: #FFFFFF;
+      color: #08090C;
+      border-color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .time-empty {
+      font-size: 14px;
+      color: #9CA3AF;
+    }
+
+    .time-note {
+      font-size: 13px;
+      color: #9CA3AF;
+      margin: 0;
+    }
+
+    .form-label {
+      font-size: 13px;
+      color: #D1D5DB;
+    }
+
+    .form-input,
+    .form-textarea {
+      font-size: 15px;
+    }
+
+    /* Summary */
+    .summary-card-title {
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+
+    .summary-item-label,
+    .summary-item-value {
+      font-size: 14.5px;
+    }
+
+    .summary-item-value {
+      text-align: right;
+    }
+
+    .summary-price-block {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      margin-top: 14px;
+      padding-top: 14px;
+      margin-bottom: 16px;
+    }
+
+    .summary-pay-today {
+      margin-top: 8px;
+      font-size: 15px;
+      color: #FFFFFF;
+    }
+
+    .summary-pay-today strong {
+      font-size: 22px;
+    }
+
+    .summary-small {
+      font-size: 12.5px;
+      color: #9CA3AF;
+      margin: 8px 0 0;
+      line-height: 1.5;
+    }
+
+    .summary-secure {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 680px) {
+      .booking-progress-tracker {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .progress-step-pill {
+        padding: 10px 6px;
+        gap: 6px;
+      }
+
+      .progress-step-pill .progress-step-title {
+        font-size: 12.5px;
+      }
+
+      .booking-question {
+        font-size: 25px;
+      }
+
+      .time-chip-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .time-chip {
+        font-size: 13.5px;
+        padding: 12px 6px;
+      }
+    }
+
+    /* Compact calendar: fixed-height day cells instead of big squares */
+    .cal-day-cell {
+      aspect-ratio: auto;
+      height: 46px;
+      font-size: 14.5px;
+    }
+
+    .time-chip-list {
+      grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    }
+
+    .time-chip {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 680px) {
+      .cal-day-cell {
+        height: 40px;
+      }
+
+      /* Durations stay side by side on phones */
+      .duration-selector-wrap {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .duration-box {
+        padding: 12px 6px;
+      }
+
+      .duration-hours {
+        font-size: 15px;
+      }
+
+      .duration-plan {
+        font-size: 11px;
+      }
+
+      .time-chip-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
   </style>
 </head>
 <body class="booking-page-body">
@@ -1546,454 +1817,215 @@
       
       <!-- HERO HEADING -->
       <div class="booking-page-hero">
-        <span class="booking-eyebrow">ONE CELEBRATION AT A TIME · GATEWAY OF INDIA</span>
-        <h1 class="booking-page-title" id="pageHeroTitle">Reserve Your Private Charter</h1>
-        <p class="booking-page-sub">
-          Lock Lady Alice exclusively for your date with a ₹5,000 token deposit. Our charter team coordinates all bespoke details, route, and decor with you directly.
-        </p>
+        <h1 class="booking-page-title" id="pageHeroTitle">Book Lady Alice</h1>
+        <p class="booking-page-sub">Pay ₹5,000 to hold your date. Our team calls you to plan the rest.</p>
       </div>
 
-      <!-- MULTI-STEP PROGRESS TRACKER -->
+      <!-- PROGRESS: 3 STEPS -->
       <div class="booking-progress-tracker" id="bookingProgressTracker">
         <div class="progress-step-pill active" data-step="1" id="progPill1">
-          <span class="progress-step-num">01</span>
-          <div class="progress-step-text">
-            <span class="progress-step-sub">Step 1</span>
-            <span class="progress-step-title">Celebration</span>
-          </div>
+          <span class="progress-step-num">1</span>
+          <span class="progress-step-title">Occasion</span>
         </div>
         <div class="progress-step-pill" data-step="2" id="progPill2">
-          <span class="progress-step-num">02</span>
-          <div class="progress-step-text">
-            <span class="progress-step-sub">Step 2</span>
-            <span class="progress-step-title">Slot & Duration</span>
-          </div>
+          <span class="progress-step-num">2</span>
+          <span class="progress-step-title">Date & time</span>
         </div>
         <div class="progress-step-pill" data-step="3" id="progPill3">
-          <span class="progress-step-num">03</span>
-          <div class="progress-step-text">
-            <span class="progress-step-sub">Step 3</span>
-            <span class="progress-step-title">Date & Time</span>
-          </div>
-        </div>
-        <div class="progress-step-pill" data-step="4" id="progPill4">
-          <span class="progress-step-num">04</span>
-          <div class="progress-step-text">
-            <span class="progress-step-sub">Step 4</span>
-            <span class="progress-step-title">Contact & Lock</span>
-          </div>
+          <span class="progress-step-num">3</span>
+          <span class="progress-step-title">Your details</span>
         </div>
       </div>
 
       <!-- 2-COLUMN BOOKING WORKSPACE -->
       <div class="booking-layout-grid" id="bookingLayoutGrid">
-        
-        <!-- LEFT COLUMN: MULTI-STEP SUBPAGE FORM -->
+
         <div class="booking-form-col">
-          
-          <!-- SUBPAGE STEP 1: EVENT / OCCASION SELECTION -->
+
+          <!-- STEP 1: OCCASION -->
           <div class="booking-step-panel active" id="stepPanel1">
             <div class="booking-card">
-              <h2 class="booking-card-title">
-                <span class="card-step-num">1</span>
-                <span>Celebration & Event Type</span>
-              </h2>
-              <p class="booking-card-desc">Select your occasion or choose an exclusive private event charter.</p>
+              <h2 class="booking-question">What are you celebrating?</h2>
 
-              <!-- FEATURED: PRIVATE EVENT / BESPOKE BUYOUT -->
-              <label class="private-event-featured" id="privateEventFeaturedCard">
-                <input type="radio" name="bookingOccasion" value="Private Event">
-                <div class="private-featured-left">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" style="color: #FFFFFF; flex-shrink: 0;"><polygon points="12 2 22 12 12 22 2 12"/></svg>
-                  <div>
-                    <div class="private-featured-title">Private Event / Custom Charter</div>
-                    <div class="private-featured-sub">Exclusive vessel buyout tailored for your private gathering, VIP party, or celebration.</div>
-                  </div>
-                </div>
-                <span class="private-featured-badge">Bespoke</span>
-              </label>
-
-              <!-- Optional Custom Name for Private Event -->
-              <div class="custom-private-input-wrap" id="customPrivateInputWrap">
-                <div class="form-group">
-                  <label for="customEventNameInput" class="form-label">Private Event Name / Concept (Optional)</label>
-                  <input type="text" id="customEventNameInput" class="form-input" placeholder="e.g. Mehta Family Private Buyout, Sunset Cocktail Lounge, VIP Brand Offsite">
-                </div>
+              <div class="events-picker-grid">
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Proposals" checked><div class="event-choice-pill"><span class="event-choice-name">Sunset Proposal</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Birthday parties"><div class="event-choice-pill"><span class="event-choice-name">Birthday</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Engagements"><div class="event-choice-pill"><span class="event-choice-name">Engagement</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Anniversaries & private dinners"><div class="event-choice-pill"><span class="event-choice-name">Anniversary & Dinner</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Private parties"><div class="event-choice-pill"><span class="event-choice-name">Cocktail & DJ Night</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Corporate events"><div class="event-choice-pill"><span class="event-choice-name">Corporate</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Bachelor & bachelorette nights"><div class="event-choice-pill"><span class="event-choice-name">Bachelorette</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Pre-wedding & photo shoots"><div class="event-choice-pill"><span class="event-choice-name">Pre-Wedding Shoot</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Coastal sailing cruises"><div class="event-choice-pill"><span class="event-choice-name">Sailing Cruise</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Sunrise yoga and wellness"><div class="event-choice-pill"><span class="event-choice-name">Sunrise Yoga</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Festive nights"><div class="event-choice-pill"><span class="event-choice-name">Festive Night</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Family celebrations"><div class="event-choice-pill"><span class="event-choice-name">Family Celebration</span></div></label>
+                <label class="event-choice-label"><input type="radio" name="bookingOccasion" value="Private Event"><div class="event-choice-pill"><span class="event-choice-name">Something else</span></div></label>
               </div>
 
-              <!-- CURATED OCCASION CHOICES -->
-              <div class="events-picker-grid">
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Proposals" checked>
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Sunset Proposal</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Coastal sailing cruises">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Coastal Sailing Cruise</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Birthday parties">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Milestone Birthday</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Engagements">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Ring Ceremony / Engagement</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Anniversaries & private dinners">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Anniversary & Dinner</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Private parties">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Cocktail & DJ Night</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Corporate events">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Corporate Offsite</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Bachelor & bachelorette nights">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Bachelorette Send-Off</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Pre-wedding & photo shoots">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Pre-Wedding Shoot</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Sunrise yoga and wellness">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Sunrise Yoga & Wellness</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Festive nights">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Festive Night</span>
-                  </div>
-                </label>
-
-                <label class="event-choice-label">
-                  <input type="radio" name="bookingOccasion" value="Family celebrations">
-                  <div class="event-choice-pill">
-                    <span class="event-choice-name">Family Celebration</span>
-                  </div>
-                </label>
+              <!-- Shown for "Something else" -->
+              <div class="custom-private-input-wrap" id="customPrivateInputWrap">
+                <div class="form-group">
+                  <label for="customEventNameInput" class="form-label">What's the occasion? (optional)</label>
+                  <input type="text" id="customEventNameInput" class="form-input" placeholder="e.g. Company offsite, family reunion">
+                </div>
               </div>
 
               <div class="step-actions-footer">
-                <button type="button" class="step-btn-next" data-next-step="2">
-                  <span>Continue to Slot & Duration →</span>
-                </button>
+                <span></span>
+                <button type="button" class="step-btn-next" data-next-step="2">Continue →</button>
               </div>
             </div>
           </div>
 
-          <!-- SUBPAGE STEP 2: CHARTER SLOT & DURATION -->
+          <!-- STEP 2: DATE & TIME -->
           <div class="booking-step-panel" id="stepPanel2">
             <div class="booking-card">
-              <h2 class="booking-card-title">
-                <span class="card-step-num">2</span>
-                <span>Charter Slot & Duration</span>
-              </h2>
-              <p class="booking-card-desc">Choose a day or evening slot, then how long you would like on board. Every charter includes time sailing and time at anchor.</p>
+              <h2 class="booking-question">When would you like to sail?</h2>
 
-              <div class="voyage-mode-wrap">
-                <div class="voyage-mode-selector">
-                  <label class="voyage-mode-option">
-                    <input type="radio" name="charterSlot" value="day">
-                    <div class="voyage-mode-card">
-                      <div class="mode-card-header">
-                        <span class="mode-name">Day Slot</span>
-                        <span class="mode-badge">from ₹1,15,000</span>
-                      </div>
-                      <p class="mode-desc">6:00 am – 2:00 pm · Sunrise, brunch and daylight harbour views.</p>
-                    </div>
-                  </label>
-
-                  <label class="voyage-mode-option">
-                    <input type="radio" name="charterSlot" value="evening" checked>
-                    <div class="voyage-mode-card">
-                      <div class="mode-card-header">
-                        <span class="mode-name">Evening Slot</span>
-                        <span class="mode-badge highlight">from ₹1,95,000</span>
-                      </div>
-                      <p class="mode-desc">2:00 pm – 11:00 pm · Golden hour, sunset and the city lights after dark.</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="duration-selector-wrap" style="margin-top: 18px;">
+              <h3 class="booking-subquestion">How long?</h3>
+              <div class="duration-selector-wrap">
                 <label class="duration-option">
                   <input type="radio" name="voyageDuration" value="3" checked>
                   <div class="duration-box">
                     <span class="duration-hours">3 hours</span>
-                    <span class="duration-price" id="durationPrice3">₹1,95,000</span>
-                    <span class="duration-plan" id="durationPlan3">1 hr sailing · 2 hrs at anchor</span>
+                    <span class="duration-plan">1 hr sailing · 2 hrs at anchor</span>
                   </div>
                 </label>
-
                 <label class="duration-option">
                   <input type="radio" name="voyageDuration" value="5">
-                  <div class="duration-box featured">
-                    <span class="duration-tag">Popular</span>
+                  <div class="duration-box">
                     <span class="duration-hours">5 hours</span>
-                    <span class="duration-price" id="durationPrice5">₹3,04,000</span>
-                    <span class="duration-plan" id="durationPlan5">1.5 hrs sailing · 3.5 hrs at anchor</span>
+                    <span class="duration-plan">1.5 hrs sailing · 3.5 hrs at anchor</span>
                   </div>
                 </label>
-
                 <label class="duration-option">
                   <input type="radio" name="voyageDuration" value="6">
                   <div class="duration-box">
                     <span class="duration-hours">6 hours</span>
-                    <span class="duration-price" id="durationPrice6">₹3,45,000</span>
-                    <span class="duration-plan" id="durationPlan6">3 hrs sailing · 3 hrs at anchor</span>
+                    <span class="duration-plan">3 hrs sailing · 3 hrs at anchor</span>
                   </div>
                 </label>
               </div>
 
-              <div class="step-actions-footer">
-                <button type="button" class="step-btn-prev" data-prev-step="1">
-                  <span>← Back to Celebration</span>
-                </button>
-                <button type="button" class="step-btn-next" data-next-step="3">
-                  <span>Continue to Date & Time →</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- SUBPAGE STEP 3: DATE & START TIME -->
-          <div class="booking-step-panel" id="stepPanel3">
-            <div class="booking-card">
-              <h2 class="booking-card-title">
-                <span class="card-step-num">3</span>
-                <span>Select Date & Start Time</span>
-              </h2>
-              <p class="booking-card-desc">Dates already reserved for your chosen slot are greyed out. Pick an open date, then your start time.</p>
-
+              <h3 class="booking-subquestion">Pick a date</h3>
               <div class="calendar-wrapper">
                 <div class="calendar-month-header">
                   <button class="month-nav-btn" id="prevMonthBtn" aria-label="Previous month" type="button">‹</button>
-                  <h3 class="current-month-label" id="currentMonthLabel">November 2026</h3>
+                  <h3 class="current-month-label" id="currentMonthLabel">Month</h3>
                   <button class="month-nav-btn" id="nextMonthBtn" aria-label="Next month" type="button">›</button>
                 </div>
-
-                <!-- Legend -->
                 <div class="calendar-legend">
                   <span class="legend-item"><span class="legend-dot dot-free"></span> Open</span>
-                  <span class="legend-item"><span class="legend-dot dot-booked"></span> Reserved</span>
+                  <span class="legend-item"><span class="legend-dot dot-filling"></span> Some times left</span>
+                  <span class="legend-item"><span class="legend-dot dot-booked"></span> Full</span>
                 </div>
-
-                <!-- Day Headers -->
                 <div class="calendar-days-row">
                   <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
                 </div>
-
-                <!-- Dynamic Days Grid -->
                 <div class="calendar-grid" id="calendarDaysGrid"></div>
-
-                <!-- Selected Date Banner -->
-                <div class="selected-date-status-box" id="selectedDateStatusBox">
-                  <div class="status-date-info">
-                    <h4 id="statusDateTitle">Choose a date</h4>
-                    <p id="statusDateSlotsCount">Open dates are shown for your selected slot.</p>
-                  </div>
-                </div>
-
-                <!-- Start Time (within the chosen slot) -->
-                <div class="inline-slots-container">
-                  <label class="slots-inline-title" for="startTimeSelect">Preferred Start Time</label>
-                  <select id="startTimeSelect" class="form-input"></select>
-                  <p class="start-time-hint" id="startTimeHint"></p>
-                </div>
               </div>
 
+              <h3 class="booking-subquestion" id="timeQuestion">Pick a time</h3>
+              <div class="time-options" id="timeOptions" aria-live="polite"></div>
+
               <div class="step-actions-footer">
-                <button type="button" class="step-btn-prev" data-prev-step="2">
-                  <span>← Back to Slot & Duration</span>
-                </button>
-                <button type="button" class="step-btn-next" data-next-step="4">
-                  <span>Continue to Guest Details →</span>
-                </button>
+                <button type="button" class="step-btn-prev" data-prev-step="1">← Back</button>
+                <button type="button" class="step-btn-next" data-next-step="3">Continue →</button>
               </div>
             </div>
           </div>
 
-          <!-- SUBPAGE STEP 4: GUEST DETAILS & FINAL REVIEW -->
-          <div class="booking-step-panel" id="stepPanel4">
+          <!-- STEP 3: YOUR DETAILS -->
+          <div class="booking-step-panel" id="stepPanel3">
             <div class="booking-card">
-              <h2 class="booking-card-title">
-                <span class="card-step-num">4</span>
-                <span>Guest Details & Reservation Lock</span>
-              </h2>
-              <p class="booking-card-desc">Your contact details for receipt and planning consultation.</p>
-
-              <!-- Quick Verification Overview of choices -->
-              <div class="step-review-overview">
-                <div class="step-review-grid">
-                  <div class="step-review-item">
-                    <span class="step-review-label">Charter Occasion</span>
-                    <span class="step-review-val" id="revStepOccasion">Sunset Proposal</span>
-                  </div>
-                  <div class="step-review-item">
-                    <span class="step-review-label">Selected Date</span>
-                    <span class="step-review-val" id="revStepDate">—</span>
-                  </div>
-                  <div class="step-review-item">
-                    <span class="step-review-label">Time & Slot</span>
-                    <span class="step-review-val" id="revStepSlot">Evening Slot · 2:00 pm – 5:00 pm</span>
-                  </div>
-                  <div class="step-review-item">
-                    <span class="step-review-label">Itinerary</span>
-                    <span class="step-review-val" id="revStepMode">1 hr sailing · 2 hrs at anchor</span>
-                  </div>
-                </div>
-              </div>
+              <h2 class="booking-question">Your details</h2>
 
               <form id="bookPageForm" class="guest-form" onsubmit="return false;">
                 <div class="form-grid-row">
                   <div class="form-group">
-                    <label for="bookGuestName" class="form-label">Full Name *</label>
-                    <input type="text" id="bookGuestName" class="form-input" placeholder="e.g. Arjun Mehta" required>
+                    <label for="bookGuestName" class="form-label">Full name</label>
+                    <input type="text" id="bookGuestName" class="form-input" placeholder="e.g. Arjun Mehta" autocomplete="name" required>
                   </div>
-
                   <div class="form-group">
-                    <label for="bookGuestPhone" class="form-label">WhatsApp Mobile Number *</label>
-                    <input type="tel" id="bookGuestPhone" class="form-input" placeholder="+91 98200 00000" required>
+                    <label for="bookGuestPhone" class="form-label">WhatsApp number</label>
+                    <input type="tel" id="bookGuestPhone" class="form-input" placeholder="+91 XXXXX XXXXX" autocomplete="tel" required>
                   </div>
                 </div>
 
                 <div class="form-grid-row">
                   <div class="form-group">
-                    <label for="bookGuestEmail" class="form-label">Email Address (for official receipt) *</label>
-                    <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" required>
+                    <label for="bookGuestEmail" class="form-label">Email (for your QR pass)</label>
+                    <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" autocomplete="email" required>
                   </div>
-
                   <div class="form-group">
-                    <label for="bookGuestCount" class="form-label">Expected Number of Guests (1–100) *</label>
+                    <label for="bookGuestCount" class="form-label">Number of guests</label>
                     <input type="number" id="bookGuestCount" class="form-input" min="1" max="100" value="2" required>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label for="bookGuestNotes" class="form-label">Special Requests / Surprise Notes (Optional)</label>
-                  <textarea id="bookGuestNotes" class="form-textarea" rows="2" placeholder="e.g. Surprise celebration, specific music, champagne or cake requirement..."></textarea>
+                  <label for="bookGuestNotes" class="form-label">Anything we should know? (optional)</label>
+                  <textarea id="bookGuestNotes" class="form-textarea" rows="2" placeholder="Surprise, music, cake, decor..."></textarea>
                 </div>
 
                 <div class="form-error-msg" id="formErrorMsg"></div>
               </form>
 
               <div class="step-actions-footer">
-                <button type="button" class="step-btn-prev" data-prev-step="3">
-                  <span>← Back to Date & Slot</span>
-                </button>
+                <button type="button" class="step-btn-prev" data-prev-step="2">← Back</button>
+                <span></span>
               </div>
             </div>
           </div>
 
         </div>
 
-        <!-- RIGHT COLUMN: STICKY RESERVATION SUMMARY & RAZORPAY PAYMENT -->
+        <!-- SUMMARY + PAYMENT -->
         <div class="booking-summary-col">
           <div class="booking-summary-sticky">
             <div class="summary-card">
-              <div class="summary-card-header">
-                <h3 class="summary-card-title">Lady Alice · Summary</h3>
-                <span class="summary-card-subtitle">Apollo Bandar, Gateway of India</span>
-              </div>
+              <h3 class="summary-card-title">Your booking</h3>
 
               <div class="summary-details-list">
                 <div class="summary-item-row">
-                  <span class="summary-item-label">Celebration</span>
-                  <span class="summary-item-value" id="sideSummaryOccasion">Sunset Proposal</span>
+                  <span class="summary-item-label">Occasion</span>
+                  <span class="summary-item-value" id="sideSummaryOccasion">—</span>
                 </div>
                 <div class="summary-item-row">
-                  <span class="summary-item-label">Charter Date</span>
-                  <span class="summary-item-value" id="sideSummaryDate">Select a date</span>
+                  <span class="summary-item-label">Date</span>
+                  <span class="summary-item-value" id="sideSummaryDate">—</span>
                 </div>
                 <div class="summary-item-row">
-                  <span class="summary-item-label">Time & Slot</span>
-                  <span class="summary-item-value" id="sideSummarySlot">Evening Slot · 2:00 pm – 5:00 pm</span>
+                  <span class="summary-item-label">Time</span>
+                  <span class="summary-item-value" id="sideSummarySlot">—</span>
                 </div>
                 <div class="summary-item-row">
                   <span class="summary-item-label">Duration</span>
                   <span class="summary-item-value" id="sideSummaryDuration">3 hours</span>
                 </div>
                 <div class="summary-item-row">
-                  <span class="summary-item-label">Itinerary</span>
-                  <span class="summary-item-value" id="sideSummaryMode">1 hr sailing · 2 hrs at anchor</span>
+                  <span class="summary-item-label">Guests</span>
+                  <span class="summary-item-value" id="sideSummaryGuests">2</span>
                 </div>
-                <div class="summary-item-row">
-                  <span class="summary-item-label">Expected Capacity</span>
-                  <span class="summary-item-value" id="sideSummaryGuests">2 guests</span>
-                </div>
+              </div>
 
-                <div class="summary-divider-line"></div>
-
+              <div class="summary-price-block">
                 <div class="summary-quote-row">
-                  <span class="summary-item-label">Charter Price</span>
-                  <span class="quote-total-val" id="sideSummaryQuoteTotal">₹1,95,000</span>
+                  <span class="summary-item-label">Charter price</span>
+                  <span class="quote-total-val" id="sideSummaryQuoteTotal">—</span>
                 </div>
-              </div>
-
-              <!-- DEPOSIT HIGHLIGHT -->
-              <div class="deposit-highlight-row">
-                <span class="deposit-highlight-label">Payable Today to Lock Date</span>
-                <span class="deposit-highlight-amount">₹5,000</span>
-              </div>
-
-              <p class="deposit-explanation-text">
-                Your ₹5,000 deposit locks Lady Alice exclusively for your date. The remaining charter balance is finalized directly with our team.
-              </p>
-
-              <!-- RAZORPAY TRUST BOX -->
-              <div class="razorpay-secure-box" style="margin-bottom: 18px; padding: 14px 16px;">
-                <div class="razorpay-header-row" style="margin-bottom: 6px; padding-bottom: 6px;">
-                  <div class="razorpay-logo-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="shield-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span class="rzp-badge-text">Powered by <strong>Razorpay</strong></span>
-                  </div>
-                  <span class="rzp-ssl-tag">100% Encrypted</span>
+                <div class="summary-quote-row summary-pay-today">
+                  <span>Pay today</span>
+                  <strong>₹5,000</strong>
                 </div>
-                <p class="rzp-methods-desc" style="font-size: 11.5px; margin: 0;">
-                  Supports <strong>UPI (GPay, PhonePe, Paytm, QR)</strong>, <strong>Credit/Debit Cards</strong> & <strong>Net Banking</strong>.
-                </p>
+                <p class="summary-small">The rest is settled with our team. Refundable within 48 hours.</p>
               </div>
 
-              <!-- ACTION BUTTON -->
               <button class="btn-pay-lock" id="btnPagePay5000">
-                <span id="btnPagePayText">Pay ₹5,000 via Razorpay to Lock Date</span>
+                <span id="btnPagePayText">Pay ₹5,000 to Book</span>
               </button>
+              <p class="summary-small summary-secure">Secure payment by Razorpay · UPI, cards, net banking</p>
             </div>
           </div>
         </div>
@@ -2057,7 +2089,7 @@
 
         <div class="call-promise-box">
           <p class="call-promise-text">
-            Our charter team will call you on <strong id="recPhone">+91 98200 00000</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
+            Our charter team will call you on <strong id="recPhone">+91 85912 06214</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
           </p>
         </div>
 
@@ -2065,7 +2097,7 @@
           <button class="btn-outline btn-block" id="btnRecAddToCal" type="button">
             Add to my calendar (.ics)
           </button>
-          <a href="https://wa.me/919820000000" target="_blank" rel="noopener" class="btn-pay-lock btn-block" id="btnRecChatWa" style="text-decoration: none;">
+          <a href="https://wa.me/918591206214" target="_blank" rel="noopener" class="btn-pay-lock btn-block" id="btnRecChatWa" style="text-decoration: none;">
             Chat with Our Team on WhatsApp
           </a>
           <a href="/" class="btn-text-subtle" style="margin-top: 8px;">
@@ -2088,7 +2120,7 @@
         <div class="footer-location-meta">
           <div><strong>Berth:</strong> Jetty No. 5, Gateway of India, Colaba, Mumbai 400001</div>
           <div><strong>Vessel:</strong> Lady Alice · MPA Regd. #IV-2041</div>
-          <div><strong>Charter Desk:</strong> +91 99300 00000 · 10 AM – 10 PM IST</div>
+          <div><strong>Charter Desk:</strong> +91 85912 06214 · 10 AM – 10 PM IST</div>
         </div>
         <p class="footer-tagline-motto">The sea, privately. · One ship. Your hundred.</p>
       </div>
@@ -2120,7 +2152,7 @@
           <span class="footer-card-eyebrow">Direct Consultation</span>
           <h4 class="footer-card-title">Need Custom Timings?</h4>
           <p class="footer-card-desc">Have a specific itinerary, multi-day shoot, or high-profile buyout? Our charter desk assists 7 days a week.</p>
-          <a href="https://wa.me/919820000000?text=Hello%20Black%20Pearl,%20I%20have%20a%20special%20charter%20enquiry." target="_blank" rel="noopener" class="footer-cta-btn">
+          <a href="https://wa.me/918591206214?text=Hello%20Black%20Pearl,%20I%20have%20a%20special%20charter%20enquiry." target="_blank" rel="noopener" class="footer-cta-btn">
             <span>WhatsApp Charter Desk</span>
           </a>
           <div class="footer-trust-notes">
@@ -2148,5 +2180,6 @@
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module" src="/book/book.js"></script>
+  <script type="module" src="/whatsapp-button.js"></script>
 </body>
 </html>

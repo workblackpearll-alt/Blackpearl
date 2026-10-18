@@ -9,7 +9,10 @@ import {
   getItineraryLabel,
   getSlotTimingLabel as slotTimingLabelFor,
   getStartHourOptions as startHourOptionsFor,
-  getCharterPrice
+  getCharterPrice,
+  isRangeFree,
+  formatRange,
+  TURNAROUND_GAP_HOURS
 } from '../shared/pricing.js';
 
 /* ========================================================
@@ -70,14 +73,13 @@ const bookState = {
   isPrivateEvent: false,
   selectedOccasion: 'Proposals',
   customEventName: '',
-  selectedSlot: 'evening', // 'day' or 'evening'
+  selectedSlot: null, // 'day' | 'evening', set by the chosen time
   selectedDuration: 3,
-  startHour: 14,
+  startHour: null, // 24h, set by the chosen time
   selectedDate: null,
   currentMonth: today.getMonth(),
   currentYear: today.getFullYear(),
-  blockedDates: [],
-  bookedSlots: {}, // { 'YYYY-MM-DD': Set(['day', 'evening']) }
+  occupied: {}, // { 'YYYY-MM-DD': [{ start, end }] } booked / locked hours (24h)
   guestDetails: {
     name: '',
     phone: '',
@@ -92,9 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initUrlParameters();
   initStepNavigation();
   initOccasionPicker();
-  initSlotAndDuration();
+  initDuration();
   initCalendar();
-  initStartTimePicker();
+  renderStartTimeOptions();
   initGuestForm();
   initRazorpayCheckout();
   initConfirmationActions();
@@ -135,45 +137,33 @@ function initMobileNav() {
 }
 
 /* ========================================================
-   0. MULTI-STEP SUBPAGE NAVIGATION & VALIDATION
+   0. STEPS: 1 Occasion · 2 Date & time · 3 Your details
    ======================================================== */
+const LAST_STEP = 3;
+
 function initStepNavigation() {
-  // Next step buttons
   document.querySelectorAll('[data-next-step]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetStep = parseInt(btn.getAttribute('data-next-step'), 10);
-      attemptGoToStep(targetStep);
-    });
+    btn.addEventListener('click', () => attemptGoToStep(parseInt(btn.getAttribute('data-next-step'), 10)));
   });
 
-  // Prev step buttons
   document.querySelectorAll('[data-prev-step]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetStep = parseInt(btn.getAttribute('data-prev-step'), 10);
-      goToStep(targetStep);
-    });
+    btn.addEventListener('click', () => goToStep(parseInt(btn.getAttribute('data-prev-step'), 10)));
   });
 
-  // Progress pill navigation (can go backwards freely, or forwards if current validated)
+  // Progress pills: go back freely, forward only if the current step is complete
   document.querySelectorAll('.progress-step-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       const step = parseInt(pill.getAttribute('data-step'), 10);
-      if (step < bookState.currentStep) {
-        goToStep(step);
-      } else if (step > bookState.currentStep) {
-        attemptGoToStep(step);
-      }
+      if (step < bookState.currentStep) goToStep(step);
+      else if (step > bookState.currentStep) attemptGoToStep(step);
     });
   });
 }
 
 function attemptGoToStep(targetStep) {
-  // Validate steps sequentially
   if (targetStep > bookState.currentStep) {
     for (let s = bookState.currentStep; s < targetStep; s++) {
-      if (!validateStep(s)) {
-        return false;
-      }
+      if (!validateStep(s)) return false;
     }
   }
   goToStep(targetStep);
@@ -181,160 +171,85 @@ function attemptGoToStep(targetStep) {
 }
 
 function validateStep(stepNum) {
-  if (stepNum === 1) {
-    if (!bookState.selectedOccasion) {
-      alert('Please select an occasion or private event to continue.');
-      return false;
-    }
-    return true;
+  if (stepNum === 1 && !bookState.selectedOccasion) {
+    alert('Please choose what you are celebrating.');
+    return false;
   }
-
   if (stepNum === 2) {
-    if (!charterSlots[bookState.selectedSlot] || !durationItinerary[bookState.selectedDuration]) {
-      alert('Please select a charter slot and duration.');
+    if (!bookState.selectedDate) {
+      alert('Please pick a date.');
       return false;
     }
-    return true;
+    if (!isTimeSelected()) {
+      alert('Please pick a time.');
+      return false;
+    }
   }
-
-  if (stepNum === 3) {
-    if (!bookState.selectedDate || !isDateAvailable(bookState.selectedDate)) {
-      alert('Please click and select an open date on the calendar.');
-      return false;
-    }
-    if (!getStartHourOptions().includes(bookState.startHour)) {
-      alert('Please choose a start time for your charter.');
-      return false;
-    }
-    return true;
-  }
-
   return true;
 }
 
 function goToStep(stepNum) {
-  if (stepNum < 1 || stepNum > 4) return;
+  if (stepNum < 1 || stepNum > LAST_STEP) return;
   bookState.currentStep = stepNum;
 
-  // Toggle step panels
-  document.querySelectorAll('.booking-step-panel').forEach(panel => {
-    panel.classList.remove('active');
-  });
-  const targetPanel = document.getElementById(`stepPanel${stepNum}`);
-  if (targetPanel) targetPanel.classList.add('active');
+  document.querySelectorAll('.booking-step-panel').forEach(panel => panel.classList.remove('active'));
+  document.getElementById(`stepPanel${stepNum}`)?.classList.add('active');
 
-  // Update progress tracker pills
   document.querySelectorAll('.progress-step-pill').forEach(pill => {
     const pStep = parseInt(pill.getAttribute('data-step'), 10);
-    pill.classList.remove('active', 'completed');
-    if (pStep === stepNum) {
-      pill.classList.add('active');
-    } else if (pStep < stepNum) {
-      pill.classList.add('completed');
-    }
+    pill.classList.toggle('active', pStep === stepNum);
+    pill.classList.toggle('completed', pStep < stepNum);
   });
 
-  // If entering step 4, refresh review overview block
-  if (stepNum === 4) {
-    updateStepReviewSummary();
-  }
-
-  // Smooth scroll container to top of form
-  const container = document.getElementById('bookingProgressTracker');
-  if (container) {
-    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-function updateStepReviewSummary() {
-  const occEl = document.getElementById('revStepOccasion');
-  const dateEl = document.getElementById('revStepDate');
-  const slotEl = document.getElementById('revStepSlot');
-  const modeEl = document.getElementById('revStepMode');
-
-  let displayOccasion = bookState.selectedOccasion;
-  if (bookState.isPrivateEvent && bookState.customEventName) {
-    displayOccasion = `Private Event (${bookState.customEventName})`;
-  } else if (bookState.isPrivateEvent) {
-    displayOccasion = 'Private Event / Custom Charter';
-  }
-
-  if (occEl) occEl.textContent = displayOccasion;
-  if (dateEl) dateEl.textContent = formatShortDate(bookState.selectedDate) || '—';
-  if (slotEl) slotEl.textContent = `${getSlotTimingLabel()} · ${bookState.selectedDuration} hrs`;
-  if (modeEl) modeEl.textContent = getItineraryLabel(bookState.selectedDuration);
+  document.getElementById('bookingProgressTracker')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 /* ========================================================
-   1. URL PARAMETER HANDLING & PRE-SELECTION
+   1. URL PARAMETERS & OCCASION
    ======================================================== */
 function initUrlParameters() {
   const params = new URLSearchParams(window.location.search);
   const occasionParam = params.get('occasion');
 
-  // Optional pre-selection from links, e.g. /book?slot=day&hours=5
-  const slotParam = (params.get('slot') || '').toLowerCase();
-  if (charterSlots[slotParam]) bookState.selectedSlot = slotParam;
+  // Optional pre-selection from links, e.g. /book?hours=5
   const hoursParam = parseInt(params.get('hours'), 10);
   if (durationItinerary[hoursParam]) bookState.selectedDuration = hoursParam;
-  bookState.startHour = charterSlots[bookState.selectedSlot].startHour;
 
-  if (occasionParam) {
-    const decoded = decodeURIComponent(occasionParam).trim();
-    const lower = decoded.toLowerCase();
-
-    if (lower === 'private event' || lower === 'private' || lower === 'bespoke' || lower === 'charter') {
-      selectPrivateEvent();
-      return;
-    }
-
-    // Check if matches curated occasion
-    const match = curatedOccasions.find(key => key.toLowerCase() === lower);
-
-    if (match) {
-      selectCuratedOccasion(match);
-    } else {
-      // Treat custom string as private event with custom title
-      selectPrivateEvent();
-      const customInput = document.getElementById('customEventNameInput');
-      if (customInput) {
-        customInput.value = decoded;
-        bookState.customEventName = decoded;
-      }
-    }
-  } else {
-    // Default: Sunset Proposal
+  if (!occasionParam) {
     selectCuratedOccasion('Proposals');
+    return;
   }
+
+  const decoded = decodeURIComponent(occasionParam).trim();
+  const lower = decoded.toLowerCase();
+  if (['private event', 'private', 'bespoke', 'charter'].includes(lower)) {
+    selectPrivateEvent();
+    return;
+  }
+
+  const match = curatedOccasions.find(key => key.toLowerCase() === lower);
+  if (match) {
+    selectCuratedOccasion(match);
+  } else {
+    // Unknown occasion name: treat as "Something else" with that name
+    selectPrivateEvent();
+    const customInput = document.getElementById('customEventNameInput');
+    if (customInput) customInput.value = decoded;
+    bookState.customEventName = decoded;
+  }
+}
+
+function setOccasionRadio(value) {
+  const radio = document.querySelector(`input[name="bookingOccasion"][value="${value}"]`);
+  if (radio) radio.checked = true;
 }
 
 function selectPrivateEvent() {
   bookState.isPrivateEvent = true;
   bookState.selectedOccasion = 'Private Event / Custom Charter';
   setPageBackground(privateEventBackground);
-
-  // Uncheck curated event radios
-  document.querySelectorAll('input[name="bookingOccasion"]').forEach(radio => {
-    radio.checked = radio.value === 'Private Event';
-  });
-
-  const featuredCard = document.getElementById('privateEventFeaturedCard');
-  if (featuredCard) {
-    featuredCard.classList.add('active');
-    const radio = featuredCard.querySelector('input[type="radio"]');
-    if (radio) radio.checked = true;
-  }
-
-  const customWrap = document.getElementById('customPrivateInputWrap');
-  if (customWrap) {
-    customWrap.classList.add('active');
-  }
-
-  const pageHeroTitle = document.getElementById('pageHeroTitle');
-  if (pageHeroTitle) {
-    pageHeroTitle.textContent = 'Reserve Private Vessel Buyout';
-  }
-
+  setOccasionRadio('Private Event');
+  document.getElementById('customPrivateInputWrap')?.classList.add('active');
   updateSummarySidebar();
 }
 
@@ -342,46 +257,21 @@ function selectCuratedOccasion(occasionName) {
   bookState.isPrivateEvent = false;
   bookState.selectedOccasion = occasionName;
   setPageBackground(occasionBackgrounds[occasionName]);
-
-  const featuredCard = document.getElementById('privateEventFeaturedCard');
-  if (featuredCard) {
-    featuredCard.classList.remove('active');
-    const privateRadio = featuredCard.querySelector('input[type="radio"]');
-    if (privateRadio) privateRadio.checked = false;
-  }
-
-  const customWrap = document.getElementById('customPrivateInputWrap');
-  if (customWrap) {
-    customWrap.classList.remove('active');
-  }
-
-  const radio = document.querySelector(`input[name="bookingOccasion"][value="${occasionName}"]`);
-  if (radio) {
-    radio.checked = true;
-  }
-
-  const pageHeroTitle = document.getElementById('pageHeroTitle');
-  if (pageHeroTitle) {
-    pageHeroTitle.textContent = 'Reserve Your Private Charter';
-  }
-
+  setOccasionRadio(occasionName);
+  document.getElementById('customPrivateInputWrap')?.classList.remove('active');
   updateSummarySidebar();
 }
 
-/* ========================================================
-   2. OCCASION PICKER & CUSTOM PRIVATE EVENT INPUT
-   ======================================================== */
-function initOccasionPicker() {
-  const featuredCard = document.getElementById('privateEventFeaturedCard');
-  const customInput = document.getElementById('customEventNameInput');
-
-  if (featuredCard) {
-    featuredCard.addEventListener('click', () => {
-      selectPrivateEvent();
-      if (customInput) customInput.focus();
-    });
+function getDisplayOccasion() {
+  if (!bookState.isPrivateEvent) {
+    const radio = document.querySelector(`input[name="bookingOccasion"][value="${bookState.selectedOccasion}"]`);
+    return radio?.closest('label')?.querySelector('.event-choice-name')?.textContent || bookState.selectedOccasion;
   }
+  return bookState.customEventName ? `Private Event: ${bookState.customEventName}` : 'Private / custom event';
+}
 
+function initOccasionPicker() {
+  const customInput = document.getElementById('customEventNameInput');
   if (customInput) {
     customInput.addEventListener('input', () => {
       bookState.customEventName = customInput.value.trim();
@@ -389,11 +279,11 @@ function initOccasionPicker() {
     });
   }
 
-  // Curated Radios
   document.querySelectorAll('input[name="bookingOccasion"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (radio.value === 'Private Event') {
         selectPrivateEvent();
+        customInput?.focus();
       } else {
         selectCuratedOccasion(radio.value);
       }
@@ -402,60 +292,29 @@ function initOccasionPicker() {
 }
 
 /* ========================================================
-   3. CHARTER SLOT, DURATION & PRICING
+   2. DURATION, DATE & EXACT AVAILABLE TIMES
    ======================================================== */
-function initSlotAndDuration() {
-  const slotRadio = document.querySelector(`input[name="charterSlot"][value="${bookState.selectedSlot}"]`);
-  if (slotRadio) slotRadio.checked = true;
-  const durationRadio = document.querySelector(`input[name="voyageDuration"][value="${bookState.selectedDuration}"]`);
-  if (durationRadio) durationRadio.checked = true;
+function initDuration() {
+  const radio = document.querySelector(`input[name="voyageDuration"][value="${bookState.selectedDuration}"]`);
+  if (radio) radio.checked = true;
 
-  document.querySelectorAll('input[name="charterSlot"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      bookState.selectedSlot = radio.value;
-      bookState.startHour = charterSlots[radio.value].startHour;
-      // A date open for the old slot may be taken for the new one
-      if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
-        bookState.selectedDate = null;
-      }
-      onScheduleChanged();
+  document.querySelectorAll('input[name="voyageDuration"]').forEach(r => {
+    r.addEventListener('change', () => {
+      bookState.selectedDuration = parseInt(r.value, 10) || 3;
+      // A longer charter may no longer fit: keep the date only if it still has a free time
+      if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) bookState.selectedDate = null;
+      clearTimeIfTaken();
+      renderCalendar();
+      renderStartTimeOptions();
+      updateSummarySidebar();
     });
   });
-
-  document.querySelectorAll('input[name="voyageDuration"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      bookState.selectedDuration = parseInt(radio.value, 10) || 3;
-      onScheduleChanged();
-    });
-  });
-
-  updatePriceCalculations();
-}
-
-function onScheduleChanged() {
-  updatePriceCalculations();
-  renderStartTimeOptions();
-  renderCalendar();
-  updateSummarySidebar();
 }
 
 function calculateCurrentTotal() {
-  return getCharterPrice(bookState.selectedSlot, bookState.selectedDuration);
+  return bookState.selectedSlot ? getCharterPrice(bookState.selectedSlot, bookState.selectedDuration) : null;
 }
 
-function updatePriceCalculations() {
-  const prices = charterSlots[bookState.selectedSlot].prices;
-  Object.keys(durationItinerary).forEach(d => {
-    const priceEl = document.getElementById(`durationPrice${d}`);
-    const planEl = document.getElementById(`durationPlan${d}`);
-    if (priceEl) priceEl.textContent = formatCurrency(prices[d]);
-    if (planEl) planEl.textContent = getItineraryLabel(Number(d));
-  });
-}
-
-/* ========================================================
-   4. CALENDAR, AVAILABILITY & START TIME
-   ======================================================== */
 function toIsoDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -472,50 +331,68 @@ function formatShortDate(iso) {
   return `${dayName}, ${d.getDate()} ${monthNames[d.getMonth()].substring(0, 3)} ${d.getFullYear()}`;
 }
 
-function getSlotWindowLabel(slotKey = bookState.selectedSlot) {
-  const slot = charterSlots[slotKey];
-  return `${slot.label} (${formatClock(slot.startHour)} – ${formatClock(slot.endHour)})`;
-}
-
 function getSlotTimingLabel() {
+  if (!bookState.selectedSlot || !Number.isFinite(bookState.startHour)) return '';
   return slotTimingLabelFor(bookState.selectedSlot, bookState.startHour, bookState.selectedDuration);
 }
 
-function isSlotTaken(dateIso, slotKey = bookState.selectedSlot) {
-  return Boolean(bookState.bookedSlots[dateIso] && bookState.bookedSlots[dateIso].has(slotKey));
+function getOccupied(dateIso) {
+  return bookState.occupied[dateIso] || [];
+}
+
+function isStartFree(dateIso, startHour, duration = bookState.selectedDuration) {
+  return isRangeFree(startHour, startHour + duration, getOccupied(dateIso));
+}
+
+// Every free start time on a date, across both slots: [{ slotKey, startHour }]
+function getFreeTimes(dateIso) {
+  const times = [];
+  Object.keys(charterSlots).forEach(slotKey => {
+    startHourOptionsFor(slotKey, bookState.selectedDuration).forEach(h => {
+      if (isStartFree(dateIso, h)) times.push({ slotKey, startHour: h });
+    });
+  });
+  return times;
+}
+
+function countAllTimes() {
+  return Object.keys(charterSlots).reduce((n, key) => n + startHourOptionsFor(key, bookState.selectedDuration).length, 0);
 }
 
 function isDateAvailable(dateIso) {
-  return dateIso >= todayIso && !bookState.blockedDates.includes(dateIso) && !isSlotTaken(dateIso);
+  return dateIso >= todayIso && getFreeTimes(dateIso).length > 0;
+}
+
+function isTimeSelected() {
+  return Boolean(bookState.selectedDate && bookState.selectedSlot && Number.isFinite(bookState.startHour)
+    && startHourOptionsFor(bookState.selectedSlot, bookState.selectedDuration).includes(bookState.startHour)
+    && isStartFree(bookState.selectedDate, bookState.startHour));
+}
+
+// Drop the chosen time if it no longer fits (date/duration changed or someone booked it)
+function clearTimeIfTaken() {
+  if (!isTimeSelected()) {
+    bookState.selectedSlot = null;
+    bookState.startHour = null;
+  }
 }
 
 function initCalendar() {
   const prevBtn = document.getElementById('prevMonthBtn');
   const nextBtn = document.getElementById('nextMonthBtn');
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      // No browsing before the current month
-      if (bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth()) return;
-      bookState.currentMonth--;
-      if (bookState.currentMonth < 0) {
-        bookState.currentMonth = 11;
-        bookState.currentYear--;
-      }
-      renderCalendar();
-    });
-  }
+  prevBtn?.addEventListener('click', () => {
+    if (bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth()) return;
+    bookState.currentMonth--;
+    if (bookState.currentMonth < 0) { bookState.currentMonth = 11; bookState.currentYear--; }
+    renderCalendar();
+  });
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      bookState.currentMonth++;
-      if (bookState.currentMonth > 11) {
-        bookState.currentMonth = 0;
-        bookState.currentYear++;
-      }
-      renderCalendar();
-    });
-  }
+  nextBtn?.addEventListener('click', () => {
+    bookState.currentMonth++;
+    if (bookState.currentMonth > 11) { bookState.currentMonth = 0; bookState.currentYear++; }
+    renderCalendar();
+  });
 
   renderCalendar();
 }
@@ -529,71 +406,58 @@ function renderCalendar() {
   grid.innerHTML = '';
 
   const prevBtn = document.getElementById('prevMonthBtn');
-  if (prevBtn) {
-    prevBtn.disabled = bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth();
-  }
+  if (prevBtn) prevBtn.disabled = bookState.currentYear === today.getFullYear() && bookState.currentMonth === today.getMonth();
 
   const firstDay = new Date(bookState.currentYear, bookState.currentMonth, 1);
-  let startingDay = firstDay.getDay() - 1;
-  if (startingDay === -1) startingDay = 6;
-
+  const leading = (firstDay.getDay() + 6) % 7; // Monday-first
   const totalDays = new Date(bookState.currentYear, bookState.currentMonth + 1, 0).getDate();
+  const allTimes = countAllTimes();
 
-  // Blank slots for previous month
-  for (let i = 0; i < startingDay; i++) {
+  for (let i = 0; i < leading; i++) {
     const blank = document.createElement('div');
     blank.className = 'cal-day-cell empty';
     grid.appendChild(blank);
   }
 
-  const slotName = charterSlots[bookState.selectedSlot].label;
-
-  // Days of current month
   for (let day = 1; day <= totalDays; day++) {
     const dateIso = toIsoDate(new Date(bookState.currentYear, bookState.currentMonth, day));
-
     const cell = document.createElement('button');
+    cell.type = 'button';
     cell.className = 'cal-day-cell';
-    cell.setAttribute('type', 'button');
     cell.textContent = day;
 
     const dot = document.createElement('span');
     dot.className = 'day-dot';
 
     const isPast = dateIso < todayIso;
-    const isBlocked = bookState.blockedDates.includes(dateIso);
-    const isTaken = isSlotTaken(dateIso);
-    const isOpen = !isPast && !isBlocked && !isTaken;
+    const freeCount = isPast ? 0 : getFreeTimes(dateIso).length;
 
     if (isPast) {
       cell.classList.add('disabled');
       cell.title = 'Date has passed';
-    } else if (isBlocked) {
+    } else if (freeCount === 0) {
       cell.classList.add('disabled');
       dot.classList.add('booked');
-      cell.title = 'Date is unavailable';
-    } else if (isTaken) {
-      cell.classList.add('disabled');
-      dot.classList.add('booked');
-      cell.title = `${slotName} already reserved on this date`;
+      cell.title = `Fully booked for ${bookState.selectedDuration} hours`;
+    } else if (freeCount < allTimes) {
+      dot.classList.add('filling');
+      cell.title = `${freeCount} time${freeCount === 1 ? '' : 's'} left`;
     } else {
       dot.classList.add('free');
-      cell.title = `${slotName} open`;
+      cell.title = 'All times open';
     }
 
-    if (bookState.selectedDate === dateIso) {
-      cell.classList.add('selected');
-    }
-
+    if (bookState.selectedDate === dateIso) cell.classList.add('selected');
     cell.appendChild(dot);
 
-    if (isOpen) {
+    if (freeCount > 0) {
       cell.addEventListener('click', () => {
-        grid.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
-        cell.classList.add('selected');
         bookState.selectedDate = dateIso;
-        updateSelectedDateBanner();
+        clearTimeIfTaken();
+        renderCalendar();
+        renderStartTimeOptions();
         updateSummarySidebar();
+        document.getElementById('timeQuestion')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     } else {
       cell.disabled = true;
@@ -601,61 +465,66 @@ function renderCalendar() {
 
     grid.appendChild(cell);
   }
-
-  updateSelectedDateBanner();
 }
 
-function updateSelectedDateBanner() {
-  const title = document.getElementById('statusDateTitle');
-  const count = document.getElementById('statusDateSlotsCount');
+// The exact free times for the chosen date, as tappable buttons grouped by slot
+function renderStartTimeOptions() {
+  const container = document.getElementById('timeOptions');
+  const question = document.getElementById('timeQuestion');
+  if (!container) return;
+  container.innerHTML = '';
 
   if (!bookState.selectedDate) {
-    if (title) title.textContent = 'Choose a date';
-    if (count) count.textContent = `Showing open dates for the ${getSlotWindowLabel()}.`;
+    if (question) question.textContent = 'Pick a time';
+    container.innerHTML = '<p class="time-empty">Pick a date to see the times available.</p>';
     return;
   }
 
-  const dateObj = fromIsoDate(bookState.selectedDate);
-  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-  if (title) title.textContent = `${dayName}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-  if (count) count.textContent = `${getSlotWindowLabel()} is open on this date.`;
-}
+  if (question) question.textContent = `Available times on ${formatShortDate(bookState.selectedDate)}`;
+  const free = getFreeTimes(bookState.selectedDate);
 
-function getStartHourOptions() {
-  return startHourOptionsFor(bookState.selectedSlot, bookState.selectedDuration);
-}
+  Object.entries(charterSlots).forEach(([slotKey, slot]) => {
+    const group = document.createElement('div');
+    group.className = 'time-group';
 
-function initStartTimePicker() {
-  const select = document.getElementById('startTimeSelect');
-  if (select) {
-    select.addEventListener('change', () => {
-      bookState.startHour = parseInt(select.value, 10);
-      renderStartTimeHint();
-      updateSummarySidebar();
+    const times = free.filter(t => t.slotKey === slotKey);
+    group.innerHTML = `
+      <div class="time-group-head">
+        <span class="time-group-name">${slot.label.replace(' Slot', '')} <span class="time-group-window">${formatClock(slot.startHour)} – ${formatClock(slot.endHour)}</span></span>
+        <span class="time-group-price">${formatCurrency(getCharterPrice(slotKey, bookState.selectedDuration))}</span>
+      </div>
+    `;
+
+    const list = document.createElement('div');
+    list.className = 'time-chip-list';
+    if (!times.length) {
+      list.innerHTML = '<span class="time-empty">No times left</span>';
+    }
+    times.forEach(({ startHour }) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'time-chip';
+      const isSelected = bookState.selectedSlot === slotKey && bookState.startHour === startHour;
+      chip.classList.toggle('selected', isSelected);
+      chip.setAttribute('aria-pressed', String(isSelected));
+      chip.textContent = `${formatClock(startHour)} – ${formatClock(startHour + bookState.selectedDuration)}`;
+      chip.addEventListener('click', () => {
+        bookState.selectedSlot = slotKey;
+        bookState.startHour = startHour;
+        renderStartTimeOptions();
+        updateSummarySidebar();
+      });
+      list.appendChild(chip);
     });
-  }
-  renderStartTimeOptions();
-}
 
-function renderStartTimeOptions() {
-  const select = document.getElementById('startTimeSelect');
-  const options = getStartHourOptions();
-  if (!options.includes(bookState.startHour)) {
-    bookState.startHour = options[0];
-  }
+    group.appendChild(list);
+    container.appendChild(group);
+  });
 
-  if (select) {
-    select.innerHTML = options
-      .map(h => `<option value="${h}" ${h === bookState.startHour ? 'selected' : ''}>${formatClock(h)} – ${formatClock(h + bookState.selectedDuration)}</option>`)
-      .join('');
-  }
-  renderStartTimeHint();
-}
-
-function renderStartTimeHint() {
-  const hint = document.getElementById('startTimeHint');
-  if (!hint) return;
-  hint.textContent = `Your ${bookState.selectedDuration}-hour charter: ${getItineraryLabel(bookState.selectedDuration)}.`;
+  const note = document.createElement('p');
+  note.className = 'time-note';
+  note.textContent = `Times next to another booking aren't shown, as we keep a ${TURNAROUND_GAP_HOURS}-hour gap between charters.`;
+  container.appendChild(note);
 }
 
 /* ========================================================
@@ -737,34 +606,23 @@ function showFormError(msg) {
    6. SUMMARY SIDEBAR UPDATE
    ======================================================== */
 function updateSummarySidebar() {
-  const occasionEl = document.getElementById('sideSummaryOccasion');
-  const dateEl = document.getElementById('sideSummaryDate');
-  const slotEl = document.getElementById('sideSummarySlot');
-  const durationEl = document.getElementById('sideSummaryDuration');
-  const modeEl = document.getElementById('sideSummaryMode');
-  const quoteEl = document.getElementById('sideSummaryQuoteTotal');
-  const guestsEl = document.getElementById('sideSummaryGuests');
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  const hasTime = Number.isFinite(bookState.startHour) && bookState.selectedSlot;
 
-  // Occasion display: if private event with custom title, display custom title
-  let displayOccasion = bookState.selectedOccasion;
-  if (bookState.isPrivateEvent && bookState.customEventName) {
-    displayOccasion = `Private Event (${bookState.customEventName})`;
-  } else if (bookState.isPrivateEvent) {
-    displayOccasion = 'Private Event / Custom Charter';
-  }
-
-  if (occasionEl) occasionEl.textContent = displayOccasion;
-  if (dateEl) dateEl.textContent = formatShortDate(bookState.selectedDate) || 'Select a date';
-  if (slotEl) slotEl.textContent = getSlotTimingLabel();
-  if (durationEl) durationEl.textContent = `${bookState.selectedDuration} hours`;
-  if (modeEl) modeEl.textContent = getItineraryLabel(bookState.selectedDuration);
+  set('sideSummaryOccasion', getDisplayOccasion());
+  set('sideSummaryDate', formatShortDate(bookState.selectedDate) || '—');
+  set('sideSummarySlot', hasTime ? formatRange(bookState.startHour, bookState.startHour + bookState.selectedDuration) : '—');
+  set('sideSummaryDuration', `${bookState.selectedDuration} hours · ${getItineraryLabel(bookState.selectedDuration)}`);
 
   const countInput = document.getElementById('bookGuestCount');
-  const countVal = countInput ? countInput.value : (bookState.guestDetails.guests || 2);
-  if (guestsEl) guestsEl.textContent = `${countVal} guest${countVal > 1 ? 's' : ''}`;
+  set('sideSummaryGuests', countInput ? countInput.value : String(bookState.guestDetails.guests || 2));
 
   const total = calculateCurrentTotal();
-  if (quoteEl) quoteEl.textContent = formatCurrency(total);
+  set('sideSummaryQuoteTotal', total ? formatCurrency(total)
+    : `from ${formatCurrency(Math.min(...Object.keys(charterSlots).map(k => getCharterPrice(k, bookState.selectedDuration))))}`);
 }
 
 /* ========================================================
@@ -777,7 +635,7 @@ function initRazorpayCheckout() {
   }
 }
 
-const PAY_BUTTON_LABEL = `Pay ${formatCurrency(DEPOSIT_AMOUNT)} via Razorpay to Lock Date`;
+const PAY_BUTTON_LABEL = `Pay ${formatCurrency(DEPOSIT_AMOUNT)} to Book`;
 
 function setPayButton(busy, label) {
   const payBtn = document.getElementById('btnPagePay5000');
@@ -798,8 +656,8 @@ async function postJson(url, body) {
 
 async function handlePageRazorpayPayment() {
   if (!validateGuestForm()) return;
-  if (!bookState.selectedDate || !isDateAvailable(bookState.selectedDate)) {
-    showFormError('Please go back and choose an open date for your charter.');
+  if (!isTimeSelected()) {
+    showFormError('Please go back to "Date & time" and pick an available time.');
     return;
   }
   if (typeof window.Razorpay !== 'function') {
@@ -832,10 +690,15 @@ async function handlePageRazorpayPayment() {
     if (!ok) {
       showFormError(data.error || 'Could not start the payment. Please try again.');
       if (data.code === 'SLOT_TAKEN') {
-        markSlotBooked(bookState.selectedDate, bookState.selectedSlot);
-        bookState.selectedDate = null;
+        // Someone else just took this time: refresh availability and let them re-pick
+        await syncAvailability();
+        if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) bookState.selectedDate = null;
+        clearTimeIfTaken();
+        goToStep(2);
+        renderStartTimeOptions();
         renderCalendar();
         updateSummarySidebar();
+        alert(data.error);
       }
       setPayButton(false);
       return;
@@ -921,7 +784,7 @@ function completePageBooking({ booking, qrUrl, verifyUrl, emailSent }) {
     startHour: bookState.startHour,
     durationHours: bookState.selectedDuration
   };
-  markSlotBooked(booking.dateIso, bookState.selectedSlot);
+  markTimeBooked(booking.dateIso, bookState.startHour, bookState.startHour + bookState.selectedDuration);
 
   renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent });
 
@@ -974,7 +837,7 @@ function renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent }) {
       `Hello Black Pearl Team, I have booked ${booking.date} (${booking.slot}) for our ${booking.occasion} on Lady Alice. ` +
       `Booking Ref: ${booking.code} (Advance ${booking.advancePaid} paid, Razorpay ID: ${booking.paymentId}).`
     );
-    waBtn.href = `https://wa.me/919820000000?text=${waText}`;
+    waBtn.href = `https://wa.me/918591206214?text=${waText}`;
   }
 }
 
@@ -1033,34 +896,30 @@ function generateICalendarDownload() {
 /* ========================================================
    9. SUPABASE BLOCKED DATES SYNC
    ======================================================== */
-// Portal bookings + admin offline locks, from the server (no guest details)
+// Website bookings + admin offline locks, as booked hours per date (no guest details)
 async function syncAvailability() {
   try {
     const res = await fetch('/api/availability', { cache: 'no-store' });
     if (!res.ok) throw new Error(`availability ${res.status}`);
-    const { bookedSlots = [], blocks = [] } = await res.json();
+    const { occupied = [] } = await res.json();
 
-    bookedSlots.forEach(b => markSlotBooked(b.date, b.slot));
-    blocks.forEach(b => {
-      if (b.slot) {
-        markSlotBooked(b.date, b.slot);
-      } else if (!bookState.blockedDates.includes(b.date)) {
-        bookState.blockedDates.push(b.date); // full-day lock
-      }
-    });
+    bookState.occupied = {};
+    occupied.forEach(range => markTimeBooked(range.date, range.start, range.end));
 
     if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) {
       bookState.selectedDate = null;
-      updateSummarySidebar();
     }
+    clearTimeIfTaken();
+    renderStartTimeOptions();
     renderCalendar();
+    updateSummarySidebar();
   } catch (err) {
     console.warn('Could not load availability:', err);
   }
 }
 
-function markSlotBooked(dateIso, slotKey) {
-  if (!dateIso || !slotKey) return;
-  if (!bookState.bookedSlots[dateIso]) bookState.bookedSlots[dateIso] = new Set();
-  bookState.bookedSlots[dateIso].add(slotKey);
+function markTimeBooked(dateIso, start, end) {
+  if (!dateIso || !Number.isFinite(start) || !Number.isFinite(end)) return;
+  if (!bookState.occupied[dateIso]) bookState.occupied[dateIso] = [];
+  bookState.occupied[dateIso].push({ start, end });
 }
