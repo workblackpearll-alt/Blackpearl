@@ -34,7 +34,7 @@ const state = {
   selectedSlotTime: '4:30 pm',
   guestDetails: {
     fullName: 'Arjun Mehta',
-    phone: '+91 98200 00000',
+    phone: '+91 85912 06214',
     email: 'arjun@example.com',
     address: 'Bandra West, Mumbai',
     guestCount: 2,
@@ -60,7 +60,7 @@ const state = {
       price: '₹90,000',
       paidToken: '₹5,000',
       name: 'Arjun Mehta',
-      phone: '+91 98200 00000',
+      phone: '+91 85912 06214',
       email: 'arjun@example.com',
       notes: 'It is a surprise. Please call me, not her.',
       status: 'Held (Deposit Paid)'
@@ -936,7 +936,7 @@ function completeBookingAndCelebrate(bookingCode, paymentId = 'pay_verified') {
   const waBtn = document.getElementById('btnChatWaConfirmation');
   if (waBtn) {
     const waText = encodeURIComponent(`Hello Black Pearl team, I have just secured date ${newHold.date} for our ${newHold.occasion} on Lady Alice (Deposit ₹5,000 paid via Razorpay). My booking code is ${bookingCode} (Payment ID: ${paymentId}). Please call me on ${newHold.phone} to plan the evening.`);
-    waBtn.href = `https://wa.me/919820000000?text=${waText}`;
+    waBtn.href = `https://wa.me/918591206214?text=${waText}`;
   }
 
   // Go to confirmation step
