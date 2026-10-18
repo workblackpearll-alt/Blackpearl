@@ -11,8 +11,8 @@ export const STATUS = {
   conflict: 'Paid - Slot Conflict'
 };
 
-// A pending checkout blocks its slot for this long, then frees it
-export const PENDING_HOLD_MINUTES = 15;
+// A pending checkout blocks its slot for this long, then frees it (tightened to 10 minutes)
+export const PENDING_HOLD_MINUTES = 10;
 
 export function getSiteUrl() {
   return (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -113,14 +113,12 @@ export async function markHoldUnpaid(orderId, { status, reason, paymentId }) {
   return data;
 }
 
-/** Public, scan-safe view of a booking for the QR pass page. */
+/** Public, scan-safe view of a booking for the QR pass page (BP-SEC-08: PII minimized). */
 export function toPublicBooking(hold) {
   return {
     code: hold.id,
     status: hold.status,
     name: hold.name,
-    phone: hold.phone,
-    email: hold.email,
     occasion: hold.occasion,
     date: hold.date,
     dateIso: hold.date_iso,
@@ -130,8 +128,7 @@ export function toPublicBooking(hold) {
     guests: hold.guests,
     price: hold.price,
     advancePaid: hold.paid_token,
-    paymentId: hold.payment_id,
-    paidAt: hold.paid_at,
-    notes: hold.notes
+    paymentId: hold.payment_id ? `${String(hold.payment_id).slice(0, 8)}...` : null,
+    paidAt: hold.paid_at
   };
 }

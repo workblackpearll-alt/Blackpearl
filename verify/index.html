@@ -304,8 +304,6 @@
           renderRows([
             ['Status', valid ? (b.status === 'Held (Deposit Paid)' ? 'Advance paid' : b.status) : b.status, valid ? 'color: #4ADE80;' : 'color: #FCA5A5;'],
             ['Booked by', b.name],
-            ['Phone', b.phone],
-            ['Email', b.email],
             ['Celebration', b.occasion],
             ['Date', b.date],
             ['Slot & time', b.slot],
@@ -314,8 +312,7 @@
             ['Guests', b.guests],
             ['Charter price', b.price],
             ['Advance paid', valid ? `${b.advancePaid} · ${b.paymentId || ''}` : ''],
-            ['Boarding', 'Jetty No. 5, Gateway of India'],
-            ['Notes', b.notes]
+            ['Boarding', 'Jetty No. 5, Gateway of India']
           ]);
 
           const text = encodeURIComponent(`Hello Black Pearl, this is about booking ${b.code} for ${b.name} on ${b.date}.`);

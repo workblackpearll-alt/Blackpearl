@@ -42,13 +42,46 @@ function clean(value, max) {
   return String(value ?? '').trim().slice(0, max);
 }
 
+const ipBuckets = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_ORDERS_PER_MINUTE = 5;
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded && typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.headers['x-real-ip'] || req.socket?.remoteAddress || '127.0.0.1';
+}
+
+function checkIpRateLimit(ip) {
+  const now = Date.now();
+  const timestamps = (ipBuckets.get(ip) || []).filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+  if (timestamps.length >= MAX_ORDERS_PER_MINUTE) {
+    return false;
+  }
+  timestamps.push(now);
+  ipBuckets.set(ip, timestamps);
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res, 'POST');
+
+  const clientIp = getClientIp(req);
+  if (!checkIpRateLimit(clientIp)) {
+    return send(res, 429, {
+      error: 'Too many booking requests. Please wait a moment before trying again.'
+    });
+  }
 
   let body;
   try {
     body = await readJson(req);
-  } catch {
+  } catch (err) {
+    if (err.statusCode === 413) {
+      return send(res, 413, { error: 'Payload too large.' });
+    }
     return send(res, 400, { error: 'Invalid request.' });
   }
 
@@ -82,6 +115,42 @@ export default async function handler(req, res) {
 
   try {
     const db = getSupabaseAdmin();
+
+    // ---- BP-SEC-05: Prevent slot hoarding by checking pending orders for this user ----
+    const pendingCutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { count: pendingCount, error: countError } = await db
+      .from('holds')
+      .select('id', { count: 'exact', head: true })
+      .eq('email', email)
+      .eq('status', STATUS.pending)
+      .gt('created_at', pendingCutoff);
+
+    if (!countError && typeof pendingCount === 'number' && pendingCount >= 3) {
+      return send(res, 429, {
+        error: 'You have multiple pending checkout attempts. Please complete your existing checkout or try again in a few minutes.'
+      });
+    }
+
+    // ---- Check for existing active pending order for this exact slot by the same client ----
+    const { data: existingPending } = await db
+      .from('holds')
+      .select('id, razorpay_order_id, price')
+      .eq('date_iso', dateIso)
+      .eq('start_hour', startHour)
+      .eq('email', email)
+      .eq('status', STATUS.pending)
+      .gt('created_at', pendingCutoff)
+      .maybeSingle();
+
+    if (existingPending && existingPending.razorpay_order_id) {
+      return send(res, 200, {
+        bookingCode: existingPending.id,
+        orderId: existingPending.razorpay_order_id,
+        amount: DEPOSIT_AMOUNT * 100,
+        currency: 'INR',
+        keyId: getRazorpayKeyId()
+      });
+    }
 
     // ---- Availability: this time (plus the 1-hour turnaround) must be free ----
     const occupied = await getOccupiedRanges({ date: dateIso });
