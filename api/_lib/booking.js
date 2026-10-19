@@ -80,23 +80,56 @@ export async function markHoldPaid(orderId, paymentId) {
 async function sendConfirmationOnce(hold) {
   const db = getSupabaseAdmin();
   // Claim the send so the webhook and the browser callback don't both email
-  const claimedAt = new Date().toISOString();
+  const now = () => new Date().toISOString();
   const { data: claimed } = await db.from('holds')
-    .update({ email_sent_at: claimedAt, email_error: null })
+    .update({ email_sent_at: now(), email_error: null })
     .eq('id', hold.id).is('email_sent_at', null).select().maybeSingle();
   if (!claimed) return hold;
 
+  const { sendBookingConfirmationEmail, sendAdminBookingAlert } = await import('./email.js');
+  let current = claimed;
+
+  // 1. Guest confirmation with QR
   try {
-    const { sendBookingConfirmationEmail } = await import('./email.js');
-    await sendBookingConfirmationEmail(claimed);
-    return claimed;
+    const sent = await sendBookingConfirmationEmail(claimed);
+    const { data } = await db.from('holds').update({
+      guest_email_id: sent?.id || null,
+      guest_email_status: 'sent',
+      guest_email_status_at: now()
+    }).eq('id', hold.id).select().single();
+    current = data || current;
   } catch (err) {
-    console.error('[email] confirmation failed', hold.id, err);
-    const { data: failed } = await db.from('holds')
-      .update({ email_sent_at: null, email_error: String(err.message || err).slice(0, 500) })
-      .eq('id', hold.id).select().single();
-    return failed || hold;
+    console.error('[email] guest confirmation failed', hold.id, err);
+    const { data } = await db.from('holds').update({
+      email_sent_at: null,
+      email_error: String(err.message || err).slice(0, 500),
+      guest_email_status: 'failed',
+      guest_email_status_at: now()
+    }).eq('id', hold.id).select().single();
+    current = data || current;
   }
+
+  // 2. Separate "new booking" alert to the team (tracked on its own)
+  try {
+    const alert = await sendAdminBookingAlert(claimed);
+    if (alert) {
+      const { data } = await db.from('holds').update({
+        admin_email_id: alert.id || null,
+        admin_email_status: 'sent',
+        admin_email_status_at: now()
+      }).eq('id', hold.id).select().single();
+      current = data || current;
+    }
+  } catch (err) {
+    console.error('[email] team alert failed', hold.id, err);
+    const { data } = await db.from('holds').update({
+      admin_email_status: 'failed',
+      admin_email_status_at: now()
+    }).eq('id', hold.id).select().single();
+    current = data || current;
+  }
+
+  return current;
 }
 
 /** Records a failed or abandoned checkout, without overwriting a paid booking. */

@@ -2791,3 +2791,56 @@ body.admin-drawer-open {
     line-height: 1;
   }
 }
+
+/* Email delivery: guest + team */
+.email-pills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.email-pill.pending {
+  color: #FCD34D;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+@media (max-width: 768px) {
+  .email-pills {
+    align-items: flex-end;
+  }
+}
+
+/* Login code step */
+.auth-form[hidden] {
+  display: none !important;
+}
+
+.otp-sent-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.otp-input {
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 0.5em;
+  font-family: var(--font-mono);
+}
+
+.otp-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.otp-links .btn-text-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+  text-decoration: none;
+}

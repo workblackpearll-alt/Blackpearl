@@ -21,6 +21,7 @@ import {
   fetchCommunitySignups,
   updateCommunityStatus,
   verifyAdminStatus,
+  getAccessToken,
   isSupabaseConfigured
 } from '../supabaseClient.js';
 import {
@@ -160,6 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Register event handlers
   initAuthHandlers();
+  initOtpHandlers();
   initSidebarNavigation();
   initDashboardHandlers();
   initBookingsHandlers();
@@ -193,10 +195,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAuthFeedback('Access Denied: Your account does not have administrator privileges.', 'error');
         return;
       }
-      state.currentUser = session.user;
-      updateUserProfileUI(session.user);
-      if (elements.authView && elements.authView.style.display !== 'none') {
-        navigateTo('dashboard');
+      if (state.currentUser) {
+        state.currentUser = session.user;
+        updateUserProfileUI(session.user);
       }
     } else if (event === 'SIGNED_OUT') {
       state.currentUser = null;
@@ -221,11 +222,7 @@ async function checkSessionAndRoute() {
         showAuthFeedback('Access Denied: Your account does not have administrator privileges.', 'error');
         return;
       }
-      state.currentUser = user;
-      updateUserProfileUI(user);
-      showPortalScreen();
-      handleRouteFromUrl();
-      await loadAllPortalData();
+      await continueAfterPassword(user);
     } else {
       state.currentUser = null;
       showAuthScreen();
@@ -274,7 +271,166 @@ function handleRouteFromUrl() {
   }
 }
 
+/* ========================================================
+   2b. LOGIN CODE (EMAIL OTP) — second step after the password
+   The database only treats this login as admin once the code is verified.
+   ======================================================== */
+let otpCooldownTimer = null;
+
+async function callAdminOtp(action, extra = {}) {
+  const token = await getAccessToken();
+  if (!token) return { ok: false, status: 401, data: { error: 'Please sign in again.' } };
+  try {
+    const res = await fetch('/api/admin-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action, ...extra })
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  } catch {
+    return { ok: false, status: 0, data: { error: 'Could not reach the login service. Check your connection.' } };
+  }
+}
+
+function showOtpFeedback(msg, type = 'info') {
+  const el = document.getElementById('otpFeedbackMsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `auth-feedback ${type}`;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function startResendCooldown(seconds) {
+  const btn = document.getElementById('btnResendOtp');
+  if (!btn) return;
+  clearInterval(otpCooldownTimer);
+  let left = Math.max(0, Math.ceil(seconds || 0));
+  const tick = () => {
+    btn.disabled = left > 0;
+    btn.textContent = left > 0 ? `Send a new code (${left}s)` : 'Send a new code';
+    left--;
+    if (left < 0) clearInterval(otpCooldownTimer);
+  };
+  tick();
+  otpCooldownTimer = setInterval(tick, 1000);
+}
+
+function showOtpScreen(sentTo) {
+  if (elements.portalView) elements.portalView.style.display = 'none';
+  if (elements.authView) elements.authView.style.display = 'flex';
+  if (elements.authForm) elements.authForm.hidden = true;
+  const otpForm = document.getElementById('adminOtpForm');
+  if (otpForm) otpForm.hidden = false;
+  if (elements.authSubtitle) elements.authSubtitle.textContent = 'One more step to keep the admin panel safe.';
+  const sentText = document.getElementById('otpSentText');
+  if (sentText) sentText.textContent = sentTo
+    ? `We emailed a 6-digit code to ${sentTo}. It expires in 10 minutes.`
+    : 'Enter the 6-digit code from your email.';
+  const input = document.getElementById('adminOtpInput');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+}
+
+function resetToPasswordForm() {
+  const otpForm = document.getElementById('adminOtpForm');
+  if (otpForm) otpForm.hidden = true;
+  if (elements.authForm) elements.authForm.hidden = false;
+  if (elements.authSubtitle) elements.authSubtitle.textContent = 'Sign in to manage bookings, the calendar and enquiries.';
+  showOtpFeedback('');
+  clearInterval(otpCooldownTimer);
+}
+
+async function requestLoginCode() {
+  showOtpFeedback('Sending your code...');
+  const { ok, status, data } = await callAdminOtp('request');
+  if (ok) {
+    showOtpScreen(data.sentTo);
+    showOtpFeedback('');
+    startResendCooldown(data.retryAfter);
+  } else if (status === 429 && data.sentTo) {
+    // A code was sent moments ago (e.g. page refresh): use that one
+    showOtpScreen(data.sentTo);
+    showOtpFeedback(data.error, 'info');
+    startResendCooldown(data.retryAfter);
+  } else {
+    showOtpScreen(null);
+    showOtpFeedback(data.error || 'Could not send the code. Please try again.', 'error');
+    startResendCooldown(0);
+  }
+}
+
+// After a correct password (or on page load with a session): verified → open, else ask for the code
+async function continueAfterPassword(user) {
+  state.pendingUser = user;
+  const { ok, data } = await callAdminOtp('status');
+  if (ok && data.verified) {
+    enterAdminPortal(user);
+    return;
+  }
+  showOtpScreen(data?.sentTo || null);
+  await requestLoginCode();
+}
+
+function enterAdminPortal(user) {
+  resetToPasswordForm();
+  state.currentUser = user;
+  updateUserProfileUI(user);
+  showPortalScreen();
+  handleRouteFromUrl();
+  loadAllPortalData();
+}
+
+function initOtpHandlers() {
+  const form = document.getElementById('adminOtpForm');
+  const input = document.getElementById('adminOtpInput');
+  const btn = document.getElementById('btnVerifyOtp');
+  const btnText = document.getElementById('btnVerifyOtpText');
+
+  input?.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, 6);
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const code = (input?.value || '').trim();
+    if (code.length !== 6) {
+      showOtpFeedback('Enter the 6-digit code from your email.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    btnText.textContent = 'Checking...';
+    const { ok, data } = await callAdminOtp('verify', { code });
+    btn.disabled = false;
+    btnText.textContent = 'Verify & Open Admin';
+
+    if (ok && data.verified) {
+      showOtpFeedback('');
+      enterAdminPortal(state.pendingUser || state.currentUser);
+      return;
+    }
+    showOtpFeedback(data.error || 'That code did not work. Please try again.', 'error');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  });
+
+  document.getElementById('btnResendOtp')?.addEventListener('click', requestLoginCode);
+
+  document.getElementById('btnOtpCancel')?.addEventListener('click', async () => {
+    await signOutAdmin();
+    state.currentUser = null;
+    state.pendingUser = null;
+    resetToPasswordForm();
+    showAuthScreen();
+  });
+}
+
 function showAuthScreen() {
+  resetToPasswordForm();
   if (elements.portalView) elements.portalView.style.display = 'none';
   if (elements.authView) elements.authView.style.display = 'flex';
   
@@ -355,11 +511,8 @@ function initAuthHandlers() {
             showAuthFeedback('Access Denied: Your account is not authorized as an administrator.', 'error');
             return;
           }
-          state.currentUser = res.data.user;
-          updateUserProfileUI(res.data.user);
-          showPortalScreen();
-          navigateTo('dashboard');
-          await loadAllPortalData();
+          elements.passwordInput.value = '';
+          await continueAfterPassword(res.data.user);
         } else {
           const errMsg = res.error?.message || 'Invalid login credentials. Please check email and password.';
           showAuthFeedback(errMsg, 'error');
@@ -388,6 +541,7 @@ function initAuthHandlers() {
   if (elements.btnSignOut) {
     elements.btnSignOut.addEventListener('click', async () => {
       if (confirm('Sign out of Black Pearl Admin deck?')) {
+        await callAdminOtp('logout');
         await signOutAdmin();
         state.currentUser = null;
         showAuthScreen();
@@ -740,10 +894,37 @@ function bookingMatchesFilter(b, filter) {
   return true;
 }
 
+// Delivery status reported by Resend for the guest's confirmation and the team alert
+const EMAIL_STATUS_LABELS = {
+  sent: 'Sent', delivered: 'Delivered', delayed: 'Delayed', bounced: 'Bounced', spam: 'Marked spam', failed: 'Failed'
+};
+const EMAIL_PROBLEM_STATUSES = ['bounced', 'spam', 'failed'];
+
+function guestEmailStatus(b) {
+  if (b.guestEmailStatus) return b.guestEmailStatus;
+  // Bookings from before delivery tracking
+  if (b.emailSentAt) return 'sent';
+  if (b.emailError) return 'failed';
+  return null;
+}
+
+function emailPill(who, status, detail) {
+  if (!status) return `<span class="email-pill none">${who}: —</span>`;
+  const tone = status === 'delivered' ? 'sent' : (EMAIL_PROBLEM_STATUSES.includes(status) ? 'error' : 'pending');
+  return `<span class="email-pill ${tone}"${detail ? ` title="${escapeHtml(detail)}"` : ''}>${who}: ${EMAIL_STATUS_LABELS[status] || status}</span>`;
+}
+
 function emailStatusHtml(b) {
-  if (b.emailSentAt) return '<span class="email-pill sent" title="Confirmation email with QR sent">Sent</span>';
-  if (b.emailError) return `<span class="email-pill error" title="${escapeHtml(b.emailError)}">Failed</span>`;
-  return '<span class="email-pill none">—</span>';
+  return `<div class="email-pills">
+    ${emailPill('Guest', guestEmailStatus(b), b.emailError)}
+    ${emailPill('You', b.adminEmailStatus)}
+  </div>`;
+}
+
+function emailStatusText(status, at) {
+  if (!status) return 'Not sent';
+  const label = EMAIL_STATUS_LABELS[status] || status;
+  return at ? `${label} · ${new Date(at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit' })}` : label;
 }
 
 function bookingPassUrl(b) {
@@ -1701,9 +1882,9 @@ function openBookingDetailModal(booking) {
       </div>`;
   const passUrl = bookingPassUrl(booking);
   const phoneDigits = (booking.phone || '').replace(/\D/g, '');
-  const emailStatus = booking.emailSentAt
-    ? `Sent ${formatDisplayDate(booking.emailSentAt)}`
-    : booking.emailError ? `Failed: ${escapeHtml(booking.emailError)}` : 'Not sent';
+  const guestStatus = guestEmailStatus(booking);
+  const guestEmailText = emailStatusText(guestStatus, booking.guestEmailStatusAt || booking.emailSentAt)
+    + (booking.emailError && guestStatus === 'failed' ? ` (${booking.emailError})` : '');
 
   elements.modalBookingBody.innerHTML = `
     <div class="modal-detail-grid">
@@ -1718,7 +1899,8 @@ function openBookingDetailModal(booking) {
       ${field('Charter price', `<strong>${escapeHtml(booking.price || '—')}</strong>`)}
       ${field('Advance', escapeHtml(booking.paidToken || '₹5,000'))}
       ${field('Status', `<span class="status-select-pill ${bookingStatusClass(booking.status)}">${escapeHtml(bookingStatusLabel(booking.status))}</span>`)}
-      ${field('Confirmation email', emailStatus)}
+      ${field('Guest confirmation email', escapeHtml(guestEmailText))}
+      ${field('Your new-booking email', escapeHtml(emailStatusText(booking.adminEmailStatus, booking.adminEmailStatusAt)))}
       ${booking.paymentId ? field('Razorpay payment', `<code class="mono-chip">${escapeHtml(booking.paymentId)}</code>`) : ''}
       ${booking.razorpayOrderId ? field('Razorpay order', `<code class="mono-chip">${escapeHtml(booking.razorpayOrderId)}</code>`) : ''}
       ${booking.failureReason ? field('Payment note', escapeHtml(booking.failureReason)) : ''}
@@ -1817,12 +1999,12 @@ function buildNotifications() {
     onAction: () => openBookingDetailModal(b)
   }));
 
-  // Urgent: paid but confirmation email failed
-  state.bookings.filter(b => PAID_STATUSES.includes(b.status) && b.emailError && !b.emailSentAt).forEach(b => items.push({
-    id: `email:${b.id}`,
+  // Urgent: paid but the guest's confirmation didn't arrive (failed, bounced or marked spam)
+  state.bookings.filter(b => PAID_STATUSES.includes(b.status) && EMAIL_PROBLEM_STATUSES.includes(guestEmailStatus(b))).forEach(b => items.push({
+    id: `email:${b.id}:${guestEmailStatus(b)}`,
     level: 'urgent',
-    title: `Confirmation email failed: ${b.name}`,
-    detail: `They paid but did not get their QR email. Send them the booking pass on WhatsApp.`,
+    title: `Confirmation email ${EMAIL_STATUS_LABELS[guestEmailStatus(b)].toLowerCase()}: ${b.name}`,
+    detail: `They paid but didn't receive their QR email (${b.email}). Send them the booking pass on WhatsApp.`,
     actionLabel: 'Open booking',
     onAction: () => openBookingDetailModal(b)
   }));
@@ -2257,6 +2439,14 @@ function renderAlertsStatus() {
 }
 
 async function refreshForNotifications() {
+  if (state.currentUser) {
+    const { ok, data } = await callAdminOtp('status');
+    if (ok && !data.verified) {
+      showToastNotification('Your admin session expired. Enter a new login code.');
+      await continueAfterPassword(state.currentUser);
+      return;
+    }
+  }
   if (!state.currentUser || document.hidden && !(desktopAlertsAvailable() && Notification.permission === 'granted')) return;
   await Promise.all([loadBookingsData(), loadContactData(), loadCommunityData(), loadBlockedDatesData()]);
   await loadCalendarReview();

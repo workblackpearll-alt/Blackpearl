@@ -139,7 +139,11 @@ export async function fetchBookingHolds() {
         paidAt: item.paid_at,
         emailSentAt: item.email_sent_at,
         emailError: item.email_error,
-        verifyToken: item.verify_token
+        verifyToken: item.verify_token,
+        guestEmailStatus: item.guest_email_status,
+        guestEmailStatusAt: item.guest_email_status_at,
+        adminEmailStatus: item.admin_email_status,
+        adminEmailStatusAt: item.admin_email_status_at
       }));
 
       return { success: true, data: mapped };
@@ -398,6 +402,15 @@ export async function signUpAdmin(email, password) {
 }
 
 /**
+ * Current login session's access token (for server calls like the admin login code)
+ */
+export async function getAccessToken() {
+  if (!isSupabaseConfigured() || !supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || null;
+}
+
+/**
  * Sign out current admin user
  */
 export async function signOutAdmin() {
@@ -451,9 +464,14 @@ export async function verifyAdminStatus() {
     return false;
   }
   try {
-    const { data, error } = await supabase.rpc('is_admin');
+    // Allow-list check only; the emailed login code is checked separately
+    let { data, error } = await supabase.rpc('is_admin_user');
+    if (error && (error.code === 'PGRST202' || /is_admin_user/.test(error.message || ''))) {
+      // Login-code migration not run yet: fall back to the older check
+      ({ data, error } = await supabase.rpc('is_admin'));
+    }
     if (error) {
-      console.warn('[Admin Auth] is_admin RPC check returned error:', error);
+      console.warn('[Admin Auth] admin check returned error:', error);
       return false;
     }
     return Boolean(data);
