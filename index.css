@@ -818,7 +818,8 @@ a:hover {
   font-size: 24px;
   font-weight: 400;
   font-style: italic;
-  color: var(--gold);
+  color: var(--gold-light); /* same as "Black Pearl Presents" so it stands out on the video */
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -4638,8 +4639,8 @@ a:hover {
   .section-hero {
     min-height: 100svh;
     padding-top: 74px;
-    padding-bottom: 32px;
-    justify-content: center; /* content block centred vertically */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    justify-content: flex-end; /* text + buttons sit low, leaving the ship visible above */
   }
 
   .hero-content {
@@ -4706,7 +4707,8 @@ a:hover {
     margin-right: -16px;
     padding: 0 16px;
     box-sizing: border-box;
-    margin-top: 96px; /* pushed slightly lower from description */
+    margin-top: 27vh;  /* open gap between the text and the buttons where the ship shows */
+    margin-top: 27svh;
   }
 
   .hero-cta-group .btn-pill-cta,
@@ -4718,6 +4720,11 @@ a:hover {
     justify-content: center;
     text-align: center;
     letter-spacing: 0.06em;
+  }
+
+  /* Show more of the ship (it sits to the right of the frame) */
+  .hero-bg-video {
+    object-position: 72% 50%;
   }
 
   /* Hero video scrim adjusted for mobile */
@@ -5622,4 +5629,35 @@ input[type="submit"],
 
 .section-workflow .workflow-cta-banner h4 {
   margin-bottom: 0;
+}
+
+/* ========================================================
+   PHONES & SMALL TABLETS: hero text + buttons sit low,
+   with an open gap between them where the ship shows
+   ======================================================== */
+@media (max-width: 768px) {
+  .section-hero {
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-top: 74px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    justify-content: flex-end;
+  }
+
+  .hero-cta-group {
+    margin-top: 23vh;
+    margin-top: 23svh;
+  }
+
+  /* Show more of the ship (it sits to the right of the frame) */
+  .hero-bg-video {
+    object-position: 72% 50%;
+  }
+}
+
+/* Larger phones / small tablets: trim the leftover space under the hero buttons */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-intro {
+    margin-bottom: 18px;
+  }
 }
