@@ -347,6 +347,49 @@ TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
+-- 11b. Voyage briefs, gallery images & analytics: restrict to admins (BP-SEC-01, BP-SEC-03, BP-SEC-10)
+DROP POLICY IF EXISTS "Public can view voyage briefs" ON public.voyage_briefs;
+DROP POLICY IF EXISTS "Public can update voyage briefs" ON public.voyage_briefs;
+DROP POLICY IF EXISTS "Admins can view voyage briefs" ON public.voyage_briefs;
+CREATE POLICY "Admins can view voyage briefs"
+ON public.voyage_briefs FOR SELECT
+TO authenticated
+USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can update voyage briefs" ON public.voyage_briefs;
+CREATE POLICY "Admins can update voyage briefs"
+ON public.voyage_briefs FOR UPDATE
+TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Public can insert gallery images" ON public.gallery_images;
+DROP POLICY IF EXISTS "Admins can insert gallery images" ON public.gallery_images;
+CREATE POLICY "Admins can insert gallery images"
+ON public.gallery_images FOR INSERT
+TO authenticated
+WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can update gallery images" ON public.gallery_images;
+CREATE POLICY "Admins can update gallery images"
+ON public.gallery_images FOR UPDATE
+TO authenticated
+USING (public.is_admin())
+WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete gallery images" ON public.gallery_images;
+CREATE POLICY "Admins can delete gallery images"
+ON public.gallery_images FOR DELETE
+TO authenticated
+USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Public can view page views" ON public.page_views;
+DROP POLICY IF EXISTS "Admins can view page views" ON public.page_views;
+CREATE POLICY "Admins can view page views"
+ON public.page_views FOR SELECT
+TO authenticated
+USING (public.is_admin());
+
 -- 12. Calendar locks: per slot (Day / Evening) or full day, with a note,
 --    for offline bookings. Admin-only; the website reads availability
 --    through the server, which never exposes notes.

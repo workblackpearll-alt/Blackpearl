@@ -442,6 +442,27 @@ export function onAuthStateChange(callback) {
   return { data: { subscription: { unsubscribe: () => {} } } };
 }
 
+/**
+ * Verifies whether the currently authenticated user has verified admin privileges
+ * by calling the server-side PostgreSQL function public.is_admin().
+ */
+export async function verifyAdminStatus() {
+  if (!isSupabaseConfigured() || !supabase) {
+    return false;
+  }
+  try {
+    const { data, error } = await supabase.rpc('is_admin');
+    if (error) {
+      console.warn('[Admin Auth] is_admin RPC check returned error:', error);
+      return false;
+    }
+    return Boolean(data);
+  } catch (err) {
+    console.error('[Admin Auth] Exception checking is_admin RPC:', err);
+    return false;
+  }
+}
+
 /* --------------------------------------------------------
    6. RECORD UPDATES (STATUS CHANGES)
    -------------------------------------------------------- */

@@ -844,22 +844,18 @@ function handleRazorpayPayment() {
       rzpInstance.open();
       return;
     } catch (err) {
-      console.warn('[Razorpay] Exception opening checkout, falling back to simulated payment:', err);
+      console.warn('[Razorpay] Exception opening checkout:', err);
     }
   }
 
-  // Smooth fallback simulation when key is not yet configured or in test mode
-  console.info('[Razorpay] Test/Demo mode active. Simulating ₹5,000 hold deposit...');
-  setTimeout(() => {
-    if (payText) payText.textContent = 'Verifying ₹5,000 deposit...';
-  }, 600);
-
-  setTimeout(() => {
-    const mockPaymentId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-    completeBookingAndCelebrate(bookingCode, mockPaymentId);
-    if (payBtn) payBtn.disabled = false;
-    if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
-  }, 1400);
+  // Gateway unavailable or credentials not set
+  console.warn('[Razorpay] Payment gateway unavailable or credentials missing.');
+  if (errBox) {
+    errBox.textContent = 'Payment gateway is currently unavailable. Please contact our concierge directly or book online at /book.';
+    errBox.style.display = 'block';
+  }
+  if (payBtn) payBtn.disabled = false;
+  if (payText) payText.textContent = 'Pay ₹5,000 via Razorpay';
 }
 
 function completeBookingAndCelebrate(bookingCode, paymentId = 'pay_verified') {
@@ -1557,6 +1553,26 @@ function initImageKitOptimization() {
 /* ========================================================
    DYNAMIC GALLERY RENDERER (SUPABASE + IMAGEKIT)
    ======================================================== */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function sanitizeMediaUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (/^(https?:|\/|data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,)/i.test(trimmed)) {
+    return trimmed;
+  }
+  return '';
+}
+
 function renderDynamicGalleryImages(images) {
   const galleryGrid = document.querySelector('.gallery-grid');
   if (!Array.isArray(images) || images.length === 0) return;
@@ -1565,24 +1581,28 @@ function renderDynamicGalleryImages(images) {
     const rawUrl = img.imagekit_url || img.imagekitUrl || img.url || img.thumbnailUrl;
     if (!rawUrl) return;
 
-    const displayUrl = rawUrl.startsWith('data:') ? rawUrl : getImageKitUrl(rawUrl, { width: 800, quality: 80, format: 'auto' });
-    const thumbUrl = rawUrl.startsWith('data:') ? rawUrl : getImageKitUrl(rawUrl, { width: 400, quality: 75, format: 'auto' });
+    const validatedRaw = sanitizeMediaUrl(rawUrl);
+    if (!validatedRaw) return;
+
+    const displayUrl = validatedRaw.startsWith('data:') ? validatedRaw : getImageKitUrl(validatedRaw, { width: 800, quality: 80, format: 'auto' });
+    const thumbUrl = validatedRaw.startsWith('data:') ? validatedRaw : getImageKitUrl(validatedRaw, { width: 400, quality: 75, format: 'auto' });
 
     if (galleryGrid) {
-      const existing = galleryGrid.querySelector(`[data-img-id="${img.id || img.file_id || img.fileId}"]`);
+      const imgId = String(img.id || img.file_id || img.fileId || '');
+      const existing = imgId ? galleryGrid.querySelector(`[data-img-id="${escapeHtml(imgId)}"]`) : null;
       if (!existing) {
         const item = document.createElement('div');
         item.className = 'gallery-item span-sq';
-        if (img.id || img.file_id || img.fileId) item.setAttribute('data-img-id', img.id || img.file_id || img.fileId);
+        if (imgId) item.setAttribute('data-img-id', imgId);
         item.setAttribute('data-src', displayUrl);
-        item.setAttribute('data-title', img.title);
+        item.setAttribute('data-title', img.title || '');
         item.setAttribute('data-subtitle', img.subtitle || 'Private celebration on Lady Alice');
         item.innerHTML = `
-          <img src="${thumbUrl}" alt="${img.title}" loading="lazy">
+          <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(img.title || 'Lady Alice charter')}" loading="lazy">
           <div class="gallery-overlay">
-            <span class="overlay-tag">Celebration · ${img.category || 'Special'}</span>
-            <h4 class="overlay-title">${img.title}</h4>
-            <p class="overlay-desc">${img.subtitle || 'Private charter on Lady Alice'}</p>
+            <span class="overlay-tag">Celebration · ${escapeHtml(img.category || 'Special')}</span>
+            <h4 class="overlay-title">${escapeHtml(img.title || '')}</h4>
+            <p class="overlay-desc">${escapeHtml(img.subtitle || 'Private charter on Lady Alice')}</p>
             <span class="expand-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
             </span>
@@ -1596,7 +1616,7 @@ function renderDynamicGalleryImages(images) {
           const subtitle = document.getElementById('lightboxSubtitle');
           if (overlay && lightboxImg) {
             lightboxImg.src = displayUrl;
-            if (title) title.textContent = img.title;
+            if (title) title.textContent = img.title || '';
             if (subtitle) subtitle.textContent = img.subtitle || '';
             overlay.classList.add('active');
           }

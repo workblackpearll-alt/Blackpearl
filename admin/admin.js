@@ -20,6 +20,7 @@ import {
   updateContactInquiryStatus,
   fetchCommunitySignups,
   updateCommunityStatus,
+  verifyAdminStatus,
   isSupabaseConfigured
 } from '../supabaseClient.js';
 import {
@@ -180,9 +181,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkSessionAndRoute();
 
   // Subscribe to real-time Supabase Auth state changes
-  onAuthStateChange((event, session) => {
+  onAuthStateChange(async (event, session) => {
     console.log('[Admin Auth State Change]', event, session?.user?.email);
     if (session && session.user) {
+      const isAuthorized = await verifyAdminStatus();
+      if (!isAuthorized) {
+        console.warn('[Admin Auth] User authenticated but not authorized in public.is_admin():', session.user.email);
+        await signOutAdmin();
+        state.currentUser = null;
+        showAuthScreen();
+        showAuthFeedback('Access Denied: Your account does not have administrator privileges.', 'error');
+        return;
+      }
       state.currentUser = session.user;
       updateUserProfileUI(session.user);
       if (elements.authView && elements.authView.style.display !== 'none') {
@@ -202,6 +212,15 @@ async function checkSessionAndRoute() {
   try {
     const user = await getCurrentAdminUser();
     if (user) {
+      const isAuthorized = await verifyAdminStatus();
+      if (!isAuthorized) {
+        console.warn('[Admin Auth] Session found for unauthorized user:', user.email);
+        await signOutAdmin();
+        state.currentUser = null;
+        showAuthScreen();
+        showAuthFeedback('Access Denied: Your account does not have administrator privileges.', 'error');
+        return;
+      }
       state.currentUser = user;
       updateUserProfileUI(user);
       showPortalScreen();
@@ -329,6 +348,13 @@ function initAuthHandlers() {
       if (state.authMode === 'signin') {
         const res = await signInAdmin(email, password);
         if (res.success && res.data && res.data.user) {
+          const isAuthorized = await verifyAdminStatus();
+          if (!isAuthorized) {
+            await signOutAdmin();
+            state.currentUser = null;
+            showAuthFeedback('Access Denied: Your account is not authorized as an administrator.', 'error');
+            return;
+          }
           state.currentUser = res.data.user;
           updateUserProfileUI(res.data.user);
           showPortalScreen();
@@ -342,17 +368,9 @@ function initAuthHandlers() {
         // Sign Up
         const res = await signUpAdmin(email, password);
         if (res.success && res.data) {
-          if (res.data.session) {
-            state.currentUser = res.data.user;
-            updateUserProfileUI(res.data.user);
-            showPortalScreen();
-            navigateTo('dashboard');
-            await loadAllPortalData();
-          } else {
-            showAuthFeedback('Account created! Supabase may require email confirmation. Please check your inbox or sign in if confirmed.', 'success');
-            // Toggle back to signin
-            elements.btnToggleAuthMode.click();
-          }
+          showAuthFeedback('Account registered. Administrative access must be granted by a system administrator in Supabase before you can log in.', 'success');
+          // Always keep on sign in mode and do not route to dashboard
+          if (elements.btnToggleAuthMode) elements.btnToggleAuthMode.click();
         } else {
           const errMsg = res.error?.message || 'Failed to register admin account.';
           showAuthFeedback(errMsg, 'error');
@@ -969,18 +987,18 @@ function renderInquiriesTable() {
 
     tr.innerHTML = `
       <td class="font-mono text-muted">${formatDisplayDate(brief.created_at || new Date())}</td>
-      <td class="font-medium"><strong>${brief.name || 'Private Client'}</strong></td>
+      <td class="font-medium"><strong>${escapeHtml(brief.name || 'Private Client')}</strong></td>
       <td>
-        <a href="${waLink}" target="_blank" class="contact-link whatsapp">
-          ${brief.phone || 'N/A'}
+        <a href="${waLink}" target="_blank" rel="noopener" class="contact-link whatsapp">
+          ${escapeHtml(brief.phone || 'N/A')}
         </a>
       </td>
-      <td><span class="occasion-tag">${brief.occasion || 'Custom'}</span></td>
-      <td><span class="charter-mode-pill">${formatCharterMode(brief.charter_mode || brief.charterMode)}</span></td>
-      <td>${brief.duration || '3 Hours'}</td>
-      <td class="notes-cell" title="${brief.notes || 'None'}">${brief.notes ? (brief.notes.length > 50 ? brief.notes.substring(0, 50) + '...' : brief.notes) : '—'}</td>
+      <td><span class="occasion-tag">${escapeHtml(brief.occasion || 'Custom')}</span></td>
+      <td><span class="charter-mode-pill">${escapeHtml(formatCharterMode(brief.charter_mode || brief.charterMode))}</span></td>
+      <td>${escapeHtml(brief.duration || '3 Hours')}</td>
+      <td class="notes-cell" title="${escapeHtml(brief.notes || 'None')}">${brief.notes ? escapeHtml(brief.notes.length > 50 ? brief.notes.substring(0, 50) + '...' : brief.notes) : '—'}</td>
       <td>
-        <select class="status-select-pill status-shipped" data-brief-id="${brief.id}">
+        <select class="status-select-pill status-shipped" data-brief-id="${escapeHtml(brief.id)}">
           <option value="New" ${brief.status === 'New' ? 'selected' : ''}>New</option>
           <option value="Contacted" ${brief.status === 'Contacted' ? 'selected' : ''}>Contacted</option>
           <option value="Confirmed" ${brief.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
@@ -988,7 +1006,7 @@ function renderInquiriesTable() {
         </select>
       </td>
       <td class="text-center">
-        <a href="${waLink}" target="_blank" class="btn-table-icon" title="Chat on WhatsApp">
+        <a href="${waLink}" target="_blank" rel="noopener" class="btn-table-icon" title="Chat on WhatsApp">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
         </a>
       </td>
@@ -1126,7 +1144,14 @@ function initCommunityHandlers() {
         showToastNotification('No community members to export yet.');
         return;
       }
-      const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const csvCell = (v) => {
+        let str = String(v ?? '');
+        // BP-SEC-06: Neutralize formula injection triggers (=, +, -, @, \t, \r)
+        if (/^[=+\-@\t\r]/.test(str)) {
+          str = "'" + str;
+        }
+        return `"${str.replace(/"/g, '""')}"`;
+      };
       const rows = [
         ['Name', 'Phone', 'Email', 'Status', 'Joined'],
         ...state.communityMembers.map(m => [m.name, '+' + m.phone, m.email || '', m.status, m.created_at])
@@ -1358,18 +1383,19 @@ function renderMediaGrid() {
     const card = document.createElement('div');
     card.className = 'admin-media-card';
     
-    const displayUrl = getImageKitUrl(item.imagekit_url || item.url, { width: 450, quality: 75, format: 'auto' });
+    const rawUrl = item.imagekit_url || item.url || '';
+    const displayUrl = getImageKitUrl(rawUrl, { width: 450, quality: 75, format: 'auto' });
 
     card.innerHTML = `
       <div class="admin-media-card-thumb">
-        <img src="${displayUrl}" alt="${item.title}" loading="lazy">
-        <span class="media-cat-badge">${item.category || 'all'}</span>
+        <img src="${escapeHtml(displayUrl)}" alt="${escapeHtml(item.title || '')}" loading="lazy">
+        <span class="media-cat-badge">${escapeHtml(item.category || 'all')}</span>
       </div>
       <div class="admin-media-card-body">
-        <h4 class="media-title">${item.title}</h4>
-        <p class="media-sub">${item.subtitle || 'Private Lady Alice charter'}</p>
+        <h4 class="media-title">${escapeHtml(item.title || '')}</h4>
+        <p class="media-sub">${escapeHtml(item.subtitle || 'Private Lady Alice charter')}</p>
         <div class="media-url-row font-mono">
-          <input type="text" readonly value="${item.imagekit_url || displayUrl}" class="copyable-url-input">
+          <input type="text" readonly value="${escapeHtml(item.imagekit_url || displayUrl)}" class="copyable-url-input">
         </div>
       </div>
     `;
