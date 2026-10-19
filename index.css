@@ -5639,7 +5639,7 @@ input[type="submit"],
   .section-hero {
     min-height: 100vh;
     min-height: 100svh;
-    padding-top: calc(74px + 11svh);
+    padding-top: calc(74px + 15svh);
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     justify-content: flex-start;
   }
@@ -5660,6 +5660,38 @@ input[type="submit"],
   /* Show more of the ship (it sits to the right of the frame) */
   .hero-bg-video {
     object-position: 72% 50%;
+  }
+
+  /* Bigger, easier-to-read hero text on phones */
+  .hero-intro {
+    width: 88%;
+    max-width: 88%;
+  }
+
+  .hero-eyebrow {
+    font-size: 12.5px;
+    letter-spacing: 0.22em;
+    margin-bottom: 10px;
+  }
+
+  .hero-title {
+    font-size: 54px;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .tagline-bold,
+  .tagline-italic {
+    font-size: 14px;
+  }
+
+  .hero-tagline-duo {
+    margin-bottom: 10px;
+  }
+
+  .hero-subtitle {
+    font-size: 15.5px;
+    line-height: 1.55;
   }
 }
 
