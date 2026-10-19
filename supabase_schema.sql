@@ -534,7 +534,7 @@ CREATE TABLE IF NOT EXISTS public.admin_sessions (
 );
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 
--- 20. "Is this email on the admin list?" (used by the login screen before the code step)
+-- 20. "Is this a Supabase Auth user?" (every Auth user is an admin: keep public sign-ups OFF)
 CREATE OR REPLACE FUNCTION public.is_admin_user()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -542,10 +542,8 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.admin_users
-    WHERE lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
-  );
+  SELECT auth.uid() IS NOT NULL
+     AND EXISTS (SELECT 1 FROM auth.users u WHERE u.id = auth.uid());
 $$;
 
 -- 21. "Admin AND this login session entered a valid code" — every data policy uses this
