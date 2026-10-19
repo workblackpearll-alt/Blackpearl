@@ -651,8 +651,11 @@ async function fetchRowsWithFallback(table, fullColumns, basicColumns, sinceIso)
   }
 }
 
+// Demo rows for showing the client are named "SAMPLE · ..." and never count in analytics
+const isSampleRow = (row) => /^sample\b/i.test(String(row?.name || ''));
+
 async function countSince(table, sinceIso) {
-  let query = supabase.from(table).select('id', { count: 'exact', head: true });
+  let query = supabase.from(table).select('id', { count: 'exact', head: true }).not('name', 'ilike', 'sample%');
   if (sinceIso) query = query.gte('created_at', sinceIso);
   const { count } = await query;
   return count || 0;
@@ -747,13 +750,13 @@ export async function fetchAnalyticsSummary(days = 30) {
       fetchRowsWithFallback('page_views',
         'session_id, visitor_id, campaign, page_path, traffic_source, device_type, created_at',
         'session_id, page_path, traffic_source, device_type, created_at', sinceIso),
-      fetchRowsWithFallback('holds', 'occasion, price, status, campaign, created_at', 'occasion, price, status, created_at', sinceIso),
+      fetchRowsWithFallback('holds', 'name, occasion, price, status, campaign, created_at', 'name, occasion, price, status, created_at', sinceIso),
       countSince('community_members', sinceIso),
       countSince('contact_inquiries', sinceIso)
     ]);
 
     const person = (v) => v.visitor_id || v.session_id;
-    const paid = allHolds.filter(h => PAID.includes(h.status));
+    const paid = allHolds.filter(h => PAID.includes(h.status) && !isSampleRow(h));
     const priceNumber = (p) => parseFloat(String(p || '').replace(/[₹,\s]/g, '')) || 0;
 
     const uniqueVisitors = new Set(allViews.map(person)).size;
