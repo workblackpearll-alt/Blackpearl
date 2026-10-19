@@ -492,3 +492,74 @@ ALTER TABLE public.blocked_dates ADD COLUMN IF NOT EXISTS end_hour INTEGER;
 -- Several offline bookings can now share a slot, so drop one-lock-per-slot
 DROP INDEX IF EXISTS public.idx_blocked_dates_date_slot;
 CREATE INDEX IF NOT EXISTS idx_blocked_dates_date ON public.blocked_dates(date);
+
+-- 17. EMAIL DELIVERY TRACKING (same as supabase_migration_email_tracking.sql)
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS guest_email_id TEXT;
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS guest_email_status TEXT;
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS guest_email_status_at TIMESTAMPTZ;
+
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS admin_email_id TEXT;
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS admin_email_status TEXT;
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS admin_email_status_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_holds_guest_email_id ON public.holds(guest_email_id);
+CREATE INDEX IF NOT EXISTS idx_holds_admin_email_id ON public.holds(admin_email_id);
+
+-- ========================================================
+-- ADMIN LOGIN CODE / EMAIL OTP (same as supabase_migration_admin_otp.sql)
+-- Must stay at the END: it redefines is_admin() to require a verified code.
+-- ========================================================
+-- 18. One-time codes (server only: no policies, so the website can't read them)
+CREATE TABLE IF NOT EXISTS public.admin_otp_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    session_id UUID NOT NULL,          -- the login session the code belongs to
+    code_hash TEXT NOT NULL,           -- never stored in plain text
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at TIMESTAMPTZ NOT NULL,
+    consumed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+CREATE INDEX IF NOT EXISTS idx_admin_otp_user_created ON public.admin_otp_codes(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_otp_session ON public.admin_otp_codes(session_id);
+ALTER TABLE public.admin_otp_codes ENABLE ROW LEVEL SECURITY;
+
+-- 19. Login sessions that passed the code check (server only)
+CREATE TABLE IF NOT EXISTS public.admin_sessions (
+    session_id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    email TEXT NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    expires_at TIMESTAMPTZ NOT NULL
+);
+ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
+
+-- 20. "Is this email on the admin list?" (used by the login screen before the code step)
+CREATE OR REPLACE FUNCTION public.is_admin_user()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  );
+$$;
+
+-- 21. "Admin AND this login session entered a valid code" — every data policy uses this
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT public.is_admin_user()
+     AND EXISTS (
+       SELECT 1 FROM public.admin_sessions s
+       WHERE s.session_id::text = coalesce(auth.jwt() ->> 'session_id', '')
+         AND s.expires_at > now()
+     );
+$$;
