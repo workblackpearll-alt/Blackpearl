@@ -561,3 +561,11 @@ AS $$
          AND s.expires_at > now()
      );
 $$;
+
+-- 22. PROMOTION ANALYTICS (same as supabase_migration_analytics.sql)
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS visitor_id TEXT;
+ALTER TABLE public.page_views ADD COLUMN IF NOT EXISTS campaign TEXT;
+CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON public.page_views(visitor_id);
+
+-- Bookings remember the promotion that brought the guest
+ALTER TABLE public.holds ADD COLUMN IF NOT EXISTS campaign TEXT;

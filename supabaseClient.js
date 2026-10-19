@@ -535,13 +535,42 @@ export async function updateBriefStatus(briefId, status) {
  * Tracks a page visit into Supabase page_views table.
  * Uses sessionStorage so one browser tab = one session.
  */
-export async function trackPageView(pagePath = '/') {
-  // Generate or retrieve persistent anonymous session ID per browser tab
-  let sessionId = sessionStorage.getItem('bp_session_id');
-  if (!sessionId) {
-    sessionId = 'bp_sess_' + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
-    sessionStorage.setItem('bp_session_id', sessionId);
+// Browser storage can be blocked (private mode); analytics must still work
+function storedId(storage, key, prefix) {
+  try {
+    let id = storage.getItem(key);
+    if (!id) {
+      id = prefix + Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
+      storage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return prefix + Math.random().toString(36).substring(2, 12);
   }
+}
+
+/**
+ * The promotion campaign (utm_campaign) this visitor arrived through,
+ * remembered for the rest of the visit so a later booking is credited to it.
+ */
+export function getCampaign() {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search || '').get('utm_campaign');
+    if (fromUrl) {
+      const clean = fromUrl.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').slice(0, 60);
+      sessionStorage.setItem('bp_campaign', clean);
+      return clean;
+    }
+    return sessionStorage.getItem('bp_campaign') || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function trackPageView(pagePath = '/') {
+  // One id per browser tab (visit) and one per browser (person, anonymous)
+  const sessionId = storedId(sessionStorage, 'bp_session_id', 'bp_sess_');
+  const visitorId = storedId(localStorage, 'bp_visitor_id', 'bp_vis_');
 
   // Determine traffic attribution from UTM tags and document.referrer
   const params = new URLSearchParams(window.location.search || '');
@@ -586,7 +615,10 @@ export async function trackPageView(pagePath = '/') {
 
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('page_views').insert([payload]);
+      const withPromo = { ...payload, visitor_id: visitorId, campaign: getCampaign() };
+      const { error } = await supabase.from('page_views').insert([withPromo]);
+      // Older database without the visitor/campaign columns: still record the visit
+      if (error) await supabase.from('page_views').insert([payload]);
     } catch (err) {
       // Analytics must never interrupt user experience
       console.debug('[Analytics] page_views insert note:', err);
@@ -594,100 +626,155 @@ export async function trackPageView(pagePath = '/') {
   }
 }
 
+// Supabase returns at most 1,000 rows per request: fetch page by page
+async function fetchAllRows(table, columns, sinceIso) {
+  const PAGE = 1000;
+  const MAX_ROWS = 50000;
+  const rows = [];
+  for (let from = 0; from < MAX_ROWS; from += PAGE) {
+    let query = supabase.from(table).select(columns).order('created_at', { ascending: true }).range(from, from + PAGE - 1);
+    if (sinceIso) query = query.gte('created_at', sinceIso);
+    const { data, error } = await query;
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE) break;
+  }
+  return rows;
+}
+
+// Try the newer columns first; fall back if the analytics migration isn't run yet
+async function fetchRowsWithFallback(table, fullColumns, basicColumns, sinceIso) {
+  try {
+    return await fetchAllRows(table, fullColumns, sinceIso);
+  } catch {
+    return fetchAllRows(table, basicColumns, sinceIso);
+  }
+}
+
+async function countSince(table, sinceIso) {
+  let query = supabase.from(table).select('id', { count: 'exact', head: true });
+  if (sinceIso) query = query.gte('created_at', sinceIso);
+  const { count } = await query;
+  return count || 0;
+}
+
+const PAGE_NAMES = {
+  '/': 'Home',
+  '/book': 'Booking page',
+  '/gallery': 'Gallery',
+  '/about': 'About',
+  '/contact': 'Contact',
+  '/verify': 'Booking pass (QR)',
+  '/terms': 'Terms',
+  '/privacy': 'Privacy',
+  '/cancellation': 'Cancellation policy',
+  '/refund': 'Cancellation policy'
+};
+
+function pageName(path) {
+  const clean = (String(path || '/').split('?')[0].replace(/\/+$/, '') || '/').toLowerCase();
+  const base = clean === '/' ? '/' : `/${clean.split('/')[1]}`;
+  return PAGE_NAMES[base] || clean;
+}
+
+// YYYY-MM-DD in India time
+function istDay(dateLike) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(dateLike));
+}
+
 /**
- * Fetches 100% live analytics from Supabase.
- * No hardcoded numbers — all metrics computed from real data.
+ * Visitors per day (or per week for long ranges) for the Overview chart.
+ * Returns [{ start, label, visitors, views }] with every period present (zeros included).
  */
-export async function fetchAnalyticsSummary() {
-  // Default empty state — shown when Supabase has no data yet
+function buildSeries(views, days) {
+  const today = istDay(Date.now());
+  const firstDay = days
+    ? istDay(Date.now() - (days - 1) * 86400000)
+    : (views.length ? istDay(views[0].created_at) : today);
+
+  const spanDays = Math.round((Date.parse(today) - Date.parse(firstDay)) / 86400000) + 1;
+  const step = spanDays > 90 ? 7 : 1; // weekly bars for very long ranges
+
+  const buckets = [];
+  for (let t = Date.parse(firstDay); t <= Date.parse(today); t += step * 86400000) {
+    const start = new Date(t).toISOString().slice(0, 10);
+    const d = new Date(t);
+    const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    buckets.push({ start, label: step === 7 ? `Week of ${label}` : label, people: new Set(), views: 0 });
+  }
+
+  views.forEach(v => {
+    const day = istDay(v.created_at);
+    const index = Math.floor((Date.parse(day) - Date.parse(firstDay)) / (step * 86400000));
+    const bucket = buckets[index];
+    if (!bucket) return;
+    bucket.views += 1;
+    bucket.people.add(v.visitor_id || v.session_id);
+  });
+
+  return { step, points: buckets.map(b => ({ start: b.start, label: b.label, visitors: b.people.size, views: b.views })) };
+}
+
+/**
+ * Live analytics for the admin Overview. days = 7 / 30 / null (all time).
+ * All numbers are computed from real data — nothing hard-coded.
+ */
+export async function fetchAnalyticsSummary(days = 30) {
   const empty = {
     websiteViews: 0,
     uniqueVisitors: 0,
     bookingViews: 0,
-    totalHolds: 0,
-    activeHolds: 0,
-    topOccasion: '—',
+    paidBookings: 0,
+    bookingValue: 0,
+    conversionRate: 0,
+    communitySignups: 0,
+    enquiries: 0,
     trafficSources: [],
     engagementReport: [],
+    topPages: [],
+    campaigns: [],
+    series: { step: 1, points: [] },
     deviceSplit: { mobile: 0, desktop: 0 }
   };
 
-  if (!isSupabaseConfigured() || !supabase) {
-    return empty;
-  }
+  if (!isSupabaseConfigured() || !supabase) return empty;
+
+  const sinceIso = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null;
+  const PAID = ['Held (Deposit Paid)', 'Confirmed', 'Completed'];
 
   try {
-    // 1. Fetch ALL page views from Supabase
-    const { data: views, error: viewsError } = await supabase
-      .from('page_views')
-      .select('session_id, page_path, traffic_source, device_type, created_at');
+    const [allViews, allHolds, communitySignups, enquiries] = await Promise.all([
+      fetchRowsWithFallback('page_views',
+        'session_id, visitor_id, campaign, page_path, traffic_source, device_type, created_at',
+        'session_id, page_path, traffic_source, device_type, created_at', sinceIso),
+      fetchRowsWithFallback('holds', 'occasion, price, status, campaign, created_at', 'occasion, price, status, created_at', sinceIso),
+      countSince('community_members', sinceIso),
+      countSince('contact_inquiries', sinceIso)
+    ]);
 
-    // 2. Fetch ALL holds for engagement + booking count
-    const { data: holds, error: holdsError } = await supabase
-      .from('holds')
-      .select('id, occasion, price, status, created_at');
+    const person = (v) => v.visitor_id || v.session_id;
+    const paid = allHolds.filter(h => PAID.includes(h.status));
+    const priceNumber = (p) => parseFloat(String(p || '').replace(/[₹,\s]/g, '')) || 0;
 
-    // 3. Fetch ALL voyage briefs for inquiry count
-    const { data: briefs, error: briefsError } = await supabase
-      .from('voyage_briefs')
-      .select('id, occasion, created_at');
+    const uniqueVisitors = new Set(allViews.map(person)).size;
+    const bookingViews = allViews.filter(v => (v.page_path || '').startsWith('/book')).length;
 
-    const allViews = (!viewsError && Array.isArray(views)) ? views : [];
-    const allHolds = (!holdsError && Array.isArray(holds)) ? holds : [];
-    const allBriefs = (!briefsError && Array.isArray(briefs)) ? briefs : [];
-
-    // ── Website Views & Unique Visitors ──────────────────
-    const totalViews = allViews.length;
-    const uniqueSessions = new Set(allViews.map(v => v.session_id)).size;
-
-    // ── Booking Views = views on /book/* paths ────────────
-    const bookingViews = allViews.filter(v =>
-      v.page_path && v.page_path.startsWith('/book')
-    ).length;
-
-    // ── Total Holds & Active Status ───────────────────────
-    const totalHolds = allHolds.length;
-    const activeHolds = allHolds.filter(h => {
-      const s = (h.status || '').toLowerCase();
-      return s.includes('held') || s.includes('confirmed');
-    }).length;
-
-    // ── Top Occasion (most booked) ────────────────────────
-    const occasionCounts = {};
-    allHolds.forEach(h => {
-      if (h.occasion) {
-        occasionCounts[h.occasion] = (occasionCounts[h.occasion] || 0) + 1;
-      }
-    });
-    // Also count occasion page views
-    allViews.forEach(v => {
-      if (v.page_path && v.page_path.startsWith('/book/')) {
-        const occ = v.page_path.replace('/book/', '').replace(/-/g, ' ');
-        if (occ) occasionCounts[occ] = (occasionCounts[occ] || 0) + 0.5;
-      }
-    });
-    const topOccasion = Object.keys(occasionCounts).length > 0
-      ? Object.entries(occasionCounts).sort((a, b) => b[1] - a[1])[0][0]
-      : '—';
-
-    // ── Traffic Source Breakdown ──────────────────────────
+    // Traffic sources (by visits)
     const SOURCE_COLORS = {
-      'Direct':              '#E4E4E7',
-      'Instagram (Organic)': '#e040fb',
-      'Google (SEO)':        '#4fc3f7',
-      'LinkedIn':            '#0077b5',
-      'WhatsApp':            '#25d366',
-      'YouTube':             '#f44336',
-      'Referral':            '#78909c'
+      'Direct': '#E4E4E7',
+      'Instagram (Organic)': '#E040FB',
+      'Google (SEO)': '#4FC3F7',
+      'LinkedIn': '#0077B5',
+      'WhatsApp': '#25D366',
+      'YouTube': '#F44336',
+      'Referral': '#78909C'
     };
-
     const sourceCounts = {};
     allViews.forEach(v => {
       const src = v.traffic_source || 'Direct';
       sourceCounts[src] = (sourceCounts[src] || 0) + 1;
     });
-
-    const totalSourceViews = Object.values(sourceCounts).reduce((a, b) => a + b, 0) || 1;
+    const totalSourceViews = allViews.length || 1;
     const trafficSources = Object.entries(sourceCounts)
       .sort((a, b) => b[1] - a[1])
       .map(([name, count]) => ({
@@ -697,71 +784,70 @@ export async function fetchAnalyticsSummary() {
         color: SOURCE_COLORS[name] || '#8B8576'
       }));
 
-    // ── Engagement Report (per occasion: page views + holds) ─
-    const occasionViewCounts = {};
+    // Top pages
+    const pages = {};
     allViews.forEach(v => {
-      if (v.page_path && v.page_path.startsWith('/book/')) {
-        const raw = v.page_path.replace('/book/', '');
-        // Capitalize first letter of each word
-        const occ = raw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        if (occ) occasionViewCounts[occ] = (occasionViewCounts[occ] || 0) + 1;
-      }
+      const name = pageName(v.page_path);
+      pages[name] = pages[name] || { views: 0, people: new Set() };
+      pages[name].views += 1;
+      pages[name].people.add(person(v));
     });
+    const topPages = Object.entries(pages)
+      .map(([name, d]) => ({ name, views: d.views, visitors: d.people.size }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 8);
 
-    const occasionHoldData = {};
-    allHolds.forEach(h => {
+    // Campaigns (promotion links): visitors + the bookings they produced
+    const campaignMap = {};
+    allViews.filter(v => v.campaign).forEach(v => {
+      campaignMap[v.campaign] = campaignMap[v.campaign] || { people: new Set(), bookings: 0, value: 0 };
+      campaignMap[v.campaign].people.add(person(v));
+    });
+    paid.filter(h => h.campaign).forEach(h => {
+      campaignMap[h.campaign] = campaignMap[h.campaign] || { people: new Set(), bookings: 0, value: 0 };
+      campaignMap[h.campaign].bookings += 1;
+      campaignMap[h.campaign].value += priceNumber(h.price);
+    });
+    const campaigns = Object.entries(campaignMap)
+      .map(([name, d]) => ({ name, visitors: d.people.size, bookings: d.bookings, value: d.value }))
+      .sort((a, b) => b.visitors - a.visitors || b.bookings - a.bookings);
+
+    // Bookings by occasion
+    const byOccasion = {};
+    paid.forEach(h => {
       const occ = h.occasion || 'Other';
-      if (!occasionHoldData[occ]) occasionHoldData[occ] = { holds: 0, revenue: 0 };
-      occasionHoldData[occ].holds += 1;
-
-      // Parse price string like "₹90,000" → 90000
-      const priceStr = (h.price || '').replace(/[₹,]/g, '').trim();
-      const priceNum = parseFloat(priceStr);
-      if (!isNaN(priceNum)) occasionHoldData[occ].revenue += priceNum;
+      byOccasion[occ] = byOccasion[occ] || { bookings: 0, value: 0 };
+      byOccasion[occ].bookings += 1;
+      byOccasion[occ].value += priceNumber(h.price);
     });
-
-    // Merge all occasions mentioned in holds or booking views
-    const allOccasions = new Set([
-      ...Object.keys(occasionHoldData),
-      ...Object.keys(occasionViewCounts)
-    ]);
-
-    const engagementReport = Array.from(allOccasions)
-      .map(occ => {
-        const holdInfo = occasionHoldData[occ] || { holds: 0, revenue: 0 };
-        const views = occasionViewCounts[occ] || 0;
-        return {
-          occasion: occ,
-          views,
-          clicks: holdInfo.holds,
-          total: holdInfo.revenue > 0
-            ? '₹' + holdInfo.revenue.toLocaleString('en-IN')
-            : '₹0'
-        };
-      })
-      .sort((a, b) => (b.views + b.clicks) - (a.views + a.clicks));
-
-    // ── Device Split ──────────────────────────────────────
-    const mobileViews = allViews.filter(v => v.device_type === 'Mobile').length;
-    const desktopViews = allViews.filter(v => v.device_type === 'Desktop').length;
+    const engagementReport = Object.entries(byOccasion)
+      .map(([occasion, d]) => ({ occasion, bookings: d.bookings, value: d.value }))
+      .sort((a, b) => b.bookings - a.bookings || b.value - a.value);
 
     return {
-      websiteViews: totalViews,
-      uniqueVisitors: uniqueSessions,
+      websiteViews: allViews.length,
+      uniqueVisitors,
       bookingViews,
-      totalHolds,
-      activeHolds,
-      topOccasion,
+      paidBookings: paid.length,
+      bookingValue: paid.reduce((sum, h) => sum + priceNumber(h.price), 0),
+      conversionRate: uniqueVisitors ? (paid.length / uniqueVisitors) * 100 : 0,
+      communitySignups,
+      enquiries,
       trafficSources,
       engagementReport,
-      deviceSplit: { mobile: mobileViews, desktop: desktopViews }
+      topPages,
+      campaigns,
+      series: buildSeries(allViews, days),
+      deviceSplit: {
+        mobile: allViews.filter(v => v.device_type === 'Mobile').length,
+        desktop: allViews.filter(v => v.device_type === 'Desktop').length
+      }
     };
   } catch (err) {
     console.error('fetchAnalyticsSummary error:', err);
     return empty;
   }
 }
-
 
 /* --------------------------------------------------------
    8. COMMUNITY SIGN-UPS (WHATSAPP BROADCAST LIST)

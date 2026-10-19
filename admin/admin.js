@@ -58,6 +58,7 @@ const state = {
   mediaItems: [],
   blockedDates: [],
   analytics: null,
+  analyticsDays: 30, // 7 | 30 | null (all time)
   activeBookingFilter: 'all',
   bookingSearchQuery: '',
   briefSearchQuery: '',
@@ -758,7 +759,7 @@ async function loadAllPortalData() {
 
 async function loadAnalyticsData() {
   try {
-    const summary = await fetchAnalyticsSummary();
+    const summary = await fetchAnalyticsSummary(state.analyticsDays);
     state.analytics = summary;
     renderDashboard();
   } catch (err) {
@@ -816,6 +817,15 @@ async function loadMediaData() {
    5. DASHBOARD CONTROLLER (SCREENSHOT 1)
    ======================================================== */
 function initDashboardHandlers() {
+  document.querySelectorAll('[data-range]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const range = btn.getAttribute('data-range');
+      state.analyticsDays = range === 'all' ? null : Number(range);
+      document.querySelectorAll('[data-range]').forEach(b => b.classList.toggle('active', b === btn));
+      await loadAnalyticsData();
+    });
+  });
+
   if (elements.btnRefreshAnalytics) {
     elements.btnRefreshAnalytics.addEventListener('click', async () => {
       elements.btnRefreshAnalytics.disabled = true;
@@ -827,34 +837,145 @@ function initDashboardHandlers() {
   }
 }
 
+function renderReportRows(bodyId, rows, rowHtml, columns, emptyText) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  body.innerHTML = Array.isArray(rows) && rows.length
+    ? rows.map(row => `<tr>${rowHtml(row)}</tr>`).join('')
+    : `<tr><td colspan="${columns}" class="overview-empty">${emptyText}</td></tr>`;
+}
+
+// Rounds the chart's top value up to a clean number (5, 10, 20, 50, 100...)
+function niceMax(value) {
+  if (value <= 5) return 5;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const steps = [1, 2, 2.5, 5, 10];
+  return steps.map(s => s * magnitude).find(s => s >= value) || 10 * magnitude;
+}
+
+/**
+ * Visitors per day (single series): thin bars, a light grid, a hover/focus
+ * tooltip on every bar, and a direct label only on the busiest day.
+ */
+function renderVisitorsChart(series) {
+  const chart = document.getElementById('visitorsChart');
+  const axis = document.getElementById('visitorsChartAxis');
+  if (!chart || !axis) return;
+
+  const points = series?.points || [];
+  const perWeek = series?.step === 7;
+  document.getElementById('visitorsChartTitle').textContent = perWeek ? 'Visitors per week' : 'Visitors per day';
+
+  if (!points.length || points.every(p => p.visitors === 0)) {
+    chart.innerHTML = '<p class="overview-empty">No visits recorded in this period yet.</p>';
+    axis.innerHTML = '';
+    document.getElementById('visitorsChartMeta').textContent = '';
+    return;
+  }
+
+  const peak = points.reduce((best, p) => (p.visitors > best.visitors ? p : best), points[0]);
+  const top = niceMax(peak.visitors);
+  const total = points.reduce((sum, p) => sum + p.visitors, 0);
+  document.getElementById('visitorsChartMeta').textContent =
+    `Busiest ${perWeek ? 'week' : 'day'}: ${peak.label} · ${peak.visitors.toLocaleString('en-IN')} visitors`;
+  chart.setAttribute('aria-label', `${perWeek ? 'Visitors per week' : 'Visitors per day'}, ${points.length} bars, busiest ${peak.label} with ${peak.visitors}`);
+
+  const grid = [1, 0.5].map(f => `
+    <div class="chart-gridline" style="bottom:${f * 100}%"><span>${Math.round(top * f).toLocaleString('en-IN')}</span></div>`).join('');
+
+  chart.innerHTML = `${grid}<div class="chart-bars">${points.map(p => `
+    <div class="chart-col" tabindex="0" aria-label="${p.label}: ${p.visitors} visitors, ${p.views} page views">
+      <div class="chart-bar" style="height:${Math.max(p.visitors ? 2 : 0, (p.visitors / top) * 100)}%"></div>
+      ${p === peak ? `<span class="chart-peak-label" style="bottom:${(p.visitors / top) * 100}%">${p.visitors.toLocaleString('en-IN')}</span>` : ''}
+      <div class="chart-tip" role="tooltip"><strong>${p.label}</strong><span>${p.visitors.toLocaleString('en-IN')} visitors</span><span>${p.views.toLocaleString('en-IN')} page views</span></div>
+    </div>`).join('')}</div>`;
+
+  // Date labels: show about 7 so they never collide
+  const every = Math.max(1, Math.ceil(points.length / 7));
+  axis.innerHTML = points.map((p, i) =>
+    `<span>${i % every === 0 || i === points.length - 1 ? p.label.replace('Week of ', '') : ''}</span>`).join('');
+  axis.style.gridTemplateColumns = `repeat(${points.length}, minmax(0, 1fr))`;
+  chart.querySelector('.chart-bars').style.gridTemplateColumns = `repeat(${points.length}, minmax(0, 1fr))`;
+
+  // Single-series chart: total visitors is the headline
+  chart.dataset.total = total;
+}
+
 function renderDashboard() {
   renderOverview();
   if (!state.analytics) return;
   const a = state.analytics;
+  const num = (n) => Number(n || 0).toLocaleString('en-IN');
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
 
-  if (elements.metricViews) elements.metricViews.textContent = Number(a.websiteViews || 0).toLocaleString('en-IN');
-  if (elements.metricVisitors) elements.metricVisitors.textContent = Number(a.uniqueVisitors || 0).toLocaleString('en-IN');
+  set('metricViews', num(a.websiteViews));
+  set('metricVisitors', num(a.uniqueVisitors));
+  set('metricBookingViews', num(a.bookingViews));
+  set('metricPaidBookings', num(a.paidBookings));
+  set('metricBookingValue', `₹${num(Math.round(a.bookingValue || 0))}`);
+  set('metricConversion', `${(a.conversionRate || 0).toFixed(a.conversionRate >= 10 || !a.conversionRate ? 0 : 1)}%`);
 
-  // 2. Traffic Acquisition List
+  set('metricSignups', num(a.communitySignups));
+  set('metricEnquiries', num(a.enquiries));
+
+  renderVisitorsChart(a.series);
+  renderReportRows('campaignReportBody', a.campaigns, row => `
+    <td class="engagement-product-title">${escapeHtml(row.name)}</td>
+    <td class="text-right num-cell">${num(row.visitors)}</td>
+    <td class="text-right num-cell">${num(row.bookings)}</td>
+    <td class="text-right total-cell">₹${num(Math.round(row.value))}</td>`, 4,
+    'No campaign links used yet in this period.');
+  renderReportRows('topPagesBody', a.topPages, row => `
+    <td class="engagement-product-title">${escapeHtml(row.name)}</td>
+    <td class="text-right num-cell">${num(row.views)}</td>
+    <td class="text-right num-cell">${num(row.visitors)}</td>`, 3,
+    'No visits recorded in this period yet.');
+
+  const devices = (a.deviceSplit?.mobile || 0) + (a.deviceSplit?.desktop || 0);
+  set('metricDeviceSplit', devices ? `${Math.round((a.deviceSplit.mobile / devices) * 100)}% on phones` : '');
+
+  // Traffic sources
   if (elements.trafficList) {
     elements.trafficList.innerHTML = '';
-    if (Array.isArray(a.trafficSources) && a.trafficSources.length > 0) {
+    if (Array.isArray(a.trafficSources) && a.trafficSources.length) {
       a.trafficSources.forEach(source => {
         const item = document.createElement('div');
         item.className = 'traffic-row';
         item.innerHTML = `
           <div class="traffic-row-header">
-            <span class="traffic-name">${source.name}</span>
-            <span class="traffic-stats"><strong>${source.count.toLocaleString('en-IN')}</strong> (${source.percentage}%)</span>
+            <span class="traffic-name">${escapeHtml(source.name)}</span>
+            <span class="traffic-stats"><strong>${num(source.count)}</strong> (${source.percentage}%)</span>
           </div>
           <div class="traffic-bar-bg">
-            <div class="traffic-bar-fill" style="width: ${Math.min(100, Math.max(2, source.percentage))}%; background-color: ${source.color || '#C9A968'};"></div>
+            <div class="traffic-bar-fill" style="width: ${Math.min(100, Math.max(2, source.percentage))}%; background-color: ${source.color};"></div>
           </div>
         `;
         elements.trafficList.appendChild(item);
       });
     } else {
-      elements.trafficList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--bp-mist-dark); font-size: 0.85rem;">No traffic records yet. Browse the site to log live visits.</div>';
+      elements.trafficList.innerHTML = '<p class="overview-empty">No visits recorded in this period yet.</p>';
+    }
+  }
+
+  // Bookings by occasion
+  const body = document.getElementById('engagementReportBody');
+  if (body) {
+    body.innerHTML = '';
+    if (Array.isArray(a.engagementReport) && a.engagementReport.length) {
+      a.engagementReport.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="engagement-product-title">${escapeHtml(row.occasion)}</td>
+          <td class="text-right num-cell">${num(row.bookings)}</td>
+          <td class="text-right total-cell">₹${num(Math.round(row.value))}</td>
+        `;
+        body.appendChild(tr);
+      });
+    } else {
+      body.innerHTML = '<tr><td colspan="3" class="overview-empty">No paid bookings in this period yet.</td></tr>';
     }
   }
 }
