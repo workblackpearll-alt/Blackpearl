@@ -4,9 +4,10 @@
    (Navigation, Gallery Filter & Lightbox, Contact Form, FAQ)
    ======================================================== */
 
-import { saveContactInquiry } from './supabaseClient.js';
+import { saveContactInquiry, trackPageView } from './supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  trackPageView(window.location.pathname || '/');
   initSubpageNavigation();
   initSubpageGallery();
   initSubpageContact();

@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { trackPageView } from '../supabaseClient.js';
+import { trackPageView, getCampaign } from '../supabaseClient.js';
 import {
   DEPOSIT_AMOUNT,
   charterSlots,
@@ -685,7 +685,8 @@ async function handlePageRazorpayPayment() {
       phone: bookState.guestDetails.phone,
       email: bookState.guestDetails.email,
       guests: bookState.guestDetails.guests,
-      notes: bookState.guestDetails.notes === 'None' ? '' : bookState.guestDetails.notes
+      notes: bookState.guestDetails.notes === 'None' ? '' : bookState.guestDetails.notes,
+      campaign: getCampaign()
     });
     if (!ok) {
       showFormError(data.error || 'Could not start the payment. Please try again.');

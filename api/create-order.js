@@ -95,6 +95,8 @@ export default async function handler(req, res) {
   const email = clean(body.email, 160).toLowerCase();
   const occasion = clean(body.occasion, 160) || 'Private Charter';
   const notes = clean(body.notes, 1000);
+  // Promotion link that brought the guest (utm_campaign), for analytics
+  const campaign = clean(body.campaign, 60).toLowerCase().replace(/[^a-z0-9_-]+/g, '-') || null;
   const guests = Math.round(Number(body.guests));
 
   if (!charterSlots[slotKey] || !durationItinerary[duration]) {
@@ -201,11 +203,17 @@ export default async function handler(req, res) {
       phone,
       email,
       notes,
+      campaign,
       status: STATUS.pending,
       created_at: new Date().toISOString()
     };
 
-    const { error: insertError } = await db.from('holds').insert([hold]);
+    let { error: insertError } = await db.from('holds').insert([hold]);
+    if (insertError && /campaign/.test(insertError.message || '')) {
+      // Analytics column not added yet: never let it block a booking
+      delete hold.campaign;
+      ({ error: insertError } = await db.from('holds').insert([hold]));
+    }
     if (insertError) throw insertError;
 
     return send(res, 200, {
