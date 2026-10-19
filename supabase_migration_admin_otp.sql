@@ -6,7 +6,7 @@
 -- Also included in supabase_schema.sql.
 --
 -- After the password, admins must enter a 6-digit code emailed (via Resend)
--- to their allow-listed address. Until they do, the database treats that
+-- to their Supabase Auth email. Until they do, the database treats that
 -- login session as NOT an admin, so a stolen password alone reads nothing.
 -- ========================================================
 
@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS public.admin_sessions (
 );
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 
--- 3. "Is this email on the admin list?" (used by the login screen before the code step)
+-- 3. "Is this a Supabase Auth user?" (used by the login screen before the code step).
+--    Every Auth user is an admin, so public sign-ups must be OFF in Supabase.
 CREATE OR REPLACE FUNCTION public.is_admin_user()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -43,10 +44,8 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.admin_users
-    WHERE lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
-  );
+  SELECT auth.uid() IS NOT NULL
+     AND EXISTS (SELECT 1 FROM auth.users u WHERE u.id = auth.uid());
 $$;
 
 -- 4. "Admin AND this login session entered a valid code" — every data policy uses this

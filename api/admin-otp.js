@@ -5,7 +5,7 @@ import { readJson, send, methodNotAllowed } from './_lib/http.js';
 /**
  * POST /api/admin-otp   (Authorization: Bearer <Supabase access token>)
  * Second login step for the admin panel. body.action:
- *   "request" – email a 6-digit code to the signed-in admin's own address
+ *   "request" – email a 6-digit code to the signed-in user's own address
  *   "verify"  – check the code; on success this login session becomes an admin
  *               session (the database's is_admin() then allows data access)
  *   "status"  – is this login session verified?
@@ -54,10 +54,7 @@ async function authenticate(req, db) {
   const sessionId = sessionIdFromToken(token);
   if (!sessionId) return null;
 
-  const { data: admins } = await db.from('admin_users').select('email');
-  const allowed = (admins || []).some(a => a.email.toLowerCase() === data.user.email.toLowerCase());
-  if (!allowed) return null;
-
+  // Every Supabase Auth user is an admin (public sign-ups must be off in Supabase)
   return { user: data.user, sessionId };
 }
 
