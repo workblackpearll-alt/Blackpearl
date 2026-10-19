@@ -5640,7 +5640,7 @@ input[type="submit"],
     min-height: 100vh;
     min-height: 100svh;
     padding-top: calc(74px + 15svh);
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px));
     justify-content: flex-start;
   }
 
