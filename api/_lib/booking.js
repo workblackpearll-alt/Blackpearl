@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from './supabaseAdmin.js';
 export const PAID_STATUSES = ['Held (Deposit Paid)', 'Confirmed', 'Completed'];
 export const STATUS = {
   pending: 'Payment Pending',
+  requested: 'Booking Requested', // request mode: no online payment yet, team confirms on WhatsApp
   failed: 'Payment Failed',
   abandoned: 'Payment Abandoned',
   paid: 'Held (Deposit Paid)',

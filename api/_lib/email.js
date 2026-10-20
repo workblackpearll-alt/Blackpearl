@@ -120,13 +120,14 @@ export async function sendAdminBookingAlert(hold) {
   }
 
   const adminUrl = `${getVerifyUrl(hold).split('/verify')[0]}/admin/orders`;
+  const isRequest = hold.status === 'Booking Requested';
   const html = `<!doctype html>
 <html><body style="margin:0;padding:24px 12px;background:#F5F1E9;font-family:Helvetica,Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#FFFFFF;border:1px solid #E6DED0;">
-    <tr><td style="background:#050506;padding:18px 24px;color:#EBD7A6;font-size:12px;letter-spacing:3px;">NEW BOOKING · ADVANCE PAID</td></tr>
+    <tr><td style="background:#050506;padding:18px 24px;color:#EBD7A6;font-size:12px;letter-spacing:3px;">${isRequest ? 'NEW BOOKING REQUEST · CONFIRM ON WHATSAPP' : 'NEW BOOKING · ADVANCE PAID'}</td></tr>
     <tr><td style="padding:24px;">
-      <h1 style="margin:0 0 4px;font-size:20px;color:#111214;">${escapeHtml(hold.name)} booked ${escapeHtml(hold.date)}</h1>
-      <p style="margin:0 0 18px;color:#4B4B4B;font-size:14px;">Call them to plan the charter.</p>
+      <h1 style="margin:0 0 4px;font-size:20px;color:#111214;">${escapeHtml(hold.name)} ${isRequest ? 'requested' : 'booked'} ${escapeHtml(hold.date)}</h1>
+      <p style="margin:0 0 18px;color:#4B4B4B;font-size:14px;">${isRequest ? 'Nothing paid yet, and this time is <strong>not blocked</strong> on the website. Confirm with them on WhatsApp, then set the booking to Confirmed in admin (or lock the time in Calendar) so nobody else can book it.' : 'Call them to plan the charter.'}</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #EEE7DA;border-bottom:1px solid #EEE7DA;margin-bottom:18px;">
         ${row('Booking', hold.id)}
         ${row('Phone', hold.phone)}
@@ -136,7 +137,7 @@ export async function sendAdminBookingAlert(hold) {
         ${row('Duration', hold.duration)}
         ${row('Guests', `${hold.guests}`)}
         ${row('Charter price', hold.price)}
-        ${row('Advance', `${hold.paid_token} (Razorpay ${hold.payment_id})`)}
+        ${isRequest ? row('Payment', 'Not paid yet: confirm on WhatsApp') : row('Advance', `${hold.paid_token} (Razorpay ${hold.payment_id})`)}
         ${hold.notes ? row('Notes', hold.notes) : ''}
       </table>
       <a href="${adminUrl}" style="display:inline-block;background:#050506;color:#FFFFFF;text-decoration:none;padding:11px 20px;font-size:13px;letter-spacing:1px;">OPEN ADMIN PANEL</a>
@@ -147,7 +148,7 @@ export async function sendAdminBookingAlert(hold) {
   const payload = {
     from,
     to: [to],
-    subject: `New booking · ${hold.name} · ${hold.date} · ${hold.slot}`,
+    subject: `${isRequest ? 'New booking request' : 'New booking'} · ${hold.name} · ${hold.date} · ${hold.slot}`,
     html
   };
   // Replying to the alert goes straight to the guest

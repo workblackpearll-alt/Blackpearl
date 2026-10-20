@@ -1756,6 +1756,63 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
+
+    /* Request sent (no online payment yet) */
+    .request-confirm-view {
+      max-width: 560px;
+      margin: 24px auto 0;
+      text-align: center;
+    }
+
+    .request-confirm-view[hidden] {
+      display: none;
+    }
+
+    .request-confirm-sub {
+      font-size: 16px;
+      color: #D1D5DB;
+      line-height: 1.6;
+      margin: 10px 0 6px;
+    }
+
+    .request-confirm-ref {
+      font-family: monospace;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      color: #9CA3AF;
+      margin: 0 0 18px;
+    }
+
+    .request-summary {
+      text-align: left;
+      margin: 0 0 20px;
+    }
+
+    .request-wa-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      background: #25D366 !important;
+      color: #06210F !important;
+      border-color: #25D366 !important;
+    }
+
+    .request-confirm-note {
+      font-size: 13px;
+      color: #9CA3AF;
+      margin: 12px 0 18px;
+    }
+
+    .request-home-link {
+      display: inline-block;
+    }
+
+    .booking-flow-container.request-sent .booking-layout-grid,
+    .booking-flow-container.request-sent .booking-page-hero,
+    .booking-flow-container.request-sent .booking-progress-tracker {
+      display: none;
+    }
   </style>
 </head>
 <body class="booking-page-body">
@@ -1818,7 +1875,7 @@
       <!-- HERO HEADING -->
       <div class="booking-page-hero">
         <h1 class="booking-page-title" id="pageHeroTitle">Book Lady Alice</h1>
-        <p class="booking-page-sub">Pay ₹5,000 to hold your date. Our team calls you to plan the rest.</p>
+        <p class="booking-page-sub" id="bookingHeroSub">Pay ₹5,000 to hold your date. Our team calls you to plan the rest.</p>
       </div>
 
       <!-- PROGRESS: 3 STEPS -->
@@ -1955,7 +2012,7 @@
 
                 <div class="form-grid-row">
                   <div class="form-group">
-                    <label for="bookGuestEmail" class="form-label">Email (for your QR pass)</label>
+                    <label for="bookGuestEmail" class="form-label" id="bookGuestEmailLabel">Email (for your QR pass)</label>
                     <input type="email" id="bookGuestEmail" class="form-input" placeholder="arjun@example.com" autocomplete="email" required>
                   </div>
                   <div class="form-group">
@@ -2015,21 +2072,39 @@
                   <span class="summary-item-label">Charter price</span>
                   <span class="quote-total-val" id="sideSummaryQuoteTotal">—</span>
                 </div>
-                <div class="summary-quote-row summary-pay-today">
+                <div class="summary-quote-row summary-pay-today" id="summaryPayToday">
                   <span>Pay today</span>
                   <strong>₹5,000</strong>
                 </div>
-                <p class="summary-small">The rest is settled with our team. Refundable within 48 hours.</p>
+                <p class="summary-small" id="summaryPayNote">The rest is settled with our team. Refundable within 48 hours.</p>
               </div>
 
               <button class="btn-pay-lock" id="btnPagePay5000">
                 <span id="btnPagePayText">Pay ₹5,000 to Book</span>
               </button>
-              <p class="summary-small summary-secure">Secure payment by Razorpay · UPI, cards, net banking</p>
+              <p class="summary-small summary-secure" id="summarySecureNote">Secure payment by Razorpay · UPI, cards, net banking</p>
             </div>
           </div>
         </div>
 
+      </div>
+
+      <!-- REQUEST SENT (while online payment is off) -->
+      <div class="request-confirm-view" id="requestConfirmView" hidden>
+        <div class="confirmation-success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="step-main-title" style="font-size: 30px; text-align: center;">Request sent.</h2>
+        <p class="request-confirm-sub">Send your booking details to us on WhatsApp. Our team will confirm the time and your booking with you.</p>
+        <p class="request-confirm-ref" id="requestRefCode"></p>
+
+        <div class="receipt-card request-summary" id="requestSummary"></div>
+
+        <a href="#" class="btn-pay-lock btn-block request-wa-btn" id="requestWhatsAppBtn" target="_blank" rel="noopener">
+          Send on WhatsApp
+        </a>
+        <p class="request-confirm-note">Nothing to pay right now. We'll share payment and next steps on WhatsApp.</p>
+        <a href="/" class="btn-text-subtle request-home-link">Return to Homepage</a>
       </div>
 
       <!-- ======================================================== -->
