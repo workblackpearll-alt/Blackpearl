@@ -7,6 +7,10 @@
 // Advance taken online for every booking (INR)
 export const DEPOSIT_AMOUNT = 5000;
 
+// ONE SWITCH: false = bookings are requests completed on WhatsApp (no online payment,
+// QR or confirmation email). Set to true once Razorpay keys are live.
+export const ONLINE_PAYMENTS_ENABLED = false;
+
 // Standard charter slots: one booking per slot per date.
 // Hours are 24h clock; prices in INR for each duration.
 export const charterSlots = {

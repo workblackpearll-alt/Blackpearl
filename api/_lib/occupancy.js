@@ -15,6 +15,8 @@ export async function getOccupiedRanges({ date, fromDate }) {
   let holdsQuery = db.from('holds')
     .select('date_iso, slot, slot_key, start_hour, duration_hours, status, created_at')
     .in('status', [...PAID_STATUSES, STATUS.pending, STATUS.conflict]);
+  // Booking requests (no advance paid) never block time: the team blocks it
+  // themselves by setting the booking to Confirmed or adding a calendar lock.
   let locksQuery = db.from('blocked_dates').select('date, slot_key, start_hour, end_hour');
 
   if (date) {

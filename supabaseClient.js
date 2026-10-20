@@ -756,7 +756,7 @@ export async function fetchAnalyticsSummary(days = 30) {
     ]);
 
     const person = (v) => v.visitor_id || v.session_id;
-    const paid = allHolds.filter(h => PAID.includes(h.status) && !isSampleRow(h));
+    const paid = allHolds.filter(h => (PAID.includes(h.status) || h.status === 'Booking Requested') && !isSampleRow(h));
     const priceNumber = (p) => parseFloat(String(p || '').replace(/[₹,\s]/g, '')) || 0;
 
     const uniqueVisitors = new Set(allViews.map(person)).size;

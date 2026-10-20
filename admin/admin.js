@@ -985,7 +985,9 @@ function renderDashboard() {
    ======================================================== */
 const PAID_STATUSES = ['Held (Deposit Paid)', 'Confirmed', 'Completed'];
 const UNPAID_STATUSES = ['Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict'];
+const REQUESTED_STATUS = 'Booking Requested'; // booked on the site, confirmed on WhatsApp (no online payment)
 const BOOKING_STATUS_OPTIONS = [
+  [REQUESTED_STATUS, 'Requested (WhatsApp)'],
   ['Held (Deposit Paid)', 'Advance paid'],
   ['Confirmed', 'Confirmed'],
   ['Completed', 'Completed'],
@@ -994,6 +996,7 @@ const BOOKING_STATUS_OPTIONS = [
 
 function bookingStatusLabel(status) {
   if (status === 'Held (Deposit Paid)') return 'Advance paid';
+  if (status === REQUESTED_STATUS) return 'Requested (WhatsApp)';
   if (status === 'Paid - Slot Conflict') return 'Paid · slot clash, refund';
   return status || '—';
 }
@@ -1001,7 +1004,7 @@ function bookingStatusLabel(status) {
 function bookingStatusClass(status) {
   const s = (status || '').toLowerCase();
   if (PAID_STATUSES.includes(status)) return 'status-confirmed';
-  if (s.includes('pending')) return 'status-held';
+  if (s.includes('pending') || status === REQUESTED_STATUS) return 'status-held';
   if (s.includes('cancel') || s.includes('failed') || s.includes('abandoned') || s.includes('conflict')) return 'status-failed';
   return 'status-shipped';
 }
@@ -1009,6 +1012,7 @@ function bookingStatusClass(status) {
 function bookingMatchesFilter(b, filter) {
   const s = (b.status || '').toLowerCase();
   if (filter === 'paid') return PAID_STATUSES.includes(b.status) || s.includes('delivered') || s.includes('shipped');
+  if (filter === 'requested') return b.status === REQUESTED_STATUS;
   if (filter === 'pending') return b.status === 'Payment Pending';
   if (filter === 'failed') return ['Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Failed'].includes(b.status);
   if (filter === 'cancelled') return s.includes('cancel');
@@ -1718,7 +1722,7 @@ function renderMediaGrid() {
    A day can hold several bookings; any two need a 1-hour gap.
    ======================================================== */
 // Statuses that do NOT occupy time on the calendar
-const NON_BLOCKING_STATUSES = ['Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Cancelled', 'Failed'];
+const NON_BLOCKING_STATUSES = ['Booking Requested', 'Payment Pending', 'Payment Failed', 'Payment Abandoned', 'Paid - Slot Conflict', 'Cancelled', 'Failed'];
 
 const adminCal = (() => {
   const now = new Date();
@@ -2129,6 +2133,19 @@ function buildNotifications() {
     actionLabel: 'Open booking',
     onAction: () => openBookingDetailModal(b)
   }));
+
+  // Action: booking requests waiting for the team on WhatsApp (clears when marked Confirmed or Cancelled)
+  const requests = state.bookings.filter(b => b.status === REQUESTED_STATUS && (b.dateIso || '') >= today);
+  if (requests.length) {
+    items.push({
+      id: `requests:${requests.map(b => b.id).sort().join(',')}`,
+      level: 'action',
+      title: `${plural(requests.length, 'booking request', 'booking requests')}: confirm and block the time`,
+      detail: `${requests.slice(0, 3).map(b => `${b.name} (${b.date})`).join(', ')}${requests.length > 3 ? '…' : ''}. These times are not blocked yet. Confirm on WhatsApp, then set the status to Confirmed (this blocks the time) or Cancelled.`,
+      actionLabel: 'View requests',
+      onAction: () => { navigateTo('bookings'); setBookingFilter('requested'); }
+    });
+  }
 
   // Action: paid, waiting for the team's call (clears when marked Confirmed)
   const awaitingCall = state.bookings.filter(b => b.status === 'Held (Deposit Paid)' && (b.dateIso || '') >= today);

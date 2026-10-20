@@ -1,4 +1,5 @@
 import confetti from 'canvas-confetti';
+import { isLikelyRealPhone } from '../shared/phone.js';
 import { trackPageView, getCampaign } from '../supabaseClient.js';
 import {
   DEPOSIT_AMOUNT,
@@ -12,7 +13,8 @@ import {
   getCharterPrice,
   isRangeFree,
   formatRange,
-  TURNAROUND_GAP_HOURS
+  TURNAROUND_GAP_HOURS,
+  ONLINE_PAYMENTS_ENABLED
 } from '../shared/pricing.js';
 
 /* ========================================================
@@ -100,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initGuestForm();
   initRazorpayCheckout();
   initConfirmationActions();
+  applyPaymentMode();
   updateSummarySidebar();
   syncAvailability();
   initMobileNav();
@@ -561,8 +564,8 @@ function validateGuestForm() {
     if (nameEl) nameEl.focus();
     return false;
   }
-  if (!phone || phone.replace(/\D/g, '').length < 9) {
-    showFormError('Please enter a valid WhatsApp mobile number for booking confirmation.');
+  if (!isLikelyRealPhone(phone)) {
+    showFormError('Please enter a valid WhatsApp number (10-digit mobile, or with + country code).');
     if (phoneEl) phoneEl.focus();
     return false;
   }
@@ -655,6 +658,7 @@ async function postJson(url, body) {
 }
 
 async function handlePageRazorpayPayment() {
+  if (!ONLINE_PAYMENTS_ENABLED) return handleBookingRequest();
   if (!validateGuestForm()) return;
   if (!isTimeSelected()) {
     showFormError('Please go back to "Date & time" and pick an available time.');
@@ -839,6 +843,145 @@ function renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent }) {
       `Booking Ref: ${booking.code} (Advance ${booking.advancePaid} paid, Razorpay ID: ${booking.paymentId}).`
     );
     waBtn.href = `https://wa.me/918591206214?text=${waText}`;
+  }
+}
+
+/* ========================================================
+   7b. REQUEST MODE (while ONLINE_PAYMENTS_ENABLED is false)
+   The request is saved as "Booking Requested" (time not blocked) and they send the
+   details to the team on WhatsApp. No payment, QR or email for now.
+   ======================================================== */
+const BOOKING_WHATSAPP_NUMBER = '918591206214';
+
+// Swap payment wording for request wording on the page
+function applyPaymentMode() {
+  if (ONLINE_PAYMENTS_ENABLED) return;
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  set('bookingHeroSub', 'Pick your date and time, then confirm with our team on WhatsApp. Nothing to pay now.');
+  set('btnPagePayText', REQUEST_BUTTON_LABEL);
+  set('bookGuestEmailLabel', 'Email');
+  set('summaryPayNote', 'Our team confirms availability and your booking with you on WhatsApp.');
+  set('summarySecureNote', 'Payment details are shared by our team on WhatsApp.');
+  const payToday = document.getElementById('summaryPayToday');
+  if (payToday) payToday.innerHTML = '<span>Pay today</span><strong>Nothing</strong>';
+}
+
+const REQUEST_BUTTON_LABEL = 'Request Booking on WhatsApp';
+
+function buildWhatsAppMessage(code) {
+  const lines = [
+    'Hi Black Pearl, I would like to book Lady Alice.',
+    '',
+    `Booking ref: ${code}`,
+    `Occasion: ${getDisplayOccasion()}`,
+    `Date: ${formatShortDate(bookState.selectedDate)}`,
+    `Time: ${formatRange(bookState.startHour, bookState.startHour + bookState.selectedDuration)}`,
+    `Duration: ${bookState.selectedDuration} hours (${getItineraryLabel(bookState.selectedDuration)})`,
+    `Guests: ${bookState.guestDetails.guests}`,
+    `Charter price: ${formatCurrency(calculateCurrentTotal())}`,
+    '',
+    `Name: ${bookState.guestDetails.name}`,
+    `Phone: ${bookState.guestDetails.phone}`,
+    `Email: ${bookState.guestDetails.email}`
+  ];
+  if (bookState.guestDetails.notes && bookState.guestDetails.notes !== 'None') {
+    lines.push(`Notes: ${bookState.guestDetails.notes}`);
+  }
+  return lines.join('\n');
+}
+
+async function handleBookingRequest() {
+  if (!validateGuestForm()) return;
+  if (!isTimeSelected()) {
+    showFormError('Please go back to "Date & time" and pick an available time.');
+    return;
+  }
+
+  // Open the WhatsApp tab now, inside the tap, so phones don't block it
+  let waWindow = null;
+  try {
+    waWindow = window.open('', '_blank');
+  } catch {
+    waWindow = null;
+  }
+
+  setPayButton(true, 'Holding your slot...');
+
+  try {
+    const { ok, data } = await postJson('/api/create-order', {
+      occasion: getDisplayOccasion(),
+      slot: bookState.selectedSlot,
+      durationHours: bookState.selectedDuration,
+      startHour: bookState.startHour,
+      dateIso: bookState.selectedDate,
+      name: bookState.guestDetails.name,
+      phone: bookState.guestDetails.phone,
+      email: bookState.guestDetails.email,
+      guests: bookState.guestDetails.guests,
+      notes: bookState.guestDetails.notes === 'None' ? '' : bookState.guestDetails.notes,
+      campaign: getCampaign()
+    });
+
+    if (!ok) {
+      if (waWindow) waWindow.close();
+      setPayButton(false, REQUEST_BUTTON_LABEL);
+      if (data.code === 'SLOT_TAKEN') {
+        await syncAvailability();
+        if (bookState.selectedDate && !isDateAvailable(bookState.selectedDate)) bookState.selectedDate = null;
+        clearTimeIfTaken();
+        goToStep(2);
+        renderStartTimeOptions();
+        renderCalendar();
+        updateSummarySidebar();
+        alert(data.error);
+        return;
+      }
+      showFormError(data.error || 'Could not send your request. Please try again.');
+      return;
+    }
+
+    const waLink = `https://wa.me/${BOOKING_WHATSAPP_NUMBER}?text=${encodeURIComponent(buildWhatsAppMessage(data.bookingCode))}`;
+    if (waWindow) waWindow.location.href = waLink;
+
+    showRequestConfirmation(data.bookingCode, waLink);
+  } catch (err) {
+    console.error('[Booking] request failed', err);
+    if (waWindow) waWindow.close();
+    setPayButton(false, REQUEST_BUTTON_LABEL);
+    showFormError('Could not reach our booking server. Please check your connection and try again.');
+  }
+}
+
+function showRequestConfirmation(code, waLink) {
+  const rows = [
+    ['Booking ref', code],
+    ['Occasion', getDisplayOccasion()],
+    ['Date', formatShortDate(bookState.selectedDate)],
+    ['Time', formatRange(bookState.startHour, bookState.startHour + bookState.selectedDuration)],
+    ['Duration', `${bookState.selectedDuration} hours · ${getItineraryLabel(bookState.selectedDuration)}`],
+    ['Guests', String(bookState.guestDetails.guests)],
+    ['Charter price', formatCurrency(calculateCurrentTotal())]
+  ];
+  const summary = document.getElementById('requestSummary');
+  if (summary) {
+    summary.innerHTML = rows.map(([label, value]) => `
+      <div class="receipt-row"><span class="r-label">${label}</span><span class="r-val"></span></div>`).join('');
+    summary.querySelectorAll('.r-val').forEach((el, i) => { el.textContent = rows[i][1]; });
+  }
+
+  const ref = document.getElementById('requestRefCode');
+  if (ref) ref.textContent = `Booking reference: ${code}`;
+  const btn = document.getElementById('requestWhatsAppBtn');
+  if (btn) btn.href = waLink;
+
+  document.getElementById('bookingFlowContainer')?.classList.add('request-sent');
+  const view = document.getElementById('requestConfirmView');
+  if (view) {
+    view.hidden = false;
+    view.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
