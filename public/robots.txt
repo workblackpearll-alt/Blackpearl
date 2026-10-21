@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /admin/
+Disallow: /api/
+Disallow: /verify
 
-Sitemap: https://blackpearlmumbai.com/sitemap.xml
+Sitemap: https://www.blackpearl.social/sitemap.xml

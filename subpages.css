@@ -1217,3 +1217,77 @@ input[type="submit"],
   border-radius: 0 !important;
 }
 
+
+/* About hero headline is the page H1; keep its original look */
+h1.hero-headline-group { margin-top: 0; font: inherit; color: inherit; }
+
+/* ========================================================
+   OCCASION GUIDE PAGES (/occasions)
+   ======================================================== */
+.occ-page { padding-bottom: 40px; }
+.occ-page p { color: var(--color-text-body); font-size: 16px; line-height: 1.7; }
+.occ-page a:not(.occ-btn):not(.occ-related-card):not(.occ-hub-card) { color: var(--color-gold-matte); }
+.occ-breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 110px; font-size: 13px; color: var(--color-text-dim); }
+.occ-breadcrumb a { color: var(--color-text-muted) !important; text-decoration: none; }
+.occ-breadcrumb [aria-current] { color: var(--color-text-body); }
+
+.occ-hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding-top: 28px; padding-bottom: 56px; }
+.occ-hero .minimal-title { text-align: left; margin: 10px 0 20px; }
+.occ-lead { max-width: 620px; }
+.occ-hero-media { margin: 0; border: 1px solid var(--color-border); overflow: hidden; aspect-ratio: 4 / 5; }
+.occ-hero-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.occ-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.occ-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; border: 1px solid rgba(255,255,255,0.3); color: #FFFFFF; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; transition: background 0.2s, color 0.2s; }
+.occ-btn:hover { border-color: #FFFFFF; }
+.occ-btn-primary { background: #FFFFFF; color: #050506; border-color: #FFFFFF; }
+.occ-btn-primary:hover { background: transparent; color: #FFFFFF; }
+
+.occ-section { padding-top: 40px; padding-bottom: 40px; border-top: 1px solid var(--color-border-subtle); }
+.occ-h2 { font-size: 26px; font-weight: 700; color: #FFFFFF; margin: 0 0 18px; }
+.occ-list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; }
+.occ-list li { position: relative; padding-left: 20px; color: var(--color-text-body); line-height: 1.6; }
+.occ-list li::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 8px; height: 1px; background: var(--color-gold-matte); }
+.occ-small { font-size: 14px !important; color: var(--color-text-muted) !important; margin-top: 14px; }
+
+.occ-table-wrap { overflow-x: auto; margin-top: 18px; }
+.occ-price-table { width: 100%; min-width: 460px; border-collapse: collapse; font-size: 15px; }
+.occ-price-table caption { text-align: left; color: var(--color-text-muted); font-size: 13px; padding-bottom: 10px; }
+.occ-price-table th, .occ-price-table td { padding: 14px 12px; border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-body); }
+.occ-price-table thead th { color: var(--color-text-muted); font-weight: 500; font-size: 13px; }
+.occ-price-table tbody th { color: #FFFFFF; font-weight: 600; }
+.occ-price-table tbody th span { display: block; font-weight: 400; font-size: 13px; color: var(--color-text-muted); }
+.occ-price-table td { font-variant-numeric: tabular-nums; }
+
+.occ-faq { max-width: none; margin: 0; padding: 0; }
+
+.occ-related { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.occ-related-card, .occ-hub-card { display: block; text-decoration: none; color: #FFFFFF; border: 1px solid var(--color-border); background: var(--color-surface); transition: border-color 0.2s; }
+.occ-related-card:hover, .occ-hub-card:hover { border-color: rgba(255,255,255,0.3); }
+.occ-related-card img { width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; display: block; }
+.occ-related-card span { display: block; padding: 14px 16px; font-weight: 600; }
+
+.occ-hub-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.occ-hub-card img { width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; display: block; }
+.occ-hub-body { display: block; padding: 18px 18px 20px; }
+.occ-hub-title { display: block; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.occ-hub-desc { display: block; font-size: 14px; line-height: 1.6; color: var(--color-text-muted); }
+
+.occ-final { text-align: center; padding-top: 56px; padding-bottom: 40px; border-top: 1px solid var(--color-border-subtle); }
+.occ-final p { margin: 0 auto 24px; max-width: 520px; }
+
+@media (max-width: 900px) {
+  .occ-hero { grid-template-columns: 1fr; gap: 28px; }
+  .occ-hero-media { aspect-ratio: 4 / 3; order: -1; }
+  .occ-hub-grid, .occ-related { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .occ-list { grid-template-columns: 1fr; }
+  .occ-hub-grid, .occ-related { grid-template-columns: 1fr; }
+  .occ-cta-row .occ-btn { flex: 1 1 100%; }
+  .occ-h2 { font-size: 22px; }
+}
+
+/* Hub page: breadcrumb already clears the header */
+.occ-page .minimal-page-header { padding-top: 24px; }
+.occ-lead + .occ-lead { margin-top: 12px; }
