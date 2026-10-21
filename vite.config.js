@@ -1,14 +1,29 @@
 import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
+import { existsSync, readdirSync } from 'fs';
+
+// Occasion guide pages: occasions/index.html and occasions/<slug>/index.html
+const occasionInputs = Object.fromEntries([
+  ['occasions', resolve(__dirname, 'occasions/index.html')],
+  ...readdirSync(resolve(__dirname, 'occasions'), { withFileTypes: true })
+    .filter(d => d.isDirectory() && existsSync(resolve(__dirname, 'occasions', d.name, 'index.html')))
+    .map(d => [`occasion-${d.name}`, resolve(__dirname, 'occasions', d.name, 'index.html')])
+]);
 
 // Vite plugin to route multi-page apps cleanly without .html
 function pageRoutingPlugin() {
   const routes = ['admin', 'book', 'gallery', 'about', 'contact', 'terms', 'privacy', 'cancellation', 'verify'];
+  const nestedPage = /^\/(occasions(?:\/[a-z0-9-]+)?)\/?(\?.*)?$/;
   return {
     name: 'page-routing-plugin',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = req.url || '';
+        const nested = url.match(nestedPage);
+        if (nested) {
+          req.url = `/${nested[1]}/index.html${nested[2] || ''}`;
+          return next();
+        }
         for (const route of routes) {
           if ((url === `/${route}` || url.startsWith(`/${route}/`) || url.startsWith(`/${route}?`)) && !url.includes('.')) {
             const query = url.includes('?') ? url.substring(url.indexOf('?')) : '';
@@ -79,7 +94,8 @@ export default defineConfig({
         privacy: resolve(__dirname, 'privacy/index.html'),
         cancellation: resolve(__dirname, 'cancellation/index.html'),
         verify: resolve(__dirname, 'verify/index.html'),
-        notFound: resolve(__dirname, '404.html')
+        notFound: resolve(__dirname, '404.html'),
+        ...occasionInputs
       }
     }
   }

@@ -5701,3 +5701,7 @@ input[type="submit"],
     margin-bottom: 0;
   }
 }
+
+/* Occasion card titles link to their guide pages (look unchanged) */
+.event-card-link { color: inherit; text-decoration: none; }
+.event-card-link:hover { text-decoration: underline; text-underline-offset: 4px; }
