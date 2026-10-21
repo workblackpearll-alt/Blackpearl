@@ -64,7 +64,7 @@ export async function sendBookingConfirmationEmail(hold) {
             <a href="${verifyUrl}" style="display:inline-block;background:#050506;color:#FFFFFF;text-decoration:none;padding:12px 22px;font-size:13px;letter-spacing:2px;">VIEW BOOKING PASS</a>
           </p>
           <p style="margin:0;color:#8B8576;font-size:12px;line-height:1.6;">
-            Boarding: Gateway of India Jetty No. 5, Apollo Bandar, Colaba, Mumbai 400001.
+            Boarding: Jetty No. 2, Princess Ferry Wharf (Bhaucha Dhakka), Mazgaon, Mumbai 400010.
           </p>
         </td></tr>
       </table>
