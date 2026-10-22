@@ -33,7 +33,7 @@ const STYLES = `
   color: #F3EDE0;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
   text-decoration: none;
-  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 .bp-whatsapp-float svg {
   width: 28px;
@@ -79,6 +79,13 @@ const STYLES = `
     display: none;
   }
 }
+/* Hidden while the home hero is on screen */
+.bp-whatsapp-float.bp-whatsapp-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+.bp-whatsapp-float { opacity: 1; }
 @media print {
   .bp-whatsapp-float { display: none; }
 }
@@ -104,6 +111,21 @@ function addWhatsAppButton() {
   link.setAttribute('aria-label', 'Chat with Black Pearl on WhatsApp');
   link.innerHTML = `${WHATSAPP_ICON}<span class="bp-whatsapp-label">Chat on WhatsApp</span>`;
   document.body.appendChild(link);
+  hideOverHero(link);
+}
+
+// Home page: keep the button off the hero, show it once the hero scrolls away
+function hideOverHero(link) {
+  const hero = document.getElementById('arrival');
+  if (!hero || !('IntersectionObserver' in window)) return;
+  link.classList.add('bp-whatsapp-hidden');
+  link.setAttribute('tabindex', '-1');
+  new IntersectionObserver(([entry]) => {
+    const overHero = entry.isIntersecting;
+    link.classList.toggle('bp-whatsapp-hidden', overHero);
+    if (overHero) link.setAttribute('tabindex', '-1');
+    else link.removeAttribute('tabindex');
+  }, { threshold: 0.15 }).observe(hero);
 }
 
 if (document.readyState === 'loading') {
