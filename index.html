@@ -147,6 +147,25 @@
   </script>
 </head>
 <body>
+  <!-- Intro loader: covers the page until the hero video can play (max 6s) -->
+  <style>
+    #bpLoader { position: fixed; inset: 0; z-index: 10000; background: #050506; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; transition: opacity 0.6s ease, visibility 0.6s ease; }
+    #bpLoader.bp-loader-done { opacity: 0; visibility: hidden; pointer-events: none; }
+    #bpLoader img { width: min(230px, 60vw); height: auto; opacity: 0; animation: bpLoaderIn 0.8s ease 0.1s forwards; }
+    #bpLoader .bp-loader-line { width: min(160px, 40vw); height: 1px; background: rgba(255,255,255,0.12); overflow: hidden; }
+    #bpLoader .bp-loader-line::after { content: ''; display: block; width: 40%; height: 100%; background: #C9A968; animation: bpLoaderSlide 1.2s ease-in-out infinite; }
+    html.bp-loading, html.bp-loading body { overflow: hidden; }
+    /* Hold the hero entrance animations until the loader lifts */
+    html.bp-loading .section-hero, html.bp-loading .section-hero * { animation-play-state: paused !important; }
+    @keyframes bpLoaderIn { to { opacity: 1; } }
+    @keyframes bpLoaderSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) { #bpLoader img { animation: none; opacity: 1; } #bpLoader .bp-loader-line::after { animation: none; width: 100%; } }
+  </style>
+  <div id="bpLoader" role="status" aria-label="Loading Black Pearl">
+    <img src="/assets/black-pearl-logo-horizontal-for-dark-backgrounds.svg" alt="Black Pearl" width="230" height="44">
+    <div class="bp-loader-line"></div>
+  </div>
+  <script>document.documentElement.classList.add('bp-loading');</script>
   <!-- Header / Navigation (Concise & Elegant) -->
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
@@ -193,10 +212,32 @@
     <section class="section-hero" id="arrival">
       <!-- Background Video Backdrop -->
       <div class="hero-video-backdrop">
-        <video class="hero-bg-video" autoplay muted loop playsinline poster="/assets/images/lady-alice-sunset-poster.jpg" id="heroBgVideo">
+        <video class="hero-bg-video" autoplay muted loop playsinline preload="auto" poster="/assets/images/lady-alice-sunset-poster.jpg" id="heroBgVideo">
           <source src="/assets/videos/White_boat_cruising_ocean_waters_20261013120252.mp4" type="video/mp4">
           <source src="/assets/videos/lady-alice.mp4" type="video/mp4">
         </video>
+        <script>
+          // Reveal the site once the hero video can play (or after 6s on slow connections)
+          (function () {
+            var video = document.getElementById('heroBgVideo');
+            var loader = document.getElementById('bpLoader');
+            var done = false;
+            function reveal() {
+              if (done) return;
+              done = true;
+              document.documentElement.classList.remove('bp-loading');
+              if (loader) {
+                loader.classList.add('bp-loader-done');
+                setTimeout(function () { loader.remove(); }, 700);
+              }
+            }
+            if (!video || video.readyState >= 3) return reveal();
+            video.addEventListener('canplay', reveal, { once: true });
+            video.addEventListener('playing', reveal, { once: true });
+            video.addEventListener('error', reveal, { once: true });
+            setTimeout(reveal, 6000);
+          })();
+        </script>
         <div class="hero-video-scrim"></div>
       </div>
       
