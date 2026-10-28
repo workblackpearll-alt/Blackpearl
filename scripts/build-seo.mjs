@@ -97,8 +97,6 @@ function breadcrumbs(items) {
 function occasionPage(p) {
   const path = `/occasions/${p.slug}`;
   const bookUrl = `/book?occasion=${encodeURIComponent(p.occasion)}&hours=${p.recommended.hours}`;
-  const slot = charterSlots[p.recommended.slot];
-  const fromPrice = Math.min(...Object.values(charterSlots).map(s => s.prices[3]));
 
   const schema = {
     '@context': 'https://schema.org',
@@ -111,8 +109,7 @@ function occasionPage(p) {
         url: `${SITE_URL}${path}`,
         image: `${SITE_URL}/assets/images/${p.image}`,
         areaServed: { '@type': 'City', name: 'Mumbai' },
-        provider: { '@type': 'LocalBusiness', '@id': `${SITE_URL}/#business`, name: 'Black Pearl · Lady Alice', telephone: PHONE, address: ADDRESS },
-        offers: { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: fromPrice, highPrice: Math.max(...Object.values(charterSlots).map(s => s.prices[6])), url: `${SITE_URL}${bookUrl}` }
+        provider: { '@type': 'LocalBusiness', '@id': `${SITE_URL}/#business`, name: 'Black Pearl · Lady Alice', telephone: PHONE, address: ADDRESS }
       },
       {
         '@type': 'FAQPage',
@@ -156,9 +153,9 @@ ${header}
     </section>
 
     <section class="occ-section container">
-      <h2 class="occ-h2">Prices and timings</h2>
-      <p>${esc(p.recommended.note)} Recommended: ${esc(slot.label)}, ${p.recommended.hours} hours, ${formatCurrency(slot.prices[p.recommended.hours])} for the whole yacht.</p>
-      ${priceTable()}
+      <h2 class="occ-h2">Timings and pricing</h2>
+      <p>${esc(p.recommended.note)} Charters run in a day slot (6 am – 2 pm) or an evening slot (2 pm – 11 pm), for 3, 5 or 6 hours. ${[3, 5, 6].map(h => `${h} hours: ${esc(getItineraryLabel(h))}`).join(' · ')}.</p>
+      <p>Every event is different, so we quote each charter personally. Send your request and our team shares pricing for your date, slot and plans on WhatsApp.</p>
     </section>
 
     <section class="occ-section container">
@@ -232,7 +229,7 @@ ${header}
       <div class="container">
         <span class="minimal-kicker">Occasions</span>
         <h1 class="minimal-title">Celebrations on a Private Yacht in Mumbai</h1>
-        <p class="minimal-subtitle">One yacht, one booking at a time, up to 100 guests. Choose your occasion to see ideas, prices and timings.</p>
+        <p class="minimal-subtitle">One yacht, one booking at a time, up to 100 guests. Choose your occasion to see ideas and timings.</p>
       </div>
     </section>
 
