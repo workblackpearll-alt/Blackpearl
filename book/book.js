@@ -14,7 +14,8 @@ import {
   isRangeFree,
   formatRange,
   TURNAROUND_GAP_HOURS,
-  ONLINE_PAYMENTS_ENABLED
+  ONLINE_PAYMENTS_ENABLED,
+  SHOW_PRICES
 } from '../shared/pricing.js';
 
 /* ========================================================
@@ -494,7 +495,7 @@ function renderStartTimeOptions() {
     group.innerHTML = `
       <div class="time-group-head">
         <span class="time-group-name">${slot.label.replace(' Slot', '')} <span class="time-group-window">${formatClock(slot.startHour)} – ${formatClock(slot.endHour)}</span></span>
-        <span class="time-group-price">${formatCurrency(getCharterPrice(slotKey, bookState.selectedDuration))}</span>
+        ${SHOW_PRICES ? `<span class="time-group-price">${formatCurrency(getCharterPrice(slotKey, bookState.selectedDuration))}</span>` : ''}
       </div>
     `;
 
@@ -624,6 +625,10 @@ function updateSummarySidebar() {
   set('sideSummaryGuests', countInput ? countInput.value : String(bookState.guestDetails.guests || 2));
 
   const total = calculateCurrentTotal();
+  if (!SHOW_PRICES) {
+    set('sideSummaryQuoteTotal', 'Quoted on WhatsApp');
+    return;
+  }
   set('sideSummaryQuoteTotal', total ? formatCurrency(total)
     : `from ${formatCurrency(Math.min(...Object.keys(charterSlots).map(k => getCharterPrice(k, bookState.selectedDuration))))}`);
 }
@@ -881,7 +886,6 @@ function buildWhatsAppMessage(code) {
     `Time: ${formatRange(bookState.startHour, bookState.startHour + bookState.selectedDuration)}`,
     `Duration: ${bookState.selectedDuration} hours (${getItineraryLabel(bookState.selectedDuration)})`,
     `Guests: ${bookState.guestDetails.guests}`,
-    `Charter price: ${formatCurrency(calculateCurrentTotal())}`,
     '',
     `Name: ${bookState.guestDetails.name}`,
     `Phone: ${bookState.guestDetails.phone}`,
@@ -963,7 +967,7 @@ function showRequestConfirmation(code, waLink) {
     ['Time', formatRange(bookState.startHour, bookState.startHour + bookState.selectedDuration)],
     ['Duration', `${bookState.selectedDuration} hours · ${getItineraryLabel(bookState.selectedDuration)}`],
     ['Guests', String(bookState.guestDetails.guests)],
-    ['Charter price', formatCurrency(calculateCurrentTotal())]
+    ...(SHOW_PRICES ? [['Charter price', formatCurrency(calculateCurrentTotal())]] : [])
   ];
   const summary = document.getElementById('requestSummary');
   if (summary) {

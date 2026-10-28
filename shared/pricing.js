@@ -11,6 +11,10 @@ export const DEPOSIT_AMOUNT = 5000;
 // QR or confirmation email). Set to true once Razorpay keys are live.
 export const ONLINE_PAYMENTS_ENABLED = false;
 
+// false = charter prices are hidden from guests; the team quotes each event on WhatsApp.
+// The rate card above is still used internally (admin, booking records, alert emails).
+export const SHOW_PRICES = false;
+
 // Standard charter slots: one booking per slot per date.
 // Hours are 24h clock; prices in INR for each duration.
 export const charterSlots = {
