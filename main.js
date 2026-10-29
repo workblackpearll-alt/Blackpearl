@@ -1007,6 +1007,7 @@ function generateICalendarFile() {
    ======================================================== */
 function initAdminPortal() {
   const modal = document.getElementById('adminModal');
+  if (!modal) return; // old in-page admin popup removed; the admin panel lives at /admin
   const trigger = document.getElementById('crewPortalTrigger');
   const closeBtn = document.getElementById('adminCloseBtn');
   const blockBtn = document.getElementById('btnAdminBlockDate');

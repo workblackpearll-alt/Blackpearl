@@ -987,11 +987,11 @@
 
           <div class="faq-item">
             <button class="faq-question" aria-expanded="false">
-              <span>Why is the reservation hold deposit ₹5,000 instead of the full amount?</span>
+              <span>How do I book and get a quote?</span>
               <span class="faq-arrow">↓</span>
             </button>
             <div class="faq-answer">
-              <p>Nobody wants to pay ₹1.5 or 2 lakhs on day one. A ₹5,000 token is small enough to hold your date from your phone, and locks the date exclusively for you. The entire deposit is 100% refundable within 48 hours under our <a href="/cancellation" style="color: var(--gold); text-decoration: underline;">Cancellation Guarantee</a> and governed by our <a href="/terms" style="color: var(--gold); text-decoration: underline;">Charter Terms</a>.</p>
+              <p>Pick your occasion, date and time on our booking page and send your request. Our team then connects with you on WhatsApp with a quote for your event and slot. Bookings are governed by our <a href="/cancellation" style="color: var(--gold); text-decoration: underline;">Cancellation Guarantee</a> and governed by our <a href="/terms" style="color: var(--gold); text-decoration: underline;">Charter Terms</a>.</p>
             </div>
           </div>
 
@@ -1149,16 +1149,16 @@
 
       <div class="footer-actions-col">
         <div class="footer-reservation-card">
-          <span class="footer-card-eyebrow">48-Hour Guarantee</span>
-          <h4 class="footer-card-title">Hold A Date</h4>
-          <p class="footer-card-desc">Lock Lady Alice exclusively with a refundable ₹5,000 token. Our charter team calls you to design your bespoke voyage.</p>
+          <span class="footer-card-eyebrow">Private Charters</span>
+          <h4 class="footer-card-title">Plan Your Date</h4>
+          <p class="footer-card-desc">Pick your date and time, send your request, and our team plans your bespoke voyage with you on WhatsApp.</p>
           <a href="/book" class="footer-cta-btn" id="footerBookBtn">
             <span>Check available dates</span>
           </a>
           <div class="footer-trust-notes">
-            <span class="footer-trust-item"><span class="footer-trust-dot"></span> 100% Refundable</span>
+            <span class="footer-trust-item"><span class="footer-trust-dot"></span> One Booking at a Time</span>
             <span class="footer-trust-item"><span class="footer-trust-dot"></span> Ferry Wharf Jetty 2</span>
-            <span class="footer-trust-item"><span class="footer-trust-dot"></span> Razorpay Secured</span>
+            <span class="footer-trust-item"><span class="footer-trust-dot"></span> Up to 100 Guests</span>
           </div>
         </div>
       </div>
@@ -1188,161 +1188,6 @@
       <span class="btn-micro-badge">Book in 2 minutes</span>
     </a>
   </aside>
-
-  <!-- ======================================================== -->
-  <!-- CREW & ADMIN MANAGEMENT MODAL (PORTAL)                   -->
-  <!-- ======================================================== -->
-  <div class="admin-modal-overlay" id="adminModal" aria-hidden="true" role="dialog">
-    <div class="admin-modal-content">
-      <div class="admin-header">
-        <div class="admin-header-title">
-          <div class="admin-badge-row">
-            <span class="admin-badge">CREW DASHBOARD</span>
-            <span class="admin-conn-pill" id="adminSupabaseStatus">Supabase: Checking...</span>
-            <span class="admin-conn-pill" id="adminImageKitStatus">ImageKit: Checking...</span>
-          </div>
-          <h3>Lady Alice Command & Guest Portal</h3>
-          <p>Live synchronized datastore: Web holds, voyage briefs & ImageKit media</p>
-        </div>
-        <button class="modal-close-btn" id="adminCloseBtn" aria-label="Close admin modal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="admin-stats-bar">
-        <div class="stat-pill">
-          <span class="stat-num" id="adminActiveHoldsCount">2</span>
-          <span class="stat-sub">Active Holds</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-num" id="adminDepositsValue">₹10,000</span>
-          <span class="stat-sub">Hold Deposits</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-num" id="adminBriefsCount">0</span>
-          <span class="stat-sub">Voyage Briefs</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-num" id="adminMediaCount">0</span>
-          <span class="stat-sub">Dynamic Media</span>
-        </div>
-      </div>
-
-      <!-- Admin Tabs Navigation -->
-      <div class="admin-nav-tabs">
-        <button class="admin-nav-tab active" data-admin-tab="holds">Date Holds</button>
-        <button class="admin-nav-tab" data-admin-tab="briefs">Voyage Briefs</button>
-        <button class="admin-nav-tab" data-admin-tab="media">ImageKit & Media</button>
-        <button class="admin-nav-tab" data-admin-tab="calendar">Calendar Locks</button>
-      </div>
-
-      <!-- TAB 1: Date Holds & Bookings -->
-      <div class="admin-tab-panel active" id="adminPanelHolds">
-        <div class="admin-panel-toolbar">
-          <h4>Recent Date Holds & Enquiries</h4>
-          <button class="btn-outline btn-xs" id="btnAdminRefreshHolds">Refresh from Supabase</button>
-        </div>
-        <div class="admin-bookings-list" id="adminBookingsList">
-          <!-- Populated dynamically -->
-        </div>
-      </div>
-
-      <!-- TAB 2: Voyage Charter Briefs -->
-      <div class="admin-tab-panel" id="adminPanelBriefs">
-        <div class="admin-panel-toolbar">
-          <h4>Client Voyage Charter Briefs</h4>
-          <button class="btn-outline btn-xs" id="btnAdminRefreshBriefs">Refresh from Supabase</button>
-        </div>
-        <div class="admin-briefs-list" id="adminBriefsList">
-          <!-- Populated dynamically -->
-        </div>
-      </div>
-
-      <!-- TAB 3: ImageKit Media Manager & Uploader -->
-      <div class="admin-tab-panel" id="adminPanelMedia">
-        <div class="admin-panel-toolbar">
-          <h4>Add & Retrieve Images with ImageKit CDN</h4>
-          <span class="admin-help-pill">URLs saved to Supabase gallery_images</span>
-        </div>
-        
-        <div class="admin-media-upload-card">
-          <form id="adminMediaUploadForm" class="admin-media-form">
-            <div class="form-row-2col">
-              <div class="form-group">
-                <label class="form-label" for="mediaTitleInput">Image Title *</label>
-                <input type="text" id="mediaTitleInput" class="admin-input" placeholder="e.g. Sunset Proposal on Bow" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="mediaCategorySelect">Occasion Category</label>
-                <select id="mediaCategorySelect" class="admin-select">
-                  <option value="sailing">Sailing & Coastal Cruises</option>
-                  <option value="romance">Romantic & Intimate</option>
-                  <option value="parties">Parties & Nightlife</option>
-                  <option value="corporate">Corporate & Brands</option>
-                  <option value="wellness">Wellness & Mornings</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="mediaSubtitleInput">Subtitle / Caption</label>
-              <input type="text" id="mediaSubtitleInput" class="admin-input" placeholder="e.g. Champagne toast as Mumbai skyline illuminates">
-            </div>
-
-            <div class="form-row-2col">
-              <div class="form-group">
-                <label class="form-label" for="mediaFileInput">Choose Image File</label>
-                <input type="file" id="mediaFileInput" class="admin-input" accept="image/*">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="mediaUrlInput">Or Enter ImageKit / Web Image URL</label>
-                <input type="url" id="mediaUrlInput" class="admin-input" placeholder="https://ik.imagekit.io/... or https://...">
-              </div>
-            </div>
-
-            <button type="submit" class="btn-gold btn-block" id="btnAdminUploadMedia">
-              <span>Upload to ImageKit & Save to Supabase</span>
-            </button>
-            <div id="mediaUploadFeedback" class="upload-feedback-msg" style="display:none;"></div>
-          </form>
-        </div>
-
-        <div class="admin-media-grid-wrap">
-          <h5>Dynamic Images in Database</h5>
-          <div class="admin-media-grid" id="adminMediaGrid">
-            <!-- Dynamically populated from Supabase -->
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: Calendar Date Locks -->
-      <div class="admin-tab-panel" id="adminPanelCalendar">
-        <div class="admin-block-date-box">
-          <h4>Block Date (Maintenance / Weather / Phone Booking)</h4>
-          <p class="admin-subtext">Locks dates on the public 5-step booking calendar. Saved to Supabase blocked_dates.</p>
-          <div class="block-controls-row">
-            <input type="date" id="adminBlockDateInput" class="admin-input">
-            <select id="adminBlockReason" class="admin-select">
-              <option value="Maintenance">Maintenance & Inspection</option>
-              <option value="Phone Booking">Booked via Phone</option>
-              <option value="Weather">Adverse Weather Warning</option>
-              <option value="Private Charter">VIP Private Charter</option>
-            </select>
-            <button class="btn-gold btn-sm" id="btnAdminBlockDate">Block Date</button>
-          </div>
-        </div>
-
-        <div class="admin-blocked-dates-list" id="adminBlockedDatesList">
-          <!-- Populated dynamically -->
-        </div>
-      </div>
-
-      <div class="admin-footer">
-        <span class="admin-sync-text" id="adminFooterSyncText">Connected with Supabase & ImageKit</span>
-        <button class="btn-outline btn-sm" id="adminResetDemoData">Reset Local Cache</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ======================================================== -->
   <!-- IMAGE LIGHTBOX MODAL                                     -->
