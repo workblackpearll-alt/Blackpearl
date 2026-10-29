@@ -860,7 +860,18 @@ const BOOKING_WHATSAPP_NUMBER = '918591206214';
 
 // Swap payment wording for request wording on the page
 function applyPaymentMode() {
-  if (ONLINE_PAYMENTS_ENABLED) return;
+  if (ONLINE_PAYMENTS_ENABLED) {
+    // The page's built-in text describes request mode; switch it to online payment wording
+    const put = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    put('bookingHeroSub', `Pay ${formatCurrency(DEPOSIT_AMOUNT)} to hold your date. Our team calls you to plan the rest.`);
+    put('btnPagePayText', PAY_BUTTON_LABEL);
+    put('summaryPayNote', 'The rest is settled with our team. Refundable within 48 hours.');
+    put('summarySecureNote', 'Secure payment by Razorpay · UPI, cards, net banking');
+    put('receiptAdvancePaid', `${formatCurrency(DEPOSIT_AMOUNT)} (Secured via Razorpay)`);
+    const payToday = document.getElementById('summaryPayToday');
+    if (payToday) payToday.innerHTML = `<span>Pay today</span><strong>${formatCurrency(DEPOSIT_AMOUNT)}</strong>`;
+    return;
+  }
   const set = (id, text) => {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
