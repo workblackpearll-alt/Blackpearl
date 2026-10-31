@@ -30,6 +30,7 @@ import {
   rangesConflict,
   formatRange,
   charterSlots,
+  SHOW_PRICES,
   DAY_START_HOUR,
   DAY_END_HOUR,
   TURNAROUND_GAP_HOURS
@@ -153,6 +154,8 @@ const elements = {
    1. INITIALIZATION & SUPABASE AUTH GUARD
    ======================================================== */
 document.addEventListener('DOMContentLoaded', async () => {
+  // Prices are quoted on WhatsApp: hide money figures in the panel
+  if (!SHOW_PRICES) document.body.classList.add('hide-money');
   // Setup default lock date to tomorrow
   if (elements.lockDateInput) {
     const tomorrow = new Date();
@@ -926,7 +929,7 @@ function renderDashboard() {
     <td class="engagement-product-title">${escapeHtml(row.name)}</td>
     <td class="text-right num-cell">${num(row.visitors)}</td>
     <td class="text-right num-cell">${num(row.bookings)}</td>
-    <td class="text-right total-cell">₹${num(Math.round(row.value))}</td>`, 4,
+    <td class="text-right total-cell money-col">₹${num(Math.round(row.value))}</td>`, 4,
     'No campaign links used yet in this period.');
   renderReportRows('topPagesBody', a.topPages, row => `
     <td class="engagement-product-title">${escapeHtml(row.name)}</td>
@@ -970,7 +973,7 @@ function renderDashboard() {
         tr.innerHTML = `
           <td class="engagement-product-title">${escapeHtml(row.occasion)}</td>
           <td class="text-right num-cell">${num(row.bookings)}</td>
-          <td class="text-right total-cell">₹${num(Math.round(row.value))}</td>
+          <td class="text-right total-cell money-col">₹${num(Math.round(row.value))}</td>
         `;
         body.appendChild(tr);
       });
@@ -1127,8 +1130,8 @@ function renderBookingsTable() {
         <div class="cell-sub">${escapeHtml(booking.email || '')}</div>
       </td>
       <td>
-        <strong>${escapeHtml(booking.price || '—')}</strong>
-        <div class="cell-sub">Advance ${escapeHtml(booking.paidToken || '₹5,000')}</div>
+        <strong>${escapeHtml(SHOW_PRICES ? (booking.price || '—') : 'Quoted on WhatsApp')}</strong>
+        ${SHOW_PRICES && booking.paidToken ? `<div class="cell-sub">Advance ${escapeHtml(booking.paidToken)}</div>` : ''}
       </td>
       <td>${statusCell}</td>
       <td>${emailStatusHtml(booking)}</td>
@@ -2021,8 +2024,8 @@ function openBookingDetailModal(booking) {
       ${field('Date', `<strong>${escapeHtml(booking.date || '—')}</strong>`)}
       ${field('Slot & time', escapeHtml(booking.slot || '—'))}
       ${field('Duration', `${escapeHtml(booking.duration || '—')} · ${escapeHtml(booking.voyageMode || '')}`)}
-      ${field('Charter price', `<strong>${escapeHtml(booking.price || '—')}</strong>`)}
-      ${field('Advance', escapeHtml(booking.paidToken || '₹5,000'))}
+      ${SHOW_PRICES ? field('Charter price', `<strong>${escapeHtml(booking.price || '—')}</strong>`) : ''}
+      ${SHOW_PRICES && booking.paidToken ? field('Advance', escapeHtml(booking.paidToken)) : ''}
       ${field('Status', `<span class="status-select-pill ${bookingStatusClass(booking.status)}">${escapeHtml(bookingStatusLabel(booking.status))}</span>`)}
       ${field('Guest confirmation email', escapeHtml(guestEmailText))}
       ${field('Your new-booking email', escapeHtml(emailStatusText(booking.adminEmailStatus, booking.adminEmailStatusAt)))}

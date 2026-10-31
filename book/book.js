@@ -859,6 +859,14 @@ function renderConfirmationReceipt(booking, { qrUrl, verifyUrl, emailSent }) {
 const BOOKING_WHATSAPP_NUMBER = '918591206214';
 
 // Swap payment wording for request wording on the page
+function loadRazorpayCheckout() {
+  if (window.Razorpay || document.getElementById('razorpayCheckoutScript')) return;
+  const script = document.createElement('script');
+  script.id = 'razorpayCheckoutScript';
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  document.head.appendChild(script);
+}
+
 function applyPaymentMode() {
   if (ONLINE_PAYMENTS_ENABLED) {
     // The page's built-in text describes request mode; switch it to online payment wording
@@ -868,21 +876,30 @@ function applyPaymentMode() {
     put('summaryPayNote', 'The rest is settled with our team. Refundable within 48 hours.');
     put('summarySecureNote', 'Secure payment by Razorpay · UPI, cards, net banking');
     put('receiptAdvancePaid', `${formatCurrency(DEPOSIT_AMOUNT)} (Secured via Razorpay)`);
+    put('recAdvanceLabel', 'Advance Paid');
+    put('recPaymentLabel', 'Razorpay Reference');
+    ['recPaymentRow', 'recAdvanceRow'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = false; });
     const payToday = document.getElementById('summaryPayToday');
-    if (payToday) payToday.innerHTML = `<span>Pay today</span><strong>${formatCurrency(DEPOSIT_AMOUNT)}</strong>`;
+    if (payToday) { payToday.innerHTML = `<span>Pay today</span><strong>${formatCurrency(DEPOSIT_AMOUNT)}</strong>`; payToday.hidden = false; }
+    const secure = document.getElementById('summarySecureNote');
+    if (secure) secure.hidden = false;
+    const priceRow = document.getElementById('summaryPriceRow');
+    if (priceRow) priceRow.hidden = !SHOW_PRICES;
+    if (SHOW_PRICES) put('summaryPriceLabel', 'Charter price');
+    loadRazorpayCheckout();
     return;
   }
   const set = (id, text) => {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
   };
-  set('bookingHeroSub', 'Pick your date and time, then confirm with our team on WhatsApp. Nothing to pay now.');
+  set('bookingHeroSub', 'Pick your date and time, then confirm with our team on WhatsApp.');
   set('btnPagePayText', REQUEST_BUTTON_LABEL);
   set('bookGuestEmailLabel', 'Email');
   set('summaryPayNote', 'Our team confirms availability and your booking with you on WhatsApp.');
-  set('summarySecureNote', 'Payment details are shared by our team on WhatsApp.');
-  const payToday = document.getElementById('summaryPayToday');
-  if (payToday) payToday.innerHTML = '<span>Pay today</span><strong>Nothing</strong>';
+  const priceRow = document.getElementById('summaryPriceRow');
+  if (priceRow) priceRow.hidden = !SHOW_PRICES;
+  if (SHOW_PRICES) set('summaryPriceLabel', 'Price');
 }
 
 const REQUEST_BUTTON_LABEL = 'Request Booking on WhatsApp';

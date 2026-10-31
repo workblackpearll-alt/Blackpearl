@@ -153,9 +153,9 @@ ${header}
     </section>
 
     <section class="occ-section container">
-      <h2 class="occ-h2">Timings and pricing</h2>
+      <h2 class="occ-h2">Timings</h2>
       <p>${esc(p.recommended.note)} Charters run in a day slot (6 am – 2 pm) or an evening slot (2 pm – 11 pm), for 3, 5 or 6 hours. ${[3, 5, 6].map(h => `${h} hours: ${esc(getItineraryLabel(h))}`).join(' · ')}.</p>
-      <p>Every event is different, so we quote each charter personally. Send your request and our team shares pricing for your date, slot and plans on WhatsApp.</p>
+      <p>Every event is different, so we plan each charter personally. Send your request and our team confirms the details with you on WhatsApp.</p>
     </section>
 
     <section class="occ-section container">

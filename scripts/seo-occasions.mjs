@@ -54,7 +54,7 @@ export const occasionPages = [
     ],
     recommended: { slot: 'evening', hours: 5, note: 'Most birthday parties choose a 5-hour evening charter: sunset, dinner and dancing.' },
     faqs: [
-      ['How many guests can come to a birthday party on board?', 'Lady Alice takes up to 100 guests. The price is for the whole yacht, not per person.'],
+      ['How many guests can come to a birthday party on board?', 'Lady Alice takes up to 100 guests, and the whole yacht is reserved for your party.'],
       ['Can we bring our own cake and decorations?', 'Yes. Share your plans with our team on WhatsApp and we coordinate the setup before you board.'],
       ['Is alcohol allowed at a birthday party on the yacht?', 'Yes, through our beverage packages or your own sealed bottles under a temporary FL-4 liquor permit, which our team helps you get.']
     ],
@@ -82,9 +82,9 @@ export const occasionPages = [
     ],
     recommended: { slot: 'day', hours: 5, note: 'Offsites usually take a 5-hour day charter; galas and launches suit the evening.' },
     faqs: [
-      ['How many people can attend a corporate event on Lady Alice?', 'Up to 100 guests. The charter price covers the whole yacht for your company.'],
+      ['How many people can attend a corporate event on Lady Alice?', 'Up to 100 guests, with the whole yacht reserved for your company.'],
       ['Can we host a brand launch or product showcase on board?', 'Yes. The open decks can be set up for a launch, a runway or a presentation. Share your brief and our team plans the layout.'],
-      ['Do you provide GST invoices for company bookings?', 'Our team shares invoicing details when confirming your booking. Message us on WhatsApp with your company details.']
+      ['Can we add our company branding on board?', 'Yes. Share your brief and our team plans the setup with you before the event.']
     ],
     related: ['private-yacht-party-mumbai', 'harbour-sailing-cruise-mumbai', 'birthday-party-yacht-mumbai']
   },
@@ -138,7 +138,7 @@ export const occasionPages = [
     ],
     recommended: { slot: 'evening', hours: 5, note: 'Ring ceremonies usually take 5 hours in the evening: ceremony, dinner and celebration.' },
     faqs: [
-      ['How many guests can we invite to an engagement on the yacht?', 'Up to 100 guests. The price is for the whole yacht.'],
+      ['How many guests can we invite to an engagement on the yacht?', 'Up to 100 guests, with the whole yacht reserved for your families.'],
       ['Can we do traditional rituals on board?', 'Yes. Tell our team what the ceremony needs and we plan the setup around it.'],
       ['Is there a room to get ready on board?', 'Yes, Lady Alice has a master suite that the couple can use before the ceremony.']
     ],
@@ -168,7 +168,7 @@ export const occasionPages = [
     faqs: [
       ['Can we play our own music?', 'Yes. There is a DJ console on deck. Bring your playlist or your own DJ.'],
       ['Can we bring alcohol?', 'Yes, through our beverage packages or your own sealed bottles under a temporary FL-4 liquor permit, which our team helps you arrange.'],
-      ['Is there a minimum group size?', 'No. The price is for the whole yacht, whether you bring 10 friends or 100.']
+      ['Is there a minimum group size?', 'No. The whole yacht is yours, whether you bring 10 friends or 100.']
     ],
     related: ['private-yacht-party-mumbai', 'birthday-party-yacht-mumbai', 'harbour-sailing-cruise-mumbai']
   },
@@ -223,7 +223,7 @@ export const occasionPages = [
     recommended: { slot: 'evening', hours: 5, note: 'Most parties take a 5-hour evening charter; the longest option is 6 hours.' },
     faqs: [
       ['How late can a yacht party go?', 'Evening charters can run until 11 pm, the end of venue hours at sea.'],
-      ['Is the price per person?', 'No. You pay for the whole yacht, for up to 100 guests.'],
+      ['Do we share the yacht with other groups?', 'No. Lady Alice takes one booking at a time, for up to 100 guests.'],
       ['Where do guests board?', 'Guests board at Jetty No. 2, Princess Ferry Wharf (Bhaucha Dhakka), Mazgaon, Mumbai.']
     ],
     related: ['birthday-party-yacht-mumbai', 'bachelorette-party-yacht-mumbai', 'corporate-event-yacht-mumbai']

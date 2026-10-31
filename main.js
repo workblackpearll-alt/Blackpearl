@@ -931,7 +931,7 @@ function completeBookingAndCelebrate(bookingCode, paymentId = 'pay_verified') {
   // WhatsApp direct team prefilled link
   const waBtn = document.getElementById('btnChatWaConfirmation');
   if (waBtn) {
-    const waText = encodeURIComponent(`Hello Black Pearl team, I have just secured date ${newHold.date} for our ${newHold.occasion} on Lady Alice (Deposit ₹5,000 paid via Razorpay). My booking code is ${bookingCode} (Payment ID: ${paymentId}). Please call me on ${newHold.phone} to plan the evening.`);
+    const waText = encodeURIComponent(`Hello Black Pearl team, I have just secured date ${newHold.date} for our ${newHold.occasion} on Lady Alice. My booking code is ${bookingCode} (Payment ID: ${paymentId}). Please call me on ${newHold.phone} to plan the evening.`);
     waBtn.href = `https://wa.me/918591206214?text=${waText}`;
   }
 
