@@ -1197,7 +1197,12 @@ function renderOverview() {
   setText('ovCommunity', newMembers);
 
   // Sidebar counters show what is waiting, not raw totals
-  if (elements.sidebarBookingsCount) elements.sidebarBookingsCount.textContent = upcoming.length;
+  // Bookings badge: website requests still waiting for the team (not yet Confirmed or Cancelled)
+  const openRequests = state.bookings.filter(b => b.status === REQUESTED_STATUS && !/^sample/i.test(b.name || '')).length;
+  if (elements.sidebarBookingsCount) {
+    elements.sidebarBookingsCount.textContent = openRequests;
+    elements.sidebarBookingsCount.title = `${openRequests} booking request${openRequests === 1 ? '' : 's'} waiting for confirmation`;
+  }
   if (elements.sidebarContactCount) elements.sidebarContactCount.textContent = newEnquiries;
   if (elements.sidebarCommunityCount) elements.sidebarCommunityCount.textContent = newMembers;
 
