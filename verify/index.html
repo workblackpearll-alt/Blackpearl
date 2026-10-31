@@ -310,8 +310,7 @@
             ['Duration', b.duration],
             ['Itinerary', b.itinerary],
             ['Guests', b.guests],
-            ['Charter price', b.price],
-            ['Advance paid', valid ? `${b.advancePaid} · ${b.paymentId || ''}` : ''],
+            ...(valid && b.paymentId ? [['Advance paid', `${b.advancePaid} · ${b.paymentId}`]] : []),
             ['Boarding', 'Jetty No. 2, Princess Ferry Wharf']
           ]);
 

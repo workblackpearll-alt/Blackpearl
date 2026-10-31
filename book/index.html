@@ -1798,6 +1798,7 @@
       border-color: #25D366 !important;
     }
 
+    #summaryPriceRow[hidden], #summaryPayToday[hidden], #summarySecureNote[hidden], #recPaymentRow[hidden], #recAdvanceRow[hidden] { display: none !important; }
     .request-confirm-note {
       font-size: 13px;
       color: #9CA3AF;
@@ -1875,7 +1876,7 @@
       <!-- HERO HEADING -->
       <div class="booking-page-hero">
         <h1 class="booking-page-title" id="pageHeroTitle">Book Lady Alice</h1>
-        <p class="booking-page-sub" id="bookingHeroSub">Pick your date and time, then confirm with our team on WhatsApp. Nothing to pay now.</p>
+        <p class="booking-page-sub" id="bookingHeroSub">Pick your date and time, then confirm with our team on WhatsApp.</p>
       </div>
 
       <!-- PROGRESS: 3 STEPS -->
@@ -2038,7 +2039,7 @@
 
         </div>
 
-        <!-- SUMMARY + PAYMENT -->
+        <!-- SUMMARY -->
         <div class="booking-summary-col">
           <div class="booking-summary-sticky">
             <div class="summary-card">
@@ -2068,13 +2069,13 @@
               </div>
 
               <div class="summary-price-block">
-                <div class="summary-quote-row">
-                  <span class="summary-item-label">Price</span>
+                <div class="summary-quote-row" id="summaryPriceRow" hidden>
+                  <span class="summary-item-label" id="summaryPriceLabel"></span>
                   <span class="quote-total-val" id="sideSummaryQuoteTotal">—</span>
                 </div>
-                <div class="summary-quote-row summary-pay-today" id="summaryPayToday">
-                  <span>Pay today</span>
-                  <strong>Nothing</strong>
+                <div class="summary-quote-row summary-pay-today" id="summaryPayToday" hidden>
+                  <span></span>
+                  <strong></strong>
                 </div>
                 <p class="summary-small" id="summaryPayNote">Our team confirms availability and your booking with you on WhatsApp.</p>
               </div>
@@ -2082,14 +2083,14 @@
               <button class="btn-pay-lock" id="btnPagePay5000">
                 <span id="btnPagePayText">Request Booking on WhatsApp</span>
               </button>
-              <p class="summary-small summary-secure" id="summarySecureNote">Payment details are shared by our team on WhatsApp.</p>
+              <p class="summary-small summary-secure" id="summarySecureNote" hidden></p>
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- REQUEST SENT (while online payment is off) -->
+      <!-- REQUEST SENT -->
       <div class="request-confirm-view" id="requestConfirmView" hidden>
         <div class="confirmation-success-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2103,12 +2104,12 @@
         <a href="#" class="btn-pay-lock btn-block request-wa-btn" id="requestWhatsAppBtn" target="_blank" rel="noopener">
           Send on WhatsApp
         </a>
-        <p class="request-confirm-note">Nothing to pay right now. We'll share payment and next steps on WhatsApp.</p>
+        <p class="request-confirm-note">Our team will reply on WhatsApp with the next steps.</p>
         <a href="/" class="btn-text-subtle request-home-link">Return to Homepage</a>
       </div>
 
       <!-- ======================================================== -->
-      <!-- STEP 5: CONFIRMATION & RECEIPT VIEW (APPEARS AFTER PAY)   -->
+      <!-- STEP 5: CONFIRMATION & RECEIPT VIEW                     -->
       <!-- ======================================================== -->
       <div class="confirmation-view" id="bookingConfirmationView">
         <div class="confirmation-success-icon">
@@ -2152,19 +2153,19 @@
             <span class="r-label">Guest Contact</span>
             <span class="r-val" id="recGuest">Arjun Mehta</span>
           </div>
-          <div class="receipt-row">
-            <span class="r-label">Razorpay Reference</span>
-            <span class="r-val font-mono" id="recPaymentId">pay_verified</span>
+          <div class="receipt-row" id="recPaymentRow" hidden>
+            <span class="r-label" id="recPaymentLabel"></span>
+            <span class="r-val font-mono" id="recPaymentId"></span>
           </div>
-          <div class="receipt-row paid-row">
-            <span class="r-label">Advance Paid</span>
-            <span class="r-val paid-badge" id="receiptAdvancePaid">Advance paid (Razorpay)</span>
+          <div class="receipt-row paid-row" id="recAdvanceRow" hidden>
+            <span class="r-label" id="recAdvanceLabel"></span>
+            <span class="r-val paid-badge" id="receiptAdvancePaid"></span>
           </div>
         </div>
 
         <div class="call-promise-box">
           <p class="call-promise-text">
-            Our charter team will call you on <strong id="recPhone">+91 85912 06214</strong> within 24 hours to personalize your itinerary, arrange custom florals & dining, and coordinate the remaining balance.
+            Our charter team will call you on <strong id="recPhone">+91 85912 06214</strong> within 24 hours to personalize your itinerary, and arrange custom florals & dining.
           </p>
         </div>
 
@@ -2248,13 +2249,12 @@
           <span class="footer-legal-divider"></span>
           <a href="/privacy">Privacy Policy</a>
           <span class="footer-legal-divider"></span>
-          <a href="/cancellation">Cancellation & Refund</a>
+          <a href="/cancellation">Cancellation Policy</a>
         </div>
       </div>
     </div>
   </footer>
 
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module" src="/book/book.js"></script>
   <script type="module" src="/whatsapp-button.js"></script>
 </body>

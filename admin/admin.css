@@ -3054,3 +3054,6 @@ body.admin-drawer-open {
     font-size: 10px;
   }
 }
+
+/* Prices are quoted on WhatsApp: hide money figures (SHOW_PRICES = false) */
+.hide-money .money-col { display: none !important; }

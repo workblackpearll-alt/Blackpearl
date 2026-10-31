@@ -10,7 +10,8 @@ import {
   getSlotTimingLabel,
   getStartHourOptions,
   isRangeFree,
-  ONLINE_PAYMENTS_ENABLED
+  ONLINE_PAYMENTS_ENABLED,
+  SHOW_PRICES
 } from '../shared/pricing.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 import { createRazorpayOrder, getRazorpayKeyId } from './_lib/razorpay.js';
@@ -221,7 +222,7 @@ export default async function handler(req, res) {
       duration_hours: duration,
       voyage_mode: getItineraryLabel(duration),
       guests,
-      price: formatCurrency(price),
+      price: SHOW_PRICES ? formatCurrency(price) : 'To be quoted',
       paid_token: ONLINE_PAYMENTS_ENABLED ? formatCurrency(DEPOSIT_AMOUNT) : 'Not paid yet',
       payment_method: ONLINE_PAYMENTS_ENABLED ? 'razorpay' : 'whatsapp',
       razorpay_order_id: order ? order.id : null,
