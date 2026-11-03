@@ -17,9 +17,11 @@ const MAX_ATTEMPTS_PER_CODE = 5;
 const RESEND_COOLDOWN_SECONDS = 60;
 const MAX_CODES_PER_HOUR = 5;
 
-function hashCode(sessionId, code) {
+// Codes belong to the admin account (not one browser session), so a code still works after
+// signing in again, refreshing, or pressing "Send a new code" while an older email is open.
+function hashCode(userId, code) {
   const key = process.env.ADMIN_OTP_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  return crypto.createHmac('sha256', key).update(`${sessionId}:${code}`).digest('hex');
+  return crypto.createHmac('sha256', key).update(`user:${userId}:${code}`).digest('hex');
 }
 
 function safeEqual(a, b) {
@@ -109,13 +111,11 @@ export default async function handler(req, res) {
 
       const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 
-      // Only the newest code for this login session can be used
-      await db.from('admin_otp_codes').update({ consumed_at: new Date(now).toISOString() })
-        .eq('session_id', sessionId).is('consumed_at', null);
+      // Earlier unexpired codes stay valid until one of them is used
       const { error: insertError } = await db.from('admin_otp_codes').insert([{
         user_id: user.id,
         session_id: sessionId,
-        code_hash: hashCode(sessionId, code),
+        code_hash: hashCode(user.id, code),
         expires_at: new Date(now + CODE_TTL_MINUTES * 60 * 1000).toISOString()
       }]);
       if (insertError) throw insertError;
@@ -129,27 +129,36 @@ export default async function handler(req, res) {
       const code = String(body.code || '').replace(/\D/g, '');
       if (code.length !== 6) return send(res, 400, { error: 'Enter the 6-digit code from your email.' });
 
-      const { data: otp } = await db.from('admin_otp_codes')
-        .select('*').eq('session_id', sessionId).eq('user_id', user.id).is('consumed_at', null)
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      // Every unused, unexpired code for this admin account (newest first)
+      const { data: active, error: activeError } = await db.from('admin_otp_codes')
+        .select('*').eq('user_id', user.id).is('consumed_at', null)
+        .gt('expires_at', new Date(now).toISOString())
+        .order('created_at', { ascending: false }).limit(MAX_CODES_PER_HOUR);
+      if (activeError) throw activeError;
 
-      if (!otp || new Date(otp.expires_at).getTime() < now) {
+      if (!active?.length) {
         return send(res, 400, { error: 'This code has expired. Request a new one.', code: 'EXPIRED' });
       }
-      if (otp.attempts >= MAX_ATTEMPTS_PER_CODE) {
+      // Wrong guesses are counted on the newest code and lock all codes together
+      const newest = active[0];
+      if (newest.attempts >= MAX_ATTEMPTS_PER_CODE) {
         return send(res, 429, { error: 'Too many wrong tries. Request a new code.', code: 'LOCKED' });
       }
 
-      if (!safeEqual(otp.code_hash, hashCode(sessionId, code))) {
-        const attempts = otp.attempts + 1;
-        await db.from('admin_otp_codes').update({ attempts }).eq('id', otp.id);
+      const hashed = hashCode(user.id, code);
+      const match = active.find(row => safeEqual(row.code_hash, hashed));
+      if (!match) {
+        const attempts = newest.attempts + 1;
+        await db.from('admin_otp_codes').update({ attempts }).eq('id', newest.id);
         const left = MAX_ATTEMPTS_PER_CODE - attempts;
         return send(res, 400, left > 0
           ? { error: `Wrong code. ${left} ${left === 1 ? 'try' : 'tries'} left.` }
           : { error: 'Too many wrong tries. Request a new code.', code: 'LOCKED' });
       }
 
-      await db.from('admin_otp_codes').update({ consumed_at: new Date(now).toISOString() }).eq('id', otp.id);
+      // Used: retire every outstanding code for this account
+      await db.from('admin_otp_codes').update({ consumed_at: new Date(now).toISOString() })
+        .eq('user_id', user.id).is('consumed_at', null);
       const expiresAt = new Date(now + SESSION_TTL_HOURS * 60 * 60 * 1000).toISOString();
       const { error: sessionError } = await db.from('admin_sessions').upsert({
         session_id: sessionId,
