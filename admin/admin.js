@@ -62,6 +62,7 @@ const state = {
   analyticsDays: 30, // 7 | 30 | null (all time)
   activeBookingFilter: 'all',
   bookingSearchQuery: '',
+  bookingSort: { key: 'created', dir: 'desc' },
   briefSearchQuery: '',
   contactInquiries: [],
   contactSearchQuery: '',
@@ -1071,6 +1072,12 @@ function initBookingsHandlers() {
   elements.bookingFilterButtons.forEach(btn => {
     btn.addEventListener('click', () => setBookingFilter(btn.getAttribute('data-filter') || 'all'));
   });
+
+  // Sort buttons (click again to flip ascending / descending)
+  document.querySelectorAll('.bk-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => setBookingSort(btn.getAttribute('data-sort-key')));
+  });
+  document.getElementById('btnExportBookings')?.addEventListener('click', exportBookingsCsv);
 }
 
 function setBookingFilter(filter) {
@@ -1089,8 +1096,74 @@ function applyBookingFilters() {
     );
   }
 
+  // Sort: one key, ascending or descending
+  const guestsOf = b => Number(b.guests) || 0;
+  const byCreated = (a, b) => new Date(a.createdAt) - new Date(b.createdAt);
+  const byDate = (a, b) => (a.dateIso || '9999').localeCompare(b.dateIso || '9999') || (a.startHour || 0) - (b.startHour || 0);
+  const byGuests = (a, b) => guestsOf(a) - guestsOf(b) || byCreated(b, a);
+  const { key, dir } = state.bookingSort;
+  const compare = { created: byCreated, date: byDate, guests: byGuests }[key] || byCreated;
+  list = [...list].sort((a, b) => (dir === 'asc' ? compare(a, b) : compare(b, a)));
+
   state.filteredBookings = list;
+  renderBookingResultsCount(list.length);
   renderBookingsTable();
+}
+
+function renderBookingResultsCount(shown) {
+  const total = state.bookings.length;
+  const el = document.getElementById('bookingResultsCount');
+  if (el) el.textContent = shown === total ? `${total} booking${total === 1 ? '' : 's'}` : `Showing ${shown} of ${total}`;
+}
+
+// Same key: flip direction. New key: its natural first direction.
+const SORT_DEFAULT_DIR = { created: 'desc', date: 'asc', guests: 'desc' };
+function setBookingSort(key) {
+  const current = state.bookingSort;
+  state.bookingSort = current.key === key
+    ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+    : { key, dir: SORT_DEFAULT_DIR[key] || 'desc' };
+  const labels = {
+    created: { desc: 'newest first', asc: 'oldest first' },
+    date: { asc: 'soonest first', desc: 'latest first' },
+    guests: { desc: 'most first', asc: 'fewest first' }
+  };
+  document.querySelectorAll('.bk-sort-btn').forEach(btn => {
+    const k = btn.getAttribute('data-sort-key');
+    const active = k === state.bookingSort.key;
+    btn.classList.toggle('active', active);
+    btn.querySelector('.bk-sort-arrow').textContent = active ? (state.bookingSort.dir === 'asc' ? '↑' : '↓') : '';
+    btn.title = active ? `Sorted ${labels[k][state.bookingSort.dir]} · click to reverse` : 'Click to sort';
+  });
+  applyBookingFilters();
+}
+
+function indiaDay(iso) {
+  if (!iso) return '';
+  try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date(iso)); } catch { return ''; }
+}
+
+function exportBookingsCsv() {
+  const rows = state.filteredBookings || [];
+  const header = ['#', 'Booking', 'Requested on', 'Name', 'Phone', 'Email', 'Occasion', 'Charter date', 'Time', 'Hours', 'Guests', 'Status', 'Notes'];
+  const cell = v => {
+    let text = String(v ?? '');
+    if (/^[=+\-@]/.test(text)) text = `'${text}`; // stop spreadsheet formulas
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+  const lines = rows.map((b, i) => [
+    i + 1, b.id, indiaDay(b.createdAt), b.name, b.phone, b.email, b.occasion, b.dateIso || b.date, b.slot,
+    b.durationHours || parseInt(b.duration, 10) || '', b.guests, bookingStatusLabel(b.status), b.notes
+  ].map(cell).join(','));
+  const csv = '\ufeff' + [header.map(cell).join(','), ...lines].join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `black-pearl-bookings-${indiaDay(new Date().toISOString())}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function renderBookingsTable() {
@@ -1103,7 +1176,7 @@ function renderBookingsTable() {
   }
   if (elements.bookingsEmptyState) elements.bookingsEmptyState.style.display = 'none';
 
-  state.filteredBookings.forEach(booking => {
+  state.filteredBookings.forEach((booking, index) => {
     const tr = document.createElement('tr');
     const isUnpaid = UNPAID_STATUSES.includes(booking.status);
 
@@ -1115,6 +1188,7 @@ function renderBookingsTable() {
         </select>`;
 
     tr.innerHTML = `
+      <td class="sr-col">${index + 1}</td>
       <td>
         <div class="font-mono"><strong>${escapeHtml(booking.id)}</strong></div>
         <div class="text-muted cell-sub">${formatDisplayDate(booking.createdAt)}</div>
@@ -1130,8 +1204,8 @@ function renderBookingsTable() {
         <div class="cell-sub">${escapeHtml(booking.email || '')}</div>
       </td>
       <td>
-        <strong>${escapeHtml(SHOW_PRICES ? (booking.price || '—') : 'Quoted on WhatsApp')}</strong>
-        ${SHOW_PRICES && booking.paidToken ? `<div class="cell-sub">Advance ${escapeHtml(booking.paidToken)}</div>` : ''}
+        <strong class="guests-cell">${Number(booking.guests) ? `${Number(booking.guests)} <span class="cell-sub">guests</span>` : '—'}</strong>
+        ${SHOW_PRICES ? `<div class="cell-sub">${escapeHtml(booking.price || '—')}${booking.paidToken ? ` · Advance ${escapeHtml(booking.paidToken)}` : ''}</div>` : ''}
       </td>
       <td>${statusCell}</td>
       <td>${emailStatusHtml(booking)}</td>
@@ -2142,18 +2216,19 @@ function buildNotifications() {
     onAction: () => openBookingDetailModal(b)
   }));
 
-  // Action: booking requests waiting for the team on WhatsApp (clears when marked Confirmed or Cancelled)
-  const requests = state.bookings.filter(b => b.status === REQUESTED_STATUS && (b.dateIso || '') >= today);
-  if (requests.length) {
-    items.push({
-      id: `requests:${requests.map(b => b.id).sort().join(',')}`,
+  // Action: one notification per booking request (clears when set to Confirmed or Cancelled)
+  state.bookings
+    .filter(b => b.status === REQUESTED_STATUS && !/^sample/i.test(b.name || ''))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .forEach(b => items.push({
+      id: `request:${b.id}`,
+      group: 'requests',
       level: 'action',
-      title: `${plural(requests.length, 'booking request', 'booking requests')}: confirm and block the time`,
-      detail: `${requests.slice(0, 3).map(b => `${b.name} (${b.date})`).join(', ')}${requests.length > 3 ? '…' : ''}. These times are not blocked yet. Confirm on WhatsApp, then set the status to Confirmed (this blocks the time) or Cancelled.`,
-      actionLabel: 'View requests',
-      onAction: () => { navigateTo('bookings'); setBookingFilter('requested'); }
-    });
-  }
+      title: `New booking request: ${b.name}`,
+      detail: [b.occasion, b.date, b.slot, b.phone].filter(Boolean).join(' · ') + '. Confirm on WhatsApp, then set Confirmed (blocks the time) or Cancelled.',
+      actionLabel: 'Open booking',
+      onAction: () => openBookingDetailModal(b)
+    }));
 
   // Action: paid, waiting for the team's call (clears when marked Confirmed)
   const awaitingCall = state.bookings.filter(b => b.status === 'Held (Deposit Paid)' && (b.dateIso || '') >= today);
@@ -2256,7 +2331,10 @@ function readHistory() {
 
 function writeHistory(history) {
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)));
+    // Never drop open items (they would pop up again as new); trim old resolved ones
+    const open = history.filter(h => !h.resolved);
+    const resolved = history.filter(h => h.resolved).slice(0, HISTORY_LIMIT);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([...open, ...resolved]));
   } catch { /* storage unavailable */ }
 }
 
@@ -2372,13 +2450,32 @@ function renderNotificationPanel(history) {
   section('Earlier', earlier);
 }
 
+// The Overview shows one line for all booking requests instead of one per request
+function summariseForOverview(items) {
+  const requests = items.filter(i => i.group === 'requests');
+  if (requests.length <= 1) return items;
+  const summary = {
+    id: 'requests-summary',
+    level: 'action',
+    title: `${requests.length} booking requests waiting`,
+    detail: 'Confirm each on WhatsApp, then set Confirmed (blocks the time) or Cancelled.',
+    actionLabel: 'View requests',
+    onAction: () => { navigateTo('bookings'); setBookingFilter('requested'); }
+  };
+  currentActions.set(summary.id, summary);
+  const firstIndex = items.findIndex(i => i.group === 'requests');
+  const rest = items.filter(i => i.group !== 'requests');
+  rest.splice(firstIndex, 0, summary);
+  return rest;
+}
+
 function renderNotifications() {
   const items = buildNotifications();
   currentActions = new Map(items.map(i => [i.id, i]));
 
   // Before the first full load, only refresh the live lists (no history, no popups)
   if (!notifState.ready) {
-    renderNotificationList(document.getElementById('ovTodoList'), items);
+    renderNotificationList(document.getElementById('ovTodoList'), summariseForOverview(items));
     renderCalendarReviewStatus();
     return;
   }
@@ -2392,7 +2489,7 @@ function renderNotifications() {
   });
 
   renderNotificationPanel(history);
-  renderNotificationList(document.getElementById('ovTodoList'), items);
+  renderNotificationList(document.getElementById('ovTodoList'), summariseForOverview(items));
   renderCalendarReviewStatus();
   announceNewNotifications(added);
 }

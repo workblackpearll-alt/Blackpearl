@@ -430,16 +430,31 @@
           <button class="filter-btn" data-filter="cancelled">Cancelled</button>
         </div>
 
+        <!-- Sort (click again to flip ascending / descending) -->
+        <div class="bk-sort-bar">
+          <div class="bk-sort-group" role="group" aria-label="Sort bookings">
+            <span class="bk-sort-label">Sort by</span>
+            <button type="button" class="filter-btn bk-sort-btn active" data-sort-key="created">Requested on <span class="bk-sort-arrow">↓</span></button>
+            <button type="button" class="filter-btn bk-sort-btn" data-sort-key="date">Charter date <span class="bk-sort-arrow"></span></button>
+            <button type="button" class="filter-btn bk-sort-btn" data-sort-key="guests">Guests <span class="bk-sort-arrow"></span></button>
+          </div>
+          <div class="bk-sort-meta">
+            <span id="bookingResultsCount"></span>
+            <button type="button" class="btn-text-link" id="btnExportBookings">Download CSV</button>
+          </div>
+        </div>
+
         <!-- Bookings Data Table -->
         <div class="data-table-card">
           <div class="table-responsive">
             <table class="admin-data-table">
               <thead>
                 <tr>
+                  <th class="sr-col">#</th>
                   <th>BOOKING</th>
                   <th>CHARTER</th>
                   <th>CUSTOMER</th>
-                  <th>QUOTE</th>
+                  <th>GUESTS</th>
                   <th>STATUS</th>
                   <th>EMAIL</th>
                   <th class="text-center">DETAILS</th>
