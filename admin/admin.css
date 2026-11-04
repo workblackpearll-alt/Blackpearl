@@ -3057,3 +3057,17 @@ body.admin-drawer-open {
 
 /* Prices are quoted on WhatsApp: hide money figures (SHOW_PRICES = false) */
 .hide-money .money-col { display: none !important; }
+
+/* ---------- Bookings: sort bar ---------- */
+.bk-sort-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin: 0 0 14px; }
+.bk-sort-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bk-sort-label { font-size: 13px; color: var(--text-muted); margin-right: 2px; }
+.bk-sort-arrow { display: inline-block; min-width: 0.8em; margin-left: 2px; }
+.bk-sort-meta { display: inline-flex; align-items: center; gap: 16px; font-size: 14px; color: var(--text-muted); }
+
+/* Bookings table: guest count */
+.guests-cell { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.guests-cell .cell-sub { display: inline; font-size: 13px; font-weight: 400; }
+
+/* Bookings table: serial number */
+.admin-data-table .sr-col { width: 44px; padding-right: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: left; }
