@@ -1481,12 +1481,10 @@ async function initSupabaseSync() {
       updateAdminBriefsView();
     }
 
-    // 4. Fetch Dynamic Gallery Images from Supabase & Local Cache
+    // 4. Fetch Dynamic Gallery Images from Supabase (the database is the only source,
+    //    so deleted photos disappear for everyone)
     let allGallery = [];
-    try {
-      const cached = JSON.parse(localStorage.getItem('black_pearl_gallery') || '[]');
-      if (Array.isArray(cached)) allGallery.push(...cached);
-    } catch (_) {}
+    try { localStorage.removeItem('black_pearl_gallery'); } catch (_) {}
 
     const galleryRes = await fetchGalleryImages();
     if (galleryRes.success && Array.isArray(galleryRes.data) && galleryRes.data.length > 0) {

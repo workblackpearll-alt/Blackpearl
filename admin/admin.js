@@ -11,6 +11,7 @@ import {
   updateBriefStatus,
   fetchGalleryImages,
   saveGalleryImage,
+  deleteGalleryImage,
   fetchBlockedDates,
   saveBlockedDate,
   deleteBlockedDate,
@@ -1712,28 +1713,24 @@ function initMediaHandlers() {
       // 1. Optimize photo from device
       const dataUrl = await optimizeImageFile(file || previewImg.src);
 
-      // 2. Build record
-      const record = {
-        id: 'img_' + Date.now(),
+      // 2. Save to Supabase table gallery_images
+      const res = await saveGalleryImage({
         title,
         subtitle: subtitle || 'Private charter on Lady Alice',
         category,
         imagekitUrl: dataUrl,
         fileId: 'dev_' + Date.now(),
-        thumbnailUrl: dataUrl,
-        created_at: new Date().toISOString()
-      };
+        thumbnailUrl: dataUrl
+      });
+      if (!res || !res.success || res.source === 'local') {
+        const reason = res?.error?.message || 'the database is not connected';
+        throw new Error(/row-level security/i.test(reason)
+          ? 'Not allowed to add photos. Please log out and log in again with your email code.'
+          : reason);
+      }
 
-      // 3. Save to Supabase table gallery_images
-      await saveGalleryImage(record);
-
-      // 4. Cache in localStorage for immediate display across the site
-      const savedLocal = JSON.parse(localStorage.getItem('black_pearl_gallery') || '[]');
-      savedLocal.unshift(record);
-      localStorage.setItem('black_pearl_gallery', JSON.stringify(savedLocal));
-
-      // 5. Update Admin UI
-      state.mediaItems.unshift(record);
+      // 3. Update Admin UI with the saved row (has the real id for deleting)
+      state.mediaItems.unshift(res.data);
       if (elements.mediaCountSpan) elements.mediaCountSpan.textContent = state.mediaItems.length;
       const sidebarCount = document.getElementById('sidebarMediaCount');
       if (sidebarCount) sidebarCount.textContent = state.mediaItems.length;
@@ -1785,8 +1782,29 @@ function renderMediaGrid() {
         <div class="media-url-row font-mono">
           <input type="text" readonly value="${escapeHtml(item.imagekit_url || displayUrl)}" class="copyable-url-input">
         </div>
+        <button type="button" class="btn-media-delete" style="margin-top:10px;width:100%;padding:8px 12px;border-radius:8px;border:1px solid #c0392b;background:transparent;color:#c0392b;font-weight:600;cursor:pointer;">Delete photo</button>
       </div>
     `;
+
+    const deleteBtn = card.querySelector('.btn-media-delete');
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Delete "${item.title || 'this photo'}" from the website gallery? This cannot be undone.`)) return;
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+      const res = await deleteGalleryImage(item.id);
+      if (!res.success) {
+        alert('Could not delete photo: ' + (res.error?.message || 'Please try again.'));
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete photo';
+        return;
+      }
+      state.mediaItems = state.mediaItems.filter(m => m.id !== item.id);
+      if (elements.mediaCountSpan) elements.mediaCountSpan.textContent = state.mediaItems.length;
+      const sidebarCount = document.getElementById('sidebarMediaCount');
+      if (sidebarCount) sidebarCount.textContent = state.mediaItems.length;
+      renderMediaGrid();
+      showToastNotification('Photo removed from the website gallery.');
+    });
 
     const copyInput = card.querySelector('.copyable-url-input');
     copyInput.addEventListener('click', () => {

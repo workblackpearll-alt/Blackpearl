@@ -326,6 +326,26 @@ export async function saveGalleryImage(image) {
 }
 
 /**
+ * Removes a gallery image (admin only).
+ * Uses .select() so an RLS-blocked delete (0 rows) is reported as a failure.
+ */
+export async function deleteGalleryImage(id) {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { success: false, error: new Error('Supabase is not configured') };
+  }
+  try {
+    const { data, error } = await supabase.from('gallery_images').delete().eq('id', id).select('id');
+    if (error) return { success: false, error };
+    if (!data || data.length === 0) {
+      return { success: false, error: new Error('Not allowed to delete this photo. Please log out and log in again with your email code.') };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err };
+  }
+}
+
+/**
  * Fetches all dynamic images stored in Supabase table 'gallery_images'.
  */
 export async function fetchGalleryImages() {
